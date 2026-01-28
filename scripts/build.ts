@@ -56,7 +56,7 @@ if (!result.success) {
 // Update shebang to use node
 const distPath = join(ROOT_DIR, "dist/index.js");
 let distContent = await readFile(distPath, "utf-8");
-distContent = distContent.replace(/^#!.*\n/, "#!/usr/bin/env node\n");
+distContent = distContent.replace(/^#!.*\n/, "#!/usr/bin/env bun\n");
 await writeFile(distPath, distContent);
 
 console.log("Build completed successfully!");

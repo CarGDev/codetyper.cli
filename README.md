@@ -52,10 +52,18 @@ Over time, CodeTyper learns which provider performs best for different task type
 
 ## Installation
 
+**Requires [Bun](https://bun.sh) runtime** (v1.0.0+)
+
 ```bash
-# Clone and install
-git clone https://github.com/your-username/codetyper-cli.git
-cd codetyper-cli
+# Install Bun if you don't have it
+curl -fsSL https://bun.sh/install | bash
+
+# Install globally via npm
+npm install -g codetyper-cli
+
+# Or install from source
+git clone https://github.com/CarGDev/codetyper.cli.git
+cd codetyper.cli
 bun install && bun run build && bun link
 
 # Login to a provider
