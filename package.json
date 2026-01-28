@@ -1,0 +1,100 @@
+{
+  "name": "codetyper-cli",
+  "version": "0.1.74",
+  "description": "CodeTyper AI Agent - Standalone CLI for autonomous code generation",
+  "main": "dist/index.js",
+  "bin": {
+    "codetyper": "./dist/index.js"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "bun src/index.ts",
+    "dev:nobump": "bun scripts/build.ts && npm link",
+    "dev:watch": "bun scripts/dev-watch.ts",
+    "build": "bun scripts/build.ts",
+    "sync-version": "bun scripts/sync-version.ts",
+    "start": "bun src/index.ts",
+    "test": "bun test",
+    "lint": "bun eslint src/**/*.ts",
+    "format": "npx prettier --write \"src/**/*.ts\"",
+    "prettier": "npx prettier --write \"src/**/*.ts\" \"src/**/*.tsx\" \"scripts/**/*.ts\"",
+    "typecheck": "bun tsc --noEmit"
+  },
+  "keywords": [
+    "ai",
+    "coding",
+    "assistant",
+    "cli",
+    "agent",
+    "typescript"
+  ],
+  "author": {
+    "name": "Carlos Gutierrez",
+    "email": "carlos.gutierrez@carg.dev",
+    "url": "https://github.com/CarGDev"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CarGDev/codetyper.nvim.git"
+  },
+  "homepage": "https://github.com/CarGDev/codetyper.nvim#readme",
+  "bugs": {
+    "url": "https://github.com/CarGDev/codetyper.nvim/issues"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.wasm",
+    "dist/**/*.scm",
+    "src/version.json"
+  ],
+  "dependencies": {
+    "@opentui/core": "^0.1.74",
+    "@opentui/solid": "^0.1.74",
+    "@solid-primitives/event-bus": "^1.0.11",
+    "@solid-primitives/scheduled": "^1.4.3",
+    "boxen": "^8.0.1",
+    "chalk": "^5.3.0",
+    "chokidar": "^5.0.0",
+    "cli-highlight": "^2.1.11",
+    "commander": "^14.0.2",
+    "fast-glob": "^3.3.2",
+    "got": "^14.0.0",
+    "inquirer": "^13.2.1",
+    "mimic-function": "^5.0.1",
+    "opentui-spinner": "^0.0.6",
+    "ora": "^9.1.0",
+    "solid-js": "^1.9.10",
+    "uuid": "^13.0.0",
+    "zustand": "^5.0.10",
+    "zod": "^4.3.5",
+    "zod-to-json-schema": "^3.25.1"
+  },
+  "overrides": {
+    "string-width": "^5.1.2",
+    "strip-ansi": "^6.0.1"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.3",
+    "@eslint/js": "^9.39.2",
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^25.0.10",
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.53.1",
+    "@typescript-eslint/parser": "^8.53.1",
+    "eslint": "^9.39.2",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-config-standard-with-typescript": "^43.0.1",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-n": "^17.23.2",
+    "eslint-plugin-promise": "^7.2.1",
+    "globals": "^17.0.0",
+    "prettier": "^3.1.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.53.0",
+    "vitest": "^4.0.17"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

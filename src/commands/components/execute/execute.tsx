@@ -1,0 +1,104 @@
+import { tui, appStore } from "@tui/index";
+import { getProviderInfo } from "@services/chat-tui-service";
+import { addServer, connectServer } from "@services/mcp/index";
+import type { ChatServiceState } from "@services/chat-tui-service";
+import type { AgentConfig } from "@/types/agent-config";
+import type { PermissionScope, LearningScope } from "@/types/tui";
+import type { ProviderModel } from "@/types/providers";
+import type { MCPAddFormData } from "@/types/mcp";
+
+interface AgentOption {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+export interface RenderAppProps {
+  sessionId?: string;
+  handleSubmit: (message: string) => Promise<void>;
+  handleCommand: (command: string) => Promise<void>;
+  handleModelSelect: (model: string) => Promise<void>;
+  handleAgentSelect: (agentId: string, agent: AgentConfig) => Promise<void>;
+  handleThemeSelect: (theme: string) => void;
+  handleProviderSelect?: (providerId: string) => Promise<void>;
+  handleCascadeToggle?: (enabled: boolean) => Promise<void>;
+  handleMCPAdd?: (data: MCPAddFormData) => Promise<void>;
+  handlePermissionResponse?: (
+    allowed: boolean,
+    scope?: PermissionScope,
+  ) => void;
+  handleLearningResponse?: (
+    save: boolean,
+    scope?: LearningScope,
+    editedContent?: string,
+  ) => void;
+  handleExit: () => void;
+  showBanner: boolean;
+  state: ChatServiceState;
+  availableModels?: ProviderModel[];
+  agents?: AgentOption[];
+  initialPrompt?: string;
+  theme?: string;
+  cascadeEnabled?: boolean;
+  plan?: {
+    id: string;
+    title: string;
+    items: Array<{ id: string; text: string; completed: boolean }>;
+  } | null;
+}
+
+const defaultHandleMCPAdd = async (data: MCPAddFormData): Promise<void> => {
+  const serverArgs = data.args.trim()
+    ? data.args.trim().split(/\s+/)
+    : undefined;
+
+  await addServer(
+    data.name,
+    {
+      command: data.command,
+      args: serverArgs,
+      enabled: true,
+    },
+    data.isGlobal,
+  );
+
+  await connectServer(data.name);
+};
+
+export const renderApp = async (props: RenderAppProps): Promise<void> => {
+  const { displayName, model: defaultModel } = getProviderInfo(
+    props.state.provider,
+  );
+  const currentModel = props.state.model ?? defaultModel;
+
+  await tui({
+    sessionId: props.sessionId,
+    provider: displayName,
+    model: currentModel,
+    theme: props.theme,
+    cascadeEnabled: props.cascadeEnabled,
+    availableModels: props.availableModels,
+    agents: props.agents,
+    initialPrompt: props.initialPrompt,
+    onSubmit: props.handleSubmit,
+    onCommand: props.handleCommand,
+    onModelSelect: props.handleModelSelect,
+    onThemeSelect: props.handleThemeSelect,
+    onProviderSelect: props.handleProviderSelect,
+    onCascadeToggle: props.handleCascadeToggle,
+    onAgentSelect: async (agentId: string) => {
+      const agent = props.agents?.find((a) => a.id === agentId);
+      if (agent) {
+        await props.handleAgentSelect(agentId, agent as AgentConfig);
+      }
+    },
+    onMCPAdd: props.handleMCPAdd ?? defaultHandleMCPAdd,
+    onPermissionResponse: props.handlePermissionResponse ?? (() => {}),
+    onLearningResponse: props.handleLearningResponse ?? (() => {}),
+    plan: props.plan,
+  });
+
+  props.handleExit();
+};
+
+export { appStore };

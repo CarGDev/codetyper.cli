@@ -1,0 +1,6 @@
+# Bun configuration for @opentui/solid JSX transformation
+preload = ["@opentui/solid/preload"]
+
+[run]
+# Enable browser export conditions for @opentui/solid
+conditions = ["browser"]

@@ -1,0 +1,20 @@
+/** Quiet bash commands - read-only exploration operations */
+export const QUIET_BASH_PATTERNS = [
+  /^ls\b/,
+  /^cat\b/,
+  /^head\b/,
+  /^tail\b/,
+  /^find\b/,
+  /^grep\b/,
+  /^rg\b/,
+  /^fd\b/,
+  /^tree\b/,
+  /^pwd\b/,
+  /^echo\b/,
+  /^which\b/,
+  /^file\b/,
+  /^stat\b/,
+  /^wc\b/,
+  /^du\b/,
+  /^df\b/,
+];
