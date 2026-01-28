@@ -36,11 +36,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CarGDev/codetyper.nvim.git"
+    "url": "git+https://github.com/CarGDev/codetyper.cli.git"
   },
-  "homepage": "https://github.com/CarGDev/codetyper.nvim#readme",
+  "homepage": "https://github.com/CarGDev/codetyper.cli#readme",
   "bugs": {
-    "url": "https://github.com/CarGDev/codetyper.nvim/issues"
+    "url": "https://github.com/CarGDev/codetyper.cli/issues"
   },
   "files": [
     "dist/**/*.js",
