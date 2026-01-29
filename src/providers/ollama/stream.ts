@@ -13,6 +13,7 @@ import type {
   StreamChunk,
 } from "@/types/providers";
 import type { OllamaChatResponse } from "@/types/ollama";
+import { addDebugLog } from "@tui-solid/components/debug-log-panel";
 
 const parseStreamLine = (
   line: string,
@@ -67,6 +68,7 @@ export const ollamaChatStream = async (
 ): Promise<void> => {
   const baseUrl = getOllamaBaseUrl();
   const body = buildChatRequest(messages, options, true);
+  addDebugLog("api", `Ollama stream request: ${messages.length} msgs, model=${body.model}`);
 
   const stream = got.stream.post(`${baseUrl}${OLLAMA_ENDPOINTS.CHAT}`, {
     json: body,

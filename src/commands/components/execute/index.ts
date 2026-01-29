@@ -26,6 +26,7 @@ import { agentLoader } from "@services/agent-loader";
 
 interface ExecuteContext {
   state: ChatServiceState | null;
+  baseSystemPrompt: string | null;
 }
 
 const createHandleExit = (): (() => void) => (): void => {
@@ -51,16 +52,22 @@ const createHandleAgentSelect =
     (ctx.state as ChatServiceState & { currentAgent?: string }).currentAgent =
       agentId;
 
-    if (agent.prompt) {
-      const basePrompt = ctx.state.systemPrompt;
-      ctx.state.systemPrompt = `${agent.prompt}\n\n${basePrompt}`;
+    // Use the stored base prompt to avoid accumulation when switching agents
+    const basePrompt = ctx.baseSystemPrompt ?? ctx.state.systemPrompt;
 
-      if (
-        ctx.state.messages.length > 0 &&
-        ctx.state.messages[0].role === "system"
-      ) {
-        ctx.state.messages[0].content = ctx.state.systemPrompt;
-      }
+    if (agent.prompt) {
+      ctx.state.systemPrompt = `${agent.prompt}\n\n${basePrompt}`;
+    } else {
+      // Reset to base prompt if agent has no custom prompt
+      ctx.state.systemPrompt = basePrompt;
+    }
+
+    // Update the system message in the conversation
+    if (
+      ctx.state.messages.length > 0 &&
+      ctx.state.messages[0].role === "system"
+    ) {
+      ctx.state.messages[0].content = ctx.state.systemPrompt;
     }
   };
 
@@ -81,6 +88,15 @@ const createHandleProviderSelect =
     const config = await getConfig();
     config.set("provider", providerId as "copilot" | "ollama");
     await config.save();
+
+    // Load models for the new provider and update the store
+    const models = await loadModels(providerId as "copilot" | "ollama");
+    appStore.setAvailableModels(models);
+
+    // If Ollama is selected and has models, open model selector
+    if (providerId === "ollama" && models.length > 0) {
+      appStore.setMode("model_select");
+    }
   };
 
 const createHandleCascadeToggle =
@@ -131,10 +147,13 @@ const createHandleSubmit =
 const execute = async (options: ChatTUIOptions): Promise<void> => {
   const ctx: ExecuteContext = {
     state: null,
+    baseSystemPrompt: null,
   };
 
   const { state, session } = await initializeChatService(options);
   ctx.state = state;
+  // Store the original system prompt before any agent modifications
+  ctx.baseSystemPrompt = state.systemPrompt;
 
   if (options.printMode && options.initialPrompt) {
     await executePrintMode(state, options.initialPrompt);

@@ -150,7 +150,25 @@ assistant: Errors are handled in src/services/error-handler.ts:42.
 
 # Git Operations
 
-Only commit when requested. When creating commits:
+CRITICAL: Git commands that modify the repository are FORBIDDEN unless the user EXPLICITLY requests them.
+
+## Forbidden by Default (require explicit user request):
+- \`git add\` - NEVER run git add (including \`git add .\` or \`git add -A\`)
+- \`git commit\` - NEVER run git commit
+- \`git push\` - NEVER run git push
+- \`git merge\` - NEVER run git merge
+- \`git rebase\` - NEVER run git rebase
+- \`git reset\` - NEVER run git reset
+- \`git checkout -- .\` or \`git restore\` - NEVER discard changes
+
+## Allowed without asking:
+- \`git status\` - checking current state
+- \`git diff\` - viewing changes
+- \`git log\` - viewing history
+- \`git branch\` - listing branches
+- \`git show\` - viewing commits
+
+## When user requests a commit:
 - NEVER use destructive commands (push --force, reset --hard) unless explicitly asked
 - NEVER skip hooks unless explicitly asked
 - Use clear, concise commit messages focusing on "why" not "what"

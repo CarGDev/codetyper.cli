@@ -46,6 +46,9 @@ export function LearningModal(props: LearningModalProps) {
   useKeyboard((evt) => {
     if (!isActive()) return;
 
+    // Stop propagation for all events when modal is active
+    evt.stopPropagation();
+
     if (isEditing()) {
       if (evt.name === "escape") {
         setIsEditing(false);
@@ -95,7 +98,8 @@ export function LearningModal(props: LearningModalProps) {
       return;
     }
 
-    if (evt.name.length === 1) {
+    // Only handle known shortcut keys to avoid accidental triggers
+    if (evt.name.length === 1 && !evt.ctrl && !evt.meta) {
       const charLower = evt.name.toLowerCase();
       const optionIndex = SCOPE_OPTIONS.findIndex((o) => o.key === charLower);
       if (optionIndex !== -1) {

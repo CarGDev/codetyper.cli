@@ -54,6 +54,7 @@ import type {
   ChatServiceCallbacks,
   ToolCallInfo,
 } from "@/types/chat-service";
+import { addDebugLog } from "@tui-solid/components/debug-log-panel";
 
 // Track last response for feedback learning
 let lastResponseContext: {
@@ -116,47 +117,58 @@ const createToolResultHandler =
 /**
  * Create streaming callbacks for TUI integration
  */
-const createStreamCallbacks = (): StreamCallbacks => ({
-  onContentChunk: (content: string) => {
-    appStore.appendStreamContent(content);
-  },
+const createStreamCallbacks = (): StreamCallbacks => {
+  let chunkCount = 0;
 
-  onToolCallStart: (toolCall) => {
-    appStore.setCurrentToolCall({
-      id: toolCall.id,
-      name: toolCall.name,
-      description: `Calling ${toolCall.name}...`,
-      status: "pending",
-    });
-  },
+  return {
+    onContentChunk: (content: string) => {
+      chunkCount++;
+      addDebugLog("stream", `Chunk #${chunkCount}: "${content.substring(0, 30)}${content.length > 30 ? "..." : ""}"`);
+      appStore.appendStreamContent(content);
+    },
 
-  onToolCallComplete: (toolCall) => {
-    appStore.updateToolCall({
-      id: toolCall.id,
-      name: toolCall.name,
-      status: "running",
-    });
-  },
+    onToolCallStart: (toolCall) => {
+      addDebugLog("tool", `Tool start: ${toolCall.name} (${toolCall.id})`);
+      appStore.setCurrentToolCall({
+        id: toolCall.id,
+        name: toolCall.name,
+        description: `Calling ${toolCall.name}...`,
+        status: "pending",
+      });
+    },
 
-  onModelSwitch: (info) => {
-    appStore.addLog({
-      type: "system",
-      content: `Model switched: ${info.from} → ${info.to} (${info.reason})`,
-    });
-  },
+    onToolCallComplete: (toolCall) => {
+      addDebugLog("tool", `Tool complete: ${toolCall.name}`);
+      appStore.updateToolCall({
+        id: toolCall.id,
+        name: toolCall.name,
+        status: "running",
+      });
+    },
 
-  onComplete: () => {
-    appStore.completeStreaming();
-  },
+    onModelSwitch: (info) => {
+      addDebugLog("api", `Model switch: ${info.from} → ${info.to}`);
+      appStore.addLog({
+        type: "system",
+        content: `Model switched: ${info.from} → ${info.to} (${info.reason})`,
+      });
+    },
 
-  onError: (error: string) => {
-    appStore.cancelStreaming();
-    appStore.addLog({
-      type: "error",
-      content: error,
-    });
-  },
-});
+    onComplete: () => {
+      addDebugLog("stream", `Stream complete (${chunkCount} chunks)`);
+      appStore.completeStreaming();
+    },
+
+    onError: (error: string) => {
+      addDebugLog("error", `Stream error: ${error}`);
+      appStore.cancelStreaming();
+      appStore.addLog({
+        type: "error",
+        content: error,
+      });
+    },
+  };
+};
 
 /**
  * Run audit with Copilot on Ollama's response
@@ -386,9 +398,12 @@ export const handleMessage = async (
   }
 
   // Start streaming UI
+  addDebugLog("state", `Starting request: provider=${effectiveProvider}, model=${state.model}`);
+  addDebugLog("state", `Mode: ${appStore.getState().interactionMode}, Cascade: ${cascadeEnabled}`);
   appStore.setMode("thinking");
   appStore.startThinking();
   appStore.startStreaming();
+  addDebugLog("state", "Streaming started");
 
   const streamCallbacks = createStreamCallbacks();
   const agent = createStreamingAgent(
@@ -412,12 +427,15 @@ export const handleMessage = async (
   );
 
   try {
+    addDebugLog("api", `Agent.run() started with ${state.messages.length} messages`);
     const result = await agent.run(state.messages);
+    addDebugLog("api", `Agent.run() completed: success=${result.success}, iterations=${result.iterations}`);
 
     // Stop thinking timer
     appStore.stopThinking();
 
     if (result.finalResponse) {
+      addDebugLog("info", `Final response length: ${result.finalResponse.length} chars`);
       let finalResponse = result.finalResponse;
 
       // Run audit if cascade mode with Ollama
@@ -450,8 +468,18 @@ export const handleMessage = async (
         role: "assistant",
         content: finalResponse,
       });
-      // Note: Don't call callbacks.onLog here - streaming already added the log entry
-      // via appendStreamContent/completeStreaming
+
+      // Check if streaming content was received - if not, add the response as a log
+      // This handles cases where streaming didn't work or content was all in final response
+      const streamingState = appStore.getState().streamingLog;
+      if (!streamingState.content && finalResponse) {
+        // Streaming didn't receive content, manually add the response
+        appStore.cancelStreaming(); // Remove empty streaming log
+        appStore.addLog({
+          type: "assistant",
+          content: finalResponse,
+        });
+      }
 
       addMessage("user", message);
       addMessage("assistant", finalResponse);

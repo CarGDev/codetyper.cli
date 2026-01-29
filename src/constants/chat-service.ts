@@ -103,4 +103,5 @@ export type CommandName =
   | "p"
   | "status"
   | "remember"
-  | "learnings";
+  | "learnings"
+  | "logs";

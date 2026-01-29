@@ -10,15 +10,19 @@ interface PermissionModalProps {
   isActive?: boolean;
 }
 
-const SCOPE_OPTIONS: Array<{
+interface PermissionOption {
   key: string;
   label: string;
-  scope: PermissionScope;
-}> = [
-  { key: "y", label: "Yes, this once", scope: "once" },
-  { key: "s", label: "Yes, for this session", scope: "session" },
-  { key: "a", label: "Always allow for this project", scope: "local" },
-  { key: "g", label: "Always allow globally", scope: "global" },
+  scope: PermissionScope | "deny";
+  allowed: boolean;
+}
+
+const PERMISSION_OPTIONS: PermissionOption[] = [
+  { key: "y", label: "Yes, this once", scope: "once", allowed: true },
+  { key: "s", label: "Yes, for this session", scope: "session", allowed: true },
+  { key: "l", label: "Yes, for this project", scope: "local", allowed: true },
+  { key: "g", label: "Yes, globally", scope: "global", allowed: true },
+  { key: "n", label: "No, deny this request", scope: "deny", allowed: false },
 ];
 
 export function PermissionModal(props: PermissionModalProps) {
@@ -38,41 +42,55 @@ export function PermissionModal(props: PermissionModalProps) {
   useKeyboard((evt) => {
     if (!isActive()) return;
 
+    // Stop propagation for all events when modal is active
+    evt.stopPropagation();
+
     if (evt.name === "up") {
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : SCOPE_OPTIONS.length));
+      setSelectedIndex((prev) =>
+        prev > 0 ? prev - 1 : PERMISSION_OPTIONS.length - 1,
+      );
       evt.preventDefault();
       return;
     }
 
     if (evt.name === "down") {
-      setSelectedIndex((prev) => (prev < SCOPE_OPTIONS.length ? prev + 1 : 0));
+      setSelectedIndex((prev) =>
+        prev < PERMISSION_OPTIONS.length - 1 ? prev + 1 : 0,
+      );
       evt.preventDefault();
       return;
     }
 
     if (evt.name === "return") {
-      if (selectedIndex() === SCOPE_OPTIONS.length) {
-        handleResponse(false);
+      const option = PERMISSION_OPTIONS[selectedIndex()];
+      if (option.allowed && option.scope !== "deny") {
+        handleResponse(true, option.scope as PermissionScope);
       } else {
-        const option = SCOPE_OPTIONS[selectedIndex()];
-        handleResponse(true, option.scope);
+        handleResponse(false);
       }
       evt.preventDefault();
       return;
     }
 
-    if (evt.name === "escape" || evt.name === "n") {
+    if (evt.name === "escape") {
       handleResponse(false);
       evt.preventDefault();
       return;
     }
 
-    if (evt.name.length === 1) {
+    // Handle shortcut keys
+    if (evt.name.length === 1 && !evt.ctrl && !evt.meta) {
       const charLower = evt.name.toLowerCase();
-      const optionIndex = SCOPE_OPTIONS.findIndex((o) => o.key === charLower);
+      const optionIndex = PERMISSION_OPTIONS.findIndex(
+        (o) => o.key === charLower,
+      );
       if (optionIndex !== -1) {
-        const option = SCOPE_OPTIONS[optionIndex];
-        handleResponse(true, option.scope);
+        const option = PERMISSION_OPTIONS[optionIndex];
+        if (option.allowed && option.scope !== "deny") {
+          handleResponse(true, option.scope as PermissionScope);
+        } else {
+          handleResponse(false);
+        }
         evt.preventDefault();
       }
     }
@@ -114,9 +132,11 @@ export function PermissionModal(props: PermissionModalProps) {
       </box>
 
       <box flexDirection="column" marginTop={1}>
-        <For each={SCOPE_OPTIONS}>
+        <For each={PERMISSION_OPTIONS}>
           {(option, index) => {
             const isSelected = () => index() === selectedIndex();
+            const keyColor = () =>
+              option.allowed ? theme.colors.success : theme.colors.error;
             return (
               <box flexDirection="row">
                 <text
@@ -127,7 +147,7 @@ export function PermissionModal(props: PermissionModalProps) {
                 >
                   {isSelected() ? "> " : "  "}
                 </text>
-                <text fg={theme.colors.success}>[{option.key}] </text>
+                <text fg={keyColor()}>[{option.key}] </text>
                 <text fg={isSelected() ? theme.colors.primary : undefined}>
                   {option.label}
                 </text>
@@ -135,32 +155,6 @@ export function PermissionModal(props: PermissionModalProps) {
             );
           }}
         </For>
-        <box flexDirection="row">
-          <text
-            fg={
-              selectedIndex() === SCOPE_OPTIONS.length
-                ? theme.colors.primary
-                : undefined
-            }
-            attributes={
-              selectedIndex() === SCOPE_OPTIONS.length
-                ? TextAttributes.BOLD
-                : TextAttributes.NONE
-            }
-          >
-            {selectedIndex() === SCOPE_OPTIONS.length ? "> " : "  "}
-          </text>
-          <text fg={theme.colors.error}>[n] </text>
-          <text
-            fg={
-              selectedIndex() === SCOPE_OPTIONS.length
-                ? theme.colors.primary
-                : undefined
-            }
-          >
-            No, deny this request
-          </text>
-        </box>
       </box>
 
       <box marginTop={1}>

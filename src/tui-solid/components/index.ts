@@ -20,6 +20,8 @@ export { SelectMenu } from "./select-menu";
 export type { SelectOption } from "./select-menu";
 export { PermissionModal } from "./permission-modal";
 export { LearningModal } from "./learning-modal";
+export { HelpMenu } from "./help-menu";
+export { HelpDetail } from "./help-detail";
 export { TodoPanel } from "./todo-panel";
 export type { TodoItem, Plan } from "./todo-panel";
 export { DiffView, parseDiffOutput, isDiffContent } from "./diff-view";

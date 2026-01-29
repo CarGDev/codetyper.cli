@@ -1,6 +1,6 @@
 import { saveSession } from "@services/session";
-import { showHelp } from "@commands/components/chat/commands/show-help";
 import { clearConversation } from "@commands/components/chat/history/clear-conversation";
+import { appStore } from "@tui/index";
 import { showContextFiles } from "@commands/components/chat/context/show-context-files";
 import { removeFile } from "@commands/components/chat/context/remove-file";
 import { showContext } from "@commands/components/chat/history/show-context";
@@ -24,8 +24,8 @@ const COMMAND_REGISTRY: Map<string, CommandHandler> = new Map<
   string,
   CommandHandler
 >([
-  ["help", () => showHelp()],
-  ["h", () => showHelp()],
+  ["help", () => appStore.setMode("help_menu")],
+  ["h", () => appStore.setMode("help_menu")],
   ["clear", (ctx: CommandContext) => clearConversation(ctx.state)],
   ["c", (ctx: CommandContext) => clearConversation(ctx.state)],
   ["files", (ctx: CommandContext) => showContextFiles(ctx.state.contextFiles)],
@@ -106,6 +106,17 @@ const COMMAND_REGISTRY: Map<string, CommandHandler> = new Map<
     },
   ],
   ["mcp", async (ctx: CommandContext) => handleMCP(ctx.args)],
+  [
+    "logs",
+    () => {
+      appStore.toggleDebugLog();
+      const { debugLogVisible } = appStore.getState();
+      appStore.addLog({
+        type: "system",
+        content: `Debug logs panel ${debugLogVisible ? "enabled" : "disabled"}`,
+      });
+    },
+  ],
 ]);
 
 export default COMMAND_REGISTRY;

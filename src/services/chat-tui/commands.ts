@@ -4,11 +4,7 @@
 
 import { saveSession as saveSessionSession } from "@services/session";
 import { appStore } from "@tui/index";
-import {
-  CHAT_MESSAGES,
-  HELP_TEXT,
-  type CommandName,
-} from "@constants/chat-service";
+import { CHAT_MESSAGES, type CommandName } from "@constants/chat-service";
 import { handleLogin, handleLogout, showWhoami } from "@services/chat-tui/auth";
 import {
   handleRememberCommand,
@@ -31,8 +27,8 @@ type CommandHandler = (
   callbacks: ChatServiceCallbacks,
 ) => Promise<void> | void;
 
-const showHelp: CommandHandler = (_, callbacks) => {
-  callbacks.onLog("system", HELP_TEXT);
+const showHelp: CommandHandler = () => {
+  appStore.setMode("help_menu");
 };
 
 const clearConversation: CommandHandler = (state, callbacks) => {
@@ -112,6 +108,15 @@ const selectMode: CommandHandler = () => {
   appStore.setMode("mode_select");
 };
 
+const toggleDebugLogs: CommandHandler = (_, callbacks) => {
+  appStore.toggleDebugLog();
+  const { debugLogVisible } = appStore.getState();
+  callbacks.onLog(
+    "system",
+    `Debug logs panel ${debugLogVisible ? "enabled" : "disabled"}`,
+  );
+};
+
 const COMMAND_HANDLERS: Record<CommandName, CommandHandler> = {
   help: showHelp,
   h: showHelp,
@@ -137,6 +142,7 @@ const COMMAND_HANDLERS: Record<CommandName, CommandHandler> = {
   status: showStatus,
   remember: handleRememberCommand,
   learnings: (_, callbacks) => handleLearningsCommand(callbacks),
+  logs: toggleDebugLogs,
 };
 
 export const executeCommand = async (

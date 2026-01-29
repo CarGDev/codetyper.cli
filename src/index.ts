@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
 import { Command } from "commander";
 import { handleCommand } from "@commands/handlers";
-import { readFile } from "fs/promises";
 import { execute } from "@commands/chat-tui";
+import versionData from "@/version.json";
 import {
   initializeProviders,
   loginProvider,
@@ -37,14 +35,8 @@ import { createPlan, displayPlan, approvePlan } from "@services/planner";
 import { ensureXdgDirectories } from "@utils/ensure-directories";
 import chalk from "chalk";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Read version from package.json
-const packageJson = JSON.parse(
-  await readFile(join(__dirname, "../package.json"), "utf-8"),
-);
-const { version } = packageJson;
+// Read version from version.json
+const { version } = versionData;
 
 // Ensure XDG directories exist
 await ensureXdgDirectories();

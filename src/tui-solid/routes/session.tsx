@@ -1,4 +1,4 @@
-import { Show, Switch, Match } from "solid-js";
+import { Show, Switch, Match, createSignal } from "solid-js";
 import { useTheme } from "@tui-solid/context/theme";
 import { useAppStore } from "@tui-solid/context/app";
 import { Header } from "@tui-solid/components/header";
@@ -16,7 +16,11 @@ import { ProviderSelect } from "@tui-solid/components/provider-select";
 import { FilePicker } from "@tui-solid/components/file-picker";
 import { PermissionModal } from "@tui-solid/components/permission-modal";
 import { LearningModal } from "@tui-solid/components/learning-modal";
+import { HelpMenu } from "@tui-solid/components/help-menu";
+import { HelpDetail } from "@tui-solid/components/help-detail";
 import { TodoPanel } from "@tui-solid/components/todo-panel";
+import { CenteredModal } from "@tui-solid/components/centered-modal";
+import { DebugLogPanel } from "@tui-solid/components/debug-log-panel";
 import type { PermissionScope, LearningScope, InteractionMode } from "@/types/tui";
 import type { MCPAddFormData } from "@/types/mcp";
 
@@ -73,6 +77,11 @@ export function Session(props: SessionProps) {
   const theme = useTheme();
   const app = useAppStore();
 
+  // Local state for help menu
+  const [selectedHelpTopic, setSelectedHelpTopic] = createSignal<string | null>(
+    null
+  );
+
   const handleCommandSelect = (command: string): void => {
     const lowerCommand = command.toLowerCase();
     // Handle menu-opening commands directly to avoid async timing issues
@@ -98,6 +107,10 @@ export function Session(props: SessionProps) {
     }
     if (lowerCommand === "provider" || lowerCommand === "p") {
       app.transitionFromCommandMenu("provider_select");
+      return;
+    }
+    if (lowerCommand === "help" || lowerCommand === "h" || lowerCommand === "?") {
+      app.transitionFromCommandMenu("help_menu");
       return;
     }
     // For other commands, close menu and process through handler
@@ -141,9 +154,9 @@ export function Session(props: SessionProps) {
     app.setMode("idle");
   };
 
-  const handleProviderSelect = (providerId: string): void => {
+  const handleProviderSelect = async (providerId: string): Promise<void> => {
     app.setProvider(providerId);
-    props.onProviderSelect?.(providerId);
+    await props.onProviderSelect?.(providerId);
   };
 
   const handleProviderClose = (): void => {
@@ -156,6 +169,26 @@ export function Session(props: SessionProps) {
   };
 
   const handleFilePickerClose = (): void => {
+    app.setMode("idle");
+  };
+
+  const handleHelpTopicSelect = (topicId: string): void => {
+    setSelectedHelpTopic(topicId);
+    app.setMode("help_detail");
+  };
+
+  const handleHelpMenuClose = (): void => {
+    setSelectedHelpTopic(null);
+    app.setMode("idle");
+  };
+
+  const handleHelpDetailBack = (): void => {
+    setSelectedHelpTopic(null);
+    app.setMode("help_menu");
+  };
+
+  const handleHelpDetailClose = (): void => {
+    setSelectedHelpTopic(null);
     app.setMode("idle");
   };
 
@@ -175,6 +208,10 @@ export function Session(props: SessionProps) {
         <Show when={app.todosVisible() && props.plan}>
           <TodoPanel plan={props.plan ?? null} visible={app.todosVisible()} />
         </Show>
+
+        <Show when={app.debugLogVisible()}>
+          <DebugLogPanel />
+        </Show>
       </box>
 
       <StatusBar />
@@ -182,37 +219,37 @@ export function Session(props: SessionProps) {
 
       <Switch>
         <Match when={app.mode() === "command_menu"}>
-          <box position="absolute" top={3} left={2}>
+          <CenteredModal>
             <CommandMenu
               onSelect={handleCommandSelect}
               onCancel={handleCommandCancel}
               isActive={app.mode() === "command_menu"}
             />
-          </box>
+          </CenteredModal>
         </Match>
 
         <Match when={app.mode() === "model_select"}>
-          <box position="absolute" top={3} left={2}>
+          <CenteredModal>
             <ModelSelect
               onSelect={props.onModelSelect}
               onClose={handleModelClose}
               isActive={app.mode() === "model_select"}
             />
-          </box>
+          </CenteredModal>
         </Match>
 
         <Match when={app.mode() === "theme_select"}>
-          <box position="absolute" top={3} left={2}>
+          <CenteredModal>
             <ThemeSelect
               onSelect={props.onThemeSelect}
               onClose={handleThemeClose}
               isActive={app.mode() === "theme_select"}
             />
-          </box>
+          </CenteredModal>
         </Match>
 
         <Match when={app.mode() === "agent_select" && props.agents}>
-          <box position="absolute" top={3} left={2}>
+          <CenteredModal>
             <AgentSelect
               agents={props.agents ?? []}
               currentAgent={app.currentAgent()}
@@ -223,11 +260,11 @@ export function Session(props: SessionProps) {
               onClose={handleAgentClose}
               isActive={app.mode() === "agent_select"}
             />
-          </box>
+          </CenteredModal>
         </Match>
 
         <Match when={app.mode() === "mcp_select"}>
-          <box position="absolute" top={3} left={2}>
+          <CenteredModal>
             <MCPSelect
               servers={props.mcpServers ?? []}
               onSelect={props.onMCPSelect}
@@ -235,31 +272,31 @@ export function Session(props: SessionProps) {
               onClose={handleMCPClose}
               isActive={app.mode() === "mcp_select"}
             />
-          </box>
+          </CenteredModal>
         </Match>
 
         <Match when={app.mode() === "mcp_add"}>
-          <box position="absolute" top={3} left={2}>
+          <CenteredModal>
             <MCPAddForm
               onSubmit={props.onMCPAdd}
               onClose={handleMCPAddClose}
               isActive={app.mode() === "mcp_add"}
             />
-          </box>
+          </CenteredModal>
         </Match>
 
         <Match when={app.mode() === "mode_select"}>
-          <box position="absolute" top={3} left={2}>
+          <CenteredModal>
             <ModeSelect
               onSelect={handleModeSelect}
               onClose={handleModeClose}
               isActive={app.mode() === "mode_select"}
             />
-          </box>
+          </CenteredModal>
         </Match>
 
         <Match when={app.mode() === "provider_select"}>
-          <box position="absolute" top={3} left={2}>
+          <CenteredModal>
             <ProviderSelect
               onSelect={handleProviderSelect}
               onClose={handleProviderClose}
@@ -269,40 +306,61 @@ export function Session(props: SessionProps) {
               providerStatuses={props.providerStatuses}
               providerScores={props.providerScores}
             />
-          </box>
+          </CenteredModal>
         </Match>
 
         <Match when={app.mode() === "file_picker"}>
-          <box position="absolute" top={3} left={2}>
+          <CenteredModal>
             <FilePicker
               files={props.files ?? []}
               onSelect={props.onFileSelect}
               onClose={handleFilePickerClose}
               isActive={app.mode() === "file_picker"}
             />
-          </box>
+          </CenteredModal>
         </Match>
 
         <Match
           when={app.mode() === "permission_prompt" && app.permissionRequest()}
         >
-          <box position="absolute" top={3} left={2}>
+          <CenteredModal>
             <PermissionModal
               request={app.permissionRequest()!}
               onRespond={props.onPermissionResponse}
               isActive={app.mode() === "permission_prompt"}
             />
-          </box>
+          </CenteredModal>
         </Match>
 
         <Match when={app.mode() === "learning_prompt" && app.learningPrompt()}>
-          <box position="absolute" top={3} left={2}>
+          <CenteredModal>
             <LearningModal
               prompt={app.learningPrompt()!}
               onRespond={props.onLearningResponse}
               isActive={app.mode() === "learning_prompt"}
             />
-          </box>
+          </CenteredModal>
+        </Match>
+
+        <Match when={app.mode() === "help_menu"}>
+          <CenteredModal>
+            <HelpMenu
+              onSelectTopic={handleHelpTopicSelect}
+              onClose={handleHelpMenuClose}
+              isActive={app.mode() === "help_menu"}
+            />
+          </CenteredModal>
+        </Match>
+
+        <Match when={app.mode() === "help_detail" && selectedHelpTopic()}>
+          <CenteredModal>
+            <HelpDetail
+              topicId={selectedHelpTopic()!}
+              onBack={handleHelpDetailBack}
+              onClose={handleHelpDetailClose}
+              isActive={app.mode() === "help_detail"}
+            />
+          </CenteredModal>
         </Match>
       </Switch>
     </box>

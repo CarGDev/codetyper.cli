@@ -37,6 +37,7 @@ interface AppStore {
   availableModels: ProviderModel[];
   sessionStats: SessionStats;
   todosVisible: boolean;
+  debugLogVisible: boolean;
   interruptPending: boolean;
   exitPending: boolean;
   isCompacting: boolean;
@@ -70,6 +71,7 @@ interface AppContextValue {
   availableModels: Accessor<ProviderModel[]>;
   sessionStats: Accessor<SessionStats>;
   todosVisible: Accessor<boolean>;
+  debugLogVisible: Accessor<boolean>;
   interruptPending: Accessor<boolean>;
   exitPending: Accessor<boolean>;
   isCompacting: Accessor<boolean>;
@@ -136,6 +138,7 @@ interface AppContextValue {
 
   // UI state actions
   toggleTodos: () => void;
+  toggleDebugLog: () => void;
   setInterruptPending: (pending: boolean) => void;
   setExitPending: (pending: boolean) => void;
   setIsCompacting: (compacting: boolean) => void;
@@ -212,6 +215,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         availableModels: [],
         sessionStats: createInitialSessionStats(),
         todosVisible: true,
+        debugLogVisible: false,
         interruptPending: false,
         exitPending: false,
         isCompacting: false,
@@ -254,6 +258,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
       const availableModels = (): ProviderModel[] => store.availableModels;
       const sessionStats = (): SessionStats => store.sessionStats;
       const todosVisible = (): boolean => store.todosVisible;
+      const debugLogVisible = (): boolean => store.debugLogVisible;
       const interruptPending = (): boolean => store.interruptPending;
       const exitPending = (): boolean => store.exitPending;
       const isCompacting = (): boolean => store.isCompacting;
@@ -495,6 +500,10 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         setStore("todosVisible", !store.todosVisible);
       };
 
+      const toggleDebugLog = (): void => {
+        setStore("debugLogVisible", !store.debugLogVisible);
+      };
+
       const setInterruptPending = (pending: boolean): void => {
         setStore("interruptPending", pending);
       };
@@ -678,6 +687,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         availableModels,
         sessionStats,
         todosVisible,
+        debugLogVisible,
         interruptPending,
         exitPending,
         isCompacting,
@@ -746,6 +756,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
 
         // UI state actions
         toggleTodos,
+        toggleDebugLog,
         setInterruptPending,
         setExitPending,
         setIsCompacting,
@@ -799,6 +810,7 @@ export const appStore = {
       sessionStats: storeRef.sessionStats(),
       cascadeEnabled: storeRef.cascadeEnabled(),
       todosVisible: storeRef.todosVisible(),
+      debugLogVisible: storeRef.debugLogVisible(),
       interruptPending: storeRef.interruptPending(),
       exitPending: storeRef.exitPending(),
       isCompacting: storeRef.isCompacting(),
@@ -915,6 +927,11 @@ export const appStore = {
   toggleTodos: (): void => {
     if (!storeRef) throw new Error("AppStore not initialized");
     storeRef.toggleTodos();
+  },
+
+  toggleDebugLog: (): void => {
+    if (!storeRef) throw new Error("AppStore not initialized");
+    storeRef.toggleDebugLog();
   },
 
   setInterruptPending: (pending: boolean): void => {

@@ -14,7 +14,7 @@ interface ProviderOption {
 }
 
 interface ProviderSelectProps {
-  onSelect: (providerId: string) => void;
+  onSelect: (providerId: string) => Promise<void> | void;
   onClose: () => void;
   onToggleCascade?: () => void;
   isActive?: boolean;
@@ -97,8 +97,19 @@ export function ProviderSelect(props: ProviderSelectProps) {
     if (evt.name === "return") {
       const selected = providers()[selectedIndex()];
       if (selected && selected.status.available) {
-        props.onSelect(selected.id);
-        props.onClose();
+        // For Ollama, let the handler manage the mode transition to model_select
+        // For other providers, close after selection
+        const result = props.onSelect(selected.id);
+        if (result instanceof Promise) {
+          result.then(() => {
+            // Only close if not ollama (ollama opens model_select)
+            if (selected.id !== "ollama") {
+              props.onClose();
+            }
+          });
+        } else if (selected.id !== "ollama") {
+          props.onClose();
+        }
       }
       evt.preventDefault();
       return;

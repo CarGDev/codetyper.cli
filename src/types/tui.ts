@@ -25,7 +25,9 @@ export type AppMode =
   | "mcp_add"
   | "file_picker"
   | "provider_select"
-  | "learning_prompt";
+  | "learning_prompt"
+  | "help_menu"
+  | "help_detail";
 
 /** Screen mode for determining which view to show */
 export type ScreenMode = "home" | "session";

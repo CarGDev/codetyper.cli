@@ -256,7 +256,8 @@ function AppContent(props: AppProps) {
     allowed: boolean,
     scope?: PermissionScope,
   ): void => {
-    app.setMode("idle");
+    // Don't set mode here - the resolve callback in permissions.ts
+    // handles the mode transition to "tool_execution"
     props.onPermissionResponse(allowed, scope);
   };
 
@@ -265,7 +266,7 @@ function AppContent(props: AppProps) {
     scope?: LearningScope,
     editedContent?: string,
   ): void => {
-    app.setMode("idle");
+    // Don't set mode here - the resolve callback handles the mode transition
     props.onLearningResponse(save, scope, editedContent);
   };
 

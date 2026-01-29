@@ -47,6 +47,8 @@ export const MODE_DISPLAY_CONFIG: Record<string, ModeDisplayConfig> = {
   mode_select: { text: "Select Mode", color: "magenta" },
   provider_select: { text: "Select Provider", color: "magenta" },
   learning_prompt: { text: "Save Learning?", color: "cyan" },
+  help_menu: { text: "Help", color: "cyan" },
+  help_detail: { text: "Help Detail", color: "cyan" },
 } as const;
 
 export const DEFAULT_MODE_DISPLAY: ModeDisplayConfig = {
@@ -199,6 +201,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   },
   { name: "theme", description: "Change color theme", category: "settings" },
   { name: "mcp", description: "Manage MCP servers", category: "settings" },
+  { name: "logs", description: "Toggle debug log panel", category: "settings" },
 
   // Account commands
   {

@@ -35,6 +35,8 @@ export type AppMode =
   | "theme_select"
   | "mcp_select"
   | "file_picker"
+  | "help_menu"
+  | "help_detail"
   | "error";
 
 export type ScreenMode = "home" | "session";

@@ -23,6 +23,7 @@ import type {
   ChatCompletionResponse,
   StreamChunk,
 } from "@/types/providers";
+import { addDebugLog } from "@tui-solid/components/debug-log-panel";
 
 interface FormattedMessage {
   role: string;
@@ -267,6 +268,7 @@ export const chatStream = async (
   options: ChatCompletionOptions | undefined,
   onChunk: (chunk: StreamChunk) => void,
 ): Promise<void> => {
+  addDebugLog("api", `Copilot stream request: ${messages.length} messages`);
   const token = await refreshToken();
   const endpoint = getEndpoint(token);
   const originalModel =
@@ -274,6 +276,7 @@ export const chatStream = async (
       ? options.model
       : getDefaultModel();
   const body = buildRequestBody(messages, options, true);
+  addDebugLog("api", `Copilot model: ${body.model}`);
 
   let lastError: unknown;
   let switchedToUnlimited = false;

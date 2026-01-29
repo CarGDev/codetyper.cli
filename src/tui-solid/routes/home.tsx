@@ -7,6 +7,7 @@ import { CommandMenu } from "@tui-solid/components/command-menu";
 import { ModelSelect } from "@tui-solid/components/model-select";
 import { ThemeSelect } from "@tui-solid/components/theme-select";
 import { FilePicker } from "@tui-solid/components/file-picker";
+import { CenteredModal } from "@tui-solid/components/centered-modal";
 import { HOME_VARS } from "@constants/home";
 
 interface HomeProps {
@@ -67,7 +68,7 @@ export function Home(props: HomeProps) {
 
       <Switch>
         <Match when={app.mode() === "command_menu"}>
-          <box position="absolute" top={3} left={2}>
+          <CenteredModal>
             <CommandMenu
               onSelect={(command) => {
                 const lowerCommand = command.toLowerCase();
@@ -95,38 +96,38 @@ export function Home(props: HomeProps) {
               onCancel={() => app.closeCommandMenu()}
               isActive={app.mode() === "command_menu"}
             />
-          </box>
+          </CenteredModal>
         </Match>
 
         <Match when={app.mode() === "model_select"}>
-          <box position="absolute" top={3} left={2}>
+          <CenteredModal>
             <ModelSelect
               onSelect={(model) => props.onModelSelect?.(model)}
               onClose={handleModelClose}
               isActive={app.mode() === "model_select"}
             />
-          </box>
+          </CenteredModal>
         </Match>
 
         <Match when={app.mode() === "theme_select"}>
-          <box position="absolute" top={3} left={2}>
+          <CenteredModal>
             <ThemeSelect
               onSelect={(themeName) => props.onThemeSelect?.(themeName)}
               onClose={handleThemeClose}
               isActive={app.mode() === "theme_select"}
             />
-          </box>
+          </CenteredModal>
         </Match>
 
         <Match when={app.mode() === "file_picker"}>
-          <box position="absolute" top={3} left={2}>
+          <CenteredModal>
             <FilePicker
               files={props.files ?? []}
               onSelect={(file) => props.onFileSelect?.(file)}
               onClose={handleFilePickerClose}
               isActive={app.mode() === "file_picker"}
             />
-          </box>
+          </CenteredModal>
         </Match>
       </Switch>
     </box>

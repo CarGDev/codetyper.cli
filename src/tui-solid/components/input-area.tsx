@@ -92,7 +92,9 @@ export function InputArea(props: InputAreaProps) {
       mode === "mcp_add" ||
       mode === "file_picker" ||
       mode === "permission_prompt" ||
-      mode === "learning_prompt"
+      mode === "learning_prompt" ||
+      mode === "help_menu" ||
+      mode === "help_detail"
     );
   });
   const placeholder = () =>
