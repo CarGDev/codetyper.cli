@@ -8,6 +8,7 @@ export const bashParams = z.object({
   command: z.string().describe("The bash command to execute"),
   description: z
     .string()
+    .optional()
     .describe("A brief description of what this command does"),
   workdir: z
     .string()

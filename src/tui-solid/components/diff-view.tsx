@@ -56,9 +56,9 @@ function DiffLine(props: DiffLineProps) {
   const theme = useTheme();
 
   const lineColor = (): string => {
-    // Use white text for add/remove lines since they have colored backgrounds
+    // Use light text for add/remove lines since they have dark colored backgrounds
     if (props.line.type === "add" || props.line.type === "remove") {
-      return theme.colors.text;
+      return theme.colors.diffLineText;
     }
     const colorMap: Record<string, string> = {
       context: theme.colors.diffContext,
@@ -82,8 +82,8 @@ function DiffLine(props: DiffLineProps) {
   };
 
   const bgColor = (): string | undefined => {
-    if (props.line.type === "add") return theme.colors.bgAdded;
-    if (props.line.type === "remove") return theme.colors.bgRemoved;
+    if (props.line.type === "add") return theme.colors.diffLineBgAdded;
+    if (props.line.type === "remove") return theme.colors.diffLineBgRemoved;
     return undefined;
   };
 

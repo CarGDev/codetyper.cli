@@ -24,7 +24,10 @@ export type {
 export { initializeChatService } from "@services/chat-tui/initialize";
 
 // Re-export message handling
-export { handleMessage } from "@services/chat-tui/message-handler";
+export {
+  handleMessage,
+  abortCurrentOperation,
+} from "@services/chat-tui/message-handler";
 
 // Re-export command handling
 export { executeCommand } from "@services/chat-tui/commands";

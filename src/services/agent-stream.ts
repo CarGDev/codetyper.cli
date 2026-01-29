@@ -23,7 +23,7 @@ import type {
 import { chatStream } from "@providers/chat";
 import { getTool, getToolsForApi, refreshMCPTools } from "@tools/index";
 import { initializePermissions } from "@services/permissions";
-import { MAX_ITERATIONS } from "@constants/agent";
+import { MAX_ITERATIONS, MAX_CONSECUTIVE_ERRORS } from "@constants/agent";
 import { createStreamAccumulator } from "@/types/streaming";
 
 // =============================================================================
@@ -80,33 +80,47 @@ const processStreamChunk = (
     tool_call: () => {
       if (!chunk.toolCall) return;
 
-      const tc = chunk.toolCall;
-      const index = tc.id ? getToolCallIndex(tc.id, accumulator) : 0;
+      const tc = chunk.toolCall as {
+        index?: number;
+        id?: string;
+        function?: { name?: string; arguments?: string };
+      };
+
+      // OpenAI streaming format includes index in each chunk
+      // Use index from chunk if available, otherwise find by id or default to 0
+      const chunkIndex = tc.index ?? (tc.id ? getToolCallIndex(tc.id, accumulator) : 0);
 
       // Get or create partial tool call
-      let partial = accumulator.toolCalls.get(index);
-      if (!partial && tc.id) {
+      let partial = accumulator.toolCalls.get(chunkIndex);
+      if (!partial) {
+        // Create new partial - use id if provided, generate one otherwise
         partial = {
-          index,
-          id: tc.id,
+          index: chunkIndex,
+          id: tc.id ?? `tool_${chunkIndex}_${Date.now()}`,
           name: tc.function?.name ?? "",
           argumentsBuffer: "",
           isComplete: false,
         };
-        accumulator.toolCalls.set(index, partial);
+        accumulator.toolCalls.set(chunkIndex, partial);
+        if (tc.id) {
+          callbacks.onToolCallStart?.(partial);
+        }
+      }
+
+      // Update id if provided (first chunk has the real id)
+      if (tc.id && partial.id.startsWith("tool_")) {
+        partial.id = tc.id;
         callbacks.onToolCallStart?.(partial);
       }
 
-      if (partial) {
-        // Update name if provided
-        if (tc.function?.name) {
-          partial.name = tc.function.name;
-        }
+      // Update name if provided
+      if (tc.function?.name) {
+        partial.name = tc.function.name;
+      }
 
-        // Accumulate arguments
-        if (tc.function?.arguments) {
-          partial.argumentsBuffer += tc.function.arguments;
-        }
+      // Accumulate arguments
+      if (tc.function?.arguments) {
+        partial.argumentsBuffer += tc.function.arguments;
       }
     },
 
@@ -165,10 +179,20 @@ const getToolCallIndex = (
  */
 const finalizeToolCall = (partial: PartialToolCall): ToolCall => {
   let args: Record<string, unknown> = {};
-  try {
-    args = JSON.parse(partial.argumentsBuffer || "{}");
-  } catch {
-    args = {};
+  const rawBuffer = partial.argumentsBuffer || "";
+
+  if (!rawBuffer) {
+    args = { __debug_error: "Empty arguments buffer" };
+  } else {
+    try {
+      args = JSON.parse(rawBuffer);
+    } catch (e) {
+      args = {
+        __debug_error: "JSON parse failed",
+        __debug_buffer: rawBuffer.substring(0, 200),
+        __debug_parseError: e instanceof Error ? e.message : String(e),
+      };
+    }
   }
 
   return {
@@ -210,12 +234,13 @@ const executeTool = async (
     const validatedArgs = tool.parameters.parse(toolCall.arguments);
     return await tool.execute(validatedArgs, ctx);
   } catch (error: unknown) {
+    const receivedArgs = JSON.stringify(toolCall.arguments);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       success: false,
-      title: "Tool error",
+      title: "Tool validation error",
       output: "",
-      error: errorMessage,
+      error: `${toolCall.name}: ${errorMessage}\nReceived: ${receivedArgs}`,
     };
   }
 };
@@ -296,6 +321,7 @@ export const runAgentLoopStream = async (
   const allToolCalls: { call: ToolCall; result: ToolResult }[] = [];
   let iterations = 0;
   let finalResponse = "";
+  let consecutiveErrors = 0;
 
   // Initialize
   await initializePermissions();
@@ -331,6 +357,9 @@ export const runAgentLoopStream = async (
           state.options.onText?.(response.content);
         }
 
+        // Track if all tool calls in this iteration failed
+        let allFailed = true;
+
         // Execute each tool call
         for (const toolCall of response.toolCalls) {
           state.options.onToolCall?.(toolCall);
@@ -339,6 +368,12 @@ export const runAgentLoopStream = async (
           allToolCalls.push({ call: toolCall, result });
 
           state.options.onToolResult?.(toolCall.id, result);
+
+          // Track success/failure
+          if (result.success) {
+            allFailed = false;
+            consecutiveErrors = 0;
+          }
 
           // Add tool result message
           const toolResultMessage: ToolResultMessage = {
@@ -349,6 +384,21 @@ export const runAgentLoopStream = async (
               : result.output,
           };
           agentMessages.push(toolResultMessage);
+        }
+
+        // Check for repeated failures
+        if (allFailed) {
+          consecutiveErrors++;
+          if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+            const errorMsg = `Stopping: ${consecutiveErrors} consecutive tool errors. Check model compatibility with tool calling.`;
+            state.options.onError?.(errorMsg);
+            return {
+              success: false,
+              finalResponse: errorMsg,
+              iterations,
+              toolCalls: allToolCalls,
+            };
+          }
         }
       } else {
         // No tool calls - this is the final response

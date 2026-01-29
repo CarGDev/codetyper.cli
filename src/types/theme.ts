@@ -44,6 +44,10 @@ export interface ThemeColors {
   diffContext: string;
   diffHeader: string;
   diffHunk: string;
+  // Diff line backgrounds (darker/muted for readability)
+  diffLineBgAdded: string;
+  diffLineBgRemoved: string;
+  diffLineText: string;
 
   // Role colors
   roleUser: string;

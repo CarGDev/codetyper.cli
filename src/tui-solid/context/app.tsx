@@ -76,6 +76,9 @@ interface AppContextValue {
   exitPending: Accessor<boolean>;
   isCompacting: Accessor<boolean>;
   streamingLog: Accessor<StreamingLogState>;
+  streamingLogId: Accessor<string | null>;
+  streamingLogContent: Accessor<string>;
+  streamingLogIsActive: Accessor<boolean>;
   suggestions: Accessor<SuggestionState>;
   cascadeEnabled: Accessor<boolean>;
 
@@ -263,6 +266,10 @@ export const { provider: AppStoreProvider, use: useAppStore } =
       const exitPending = (): boolean => store.exitPending;
       const isCompacting = (): boolean => store.isCompacting;
       const streamingLog = (): StreamingLogState => store.streamingLog;
+      // Individual property accessors for fine-grained reactivity
+      const streamingLogId = (): string | null => store.streamingLog.logId;
+      const streamingLogContent = (): string => store.streamingLog.content;
+      const streamingLogIsActive = (): boolean => store.streamingLog.isStreaming;
       const suggestions = (): SuggestionState => store.suggestions;
       const cascadeEnabled = (): boolean => store.cascadeEnabled;
 
@@ -532,34 +539,30 @@ export const { provider: AppStoreProvider, use: useAppStore } =
               s.logs.push(entry);
             }),
           );
-          setStore("streamingLog", {
-            logId,
-            content: "",
-            isStreaming: true,
-          });
+          // Use path-based updates to ensure proper proxy reactivity
+          setStore("streamingLog", "logId", logId);
+          setStore("streamingLog", "content", "");
+          setStore("streamingLog", "isStreaming", true);
         });
         return logId;
       };
 
       const appendStreamContent = (content: string): void => {
-        if (!store.streamingLog.logId || !store.streamingLog.isStreaming) {
+        const logId = store.streamingLog.logId;
+        const isCurrentlyStreaming = store.streamingLog.isStreaming;
+        if (!logId || !isCurrentlyStreaming) {
           return;
         }
 
         const newContent = store.streamingLog.content + content;
+        const logIndex = store.logs.findIndex((l) => l.id === logId);
+
         batch(() => {
-          setStore("streamingLog", {
-            ...store.streamingLog,
-            content: newContent,
-          });
-          setStore(
-            produce((s) => {
-              const log = s.logs.find((l) => l.id === store.streamingLog.logId);
-              if (log) {
-                log.content = newContent;
-              }
-            }),
-          );
+          // Use path-based updates for proper reactivity tracking
+          setStore("streamingLog", "content", newContent);
+          if (logIndex !== -1) {
+            setStore("logs", logIndex, "content", newContent);
+          }
         });
       };
 
@@ -569,21 +572,19 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         }
 
         const logId = store.streamingLog.logId;
+        const logIndex = store.logs.findIndex((l) => l.id === logId);
+
         batch(() => {
           setStore("streamingLog", createInitialStreamingState());
-          setStore(
-            produce((s) => {
-              const log = s.logs.find((l) => l.id === logId);
-              if (log) {
-                log.type = "assistant";
-                log.metadata = {
-                  ...log.metadata,
-                  isStreaming: false,
-                  streamComplete: true,
-                };
-              }
-            }),
-          );
+          if (logIndex !== -1) {
+            const currentMetadata = store.logs[logIndex].metadata ?? {};
+            setStore("logs", logIndex, "type", "assistant");
+            setStore("logs", logIndex, "metadata", {
+              ...currentMetadata,
+              isStreaming: false,
+              streamComplete: true,
+            });
+          }
         });
       };
 
@@ -692,6 +693,9 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         exitPending,
         isCompacting,
         streamingLog,
+        streamingLogId,
+        streamingLogContent,
+        streamingLogIsActive,
         suggestions,
         cascadeEnabled,
 

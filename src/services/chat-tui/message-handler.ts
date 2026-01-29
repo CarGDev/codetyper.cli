@@ -43,7 +43,7 @@ import {
   checkOllamaAvailability,
   checkCopilotAvailability,
 } from "@services/cascading-provider";
-import { chat } from "@providers/chat";
+import { chat, getDefaultModel } from "@providers/chat";
 import { AUDIT_SYSTEM_PROMPT, createAuditPrompt, parseAuditResponse } from "@prompts/audit-prompt";
 import { PROVIDER_IDS } from "@constants/provider-quality";
 import { appStore } from "@tui/index";
@@ -55,6 +55,12 @@ import type {
   ToolCallInfo,
 } from "@/types/chat-service";
 import { addDebugLog } from "@tui-solid/components/debug-log-panel";
+import { FILE_MODIFYING_TOOLS } from "@constants/tools";
+import type { StreamCallbacksWithState } from "@interfaces/StreamCallbacksWithState";
+import {
+  detectCommand,
+  executeDetectedCommand,
+} from "@services/command-detection";
 
 // Track last response for feedback learning
 let lastResponseContext: {
@@ -63,7 +69,25 @@ let lastResponseContext: {
   response: string;
 } | null = null;
 
-const FILE_MODIFYING_TOOLS = ["write", "edit"];
+// Track current running agent for abort capability
+let currentAgent: { stop: () => void } | null = null;
+
+/**
+ * Abort the currently running agent operation
+ * @returns true if an operation was aborted, false if nothing was running
+ */
+export const abortCurrentOperation = (): boolean => {
+  if (currentAgent) {
+    currentAgent.stop();
+    currentAgent = null;
+    appStore.cancelStreaming();
+    appStore.stopThinking();
+    appStore.setMode("idle");
+    addDebugLog("state", "Operation aborted by user");
+    return true;
+  }
+  return false;
+};
 
 const createToolCallHandler =
   (
@@ -72,7 +96,7 @@ const createToolCallHandler =
   ) =>
   (call: { id: string; name: string; arguments?: Record<string, unknown> }) => {
     const args = call.arguments;
-    if (FILE_MODIFYING_TOOLS.includes(call.name) && args?.path) {
+    if ((FILE_MODIFYING_TOOLS as readonly string[]).includes(call.name) && args?.path) {
       toolCallRef.current = { name: call.name, path: String(args.path) };
     } else {
       toolCallRef.current = { name: call.name };
@@ -117,10 +141,10 @@ const createToolResultHandler =
 /**
  * Create streaming callbacks for TUI integration
  */
-const createStreamCallbacks = (): StreamCallbacks => {
+const createStreamCallbacks = (): StreamCallbacksWithState => {
   let chunkCount = 0;
 
-  return {
+  const callbacks: StreamCallbacks = {
     onContentChunk: (content: string) => {
       chunkCount++;
       addDebugLog("stream", `Chunk #${chunkCount}: "${content.substring(0, 30)}${content.length > 30 ? "..." : ""}"`);
@@ -155,8 +179,10 @@ const createStreamCallbacks = (): StreamCallbacks => {
     },
 
     onComplete: () => {
-      addDebugLog("stream", `Stream complete (${chunkCount} chunks)`);
-      appStore.completeStreaming();
+      // Note: Don't call completeStreaming() here!
+      // The agent loop may have multiple iterations (tool calls + final response)
+      // Streaming will be completed manually after the entire agent finishes
+      addDebugLog("stream", `Stream iteration done (${chunkCount} chunks total)`);
     },
 
     onError: (error: string) => {
@@ -167,6 +193,11 @@ const createStreamCallbacks = (): StreamCallbacks => {
         content: error,
       });
     },
+  };
+
+  return {
+    callbacks,
+    hasReceivedContent: () => chunkCount > 0,
   };
 };
 
@@ -244,6 +275,50 @@ export const handleMessage = async (
 ): Promise<void> => {
   // Check for feedback on previous response
   await checkUserFeedback(message, callbacks);
+
+  // Detect explicit command requests and execute directly
+  const detected = detectCommand(message);
+  if (detected.detected && detected.command) {
+    addDebugLog("info", `Detected command: ${detected.command}`);
+
+    // Show the user's request
+    appStore.addLog({
+      type: "user",
+      content: message,
+    });
+
+    // Show what we're running
+    appStore.addLog({
+      type: "tool",
+      content: detected.command,
+      metadata: {
+        toolName: "bash",
+        toolStatus: "running",
+        toolDescription: `Running: ${detected.command}`,
+      },
+    });
+
+    appStore.setMode("tool_execution");
+    const result = await executeDetectedCommand(detected.command, process.cwd());
+    appStore.setMode("idle");
+
+    // Show result
+    if (result.success && result.output) {
+      appStore.addLog({
+        type: "assistant",
+        content: result.output,
+      });
+    } else if (!result.success) {
+      appStore.addLog({
+        type: "error",
+        content: result.error || "Command failed",
+      });
+    }
+
+    // Save to session (for persistence only, not UI)
+    await saveSession();
+    return;
+  }
 
   // Get interaction mode and cascade setting from app store
   const { interactionMode, cascadeEnabled } = appStore.getState();
@@ -397,23 +472,34 @@ export const handleMessage = async (
     }
   }
 
+  // Determine the correct model for the provider
+  // If provider changed, use the provider's default model instead of state.model
+  const effectiveModel =
+    effectiveProvider === state.provider
+      ? state.model
+      : getDefaultModel(effectiveProvider);
+
   // Start streaming UI
-  addDebugLog("state", `Starting request: provider=${effectiveProvider}, model=${state.model}`);
+  addDebugLog("state", `Starting request: provider=${effectiveProvider}, model=${effectiveModel}`);
   addDebugLog("state", `Mode: ${appStore.getState().interactionMode}, Cascade: ${cascadeEnabled}`);
   appStore.setMode("thinking");
   appStore.startThinking();
   appStore.startStreaming();
   addDebugLog("state", "Streaming started");
 
-  const streamCallbacks = createStreamCallbacks();
+  const streamState = createStreamCallbacks();
   const agent = createStreamingAgent(
     process.cwd(),
     {
       provider: effectiveProvider,
-      model: state.model,
+      model: effectiveModel,
       verbose: state.verbose,
       autoApprove: state.autoApprove,
       chatMode: isReadOnlyMode,
+      onText: (text: string) => {
+        addDebugLog("info", `onText callback: "${text.substring(0, 50)}..."`);
+        appStore.appendStreamContent(text);
+      },
       onToolCall: createToolCallHandler(callbacks, toolCallRef),
       onToolResult: createToolResultHandler(callbacks, toolCallRef),
       onError: (error) => {
@@ -423,8 +509,11 @@ export const handleMessage = async (
         callbacks.onLog("system", warning);
       },
     },
-    streamCallbacks,
+    streamState.callbacks,
   );
+
+  // Store agent reference for abort capability
+  currentAgent = agent;
 
   try {
     addDebugLog("api", `Agent.run() started with ${state.messages.length} messages`);
@@ -471,14 +560,18 @@ export const handleMessage = async (
 
       // Check if streaming content was received - if not, add the response as a log
       // This handles cases where streaming didn't work or content was all in final response
-      const streamingState = appStore.getState().streamingLog;
-      if (!streamingState.content && finalResponse) {
+      if (!streamState.hasReceivedContent() && finalResponse) {
+        addDebugLog("info", "No streaming content received, adding fallback log");
         // Streaming didn't receive content, manually add the response
         appStore.cancelStreaming(); // Remove empty streaming log
         appStore.addLog({
           type: "assistant",
           content: finalResponse,
         });
+      } else {
+        // Streaming received content - finalize the streaming log
+        addDebugLog("info", "Completing streaming with received content");
+        appStore.completeStreaming();
       }
 
       addMessage("user", message);
@@ -501,5 +594,8 @@ export const handleMessage = async (
     appStore.cancelStreaming();
     appStore.stopThinking();
     callbacks.onLog("error", String(error));
+  } finally {
+    // Clear agent reference when done
+    currentAgent = null;
   }
 };

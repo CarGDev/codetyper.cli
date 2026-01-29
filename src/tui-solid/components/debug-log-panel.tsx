@@ -1,4 +1,4 @@
-import { createMemo, For, createSignal, onMount, onCleanup } from "solid-js";
+import { For, createSignal, onMount, onCleanup } from "solid-js";
 import { useKeyboard } from "@opentui/solid";
 import { TextAttributes } from "@opentui/core";
 import type { ScrollBoxRenderable } from "@opentui/core";
@@ -10,7 +10,7 @@ const SCROLL_LINES = 2;
 interface DebugEntry {
   id: string;
   timestamp: number;
-  type: "api" | "stream" | "tool" | "state" | "error" | "info";
+  type: "api" | "stream" | "tool" | "state" | "error" | "info" | "render";
   message: string;
 }
 
@@ -80,6 +80,7 @@ export function DebugLogPanel() {
       state: theme.colors.accent,
       error: theme.colors.error,
       info: theme.colors.textDim,
+      render: theme.colors.primary,
     };
     return colorMap[type];
   };
@@ -92,6 +93,7 @@ export function DebugLogPanel() {
       state: "STA",
       error: "ERR",
       info: "INF",
+      render: "RND",
     };
     return labelMap[type];
   };

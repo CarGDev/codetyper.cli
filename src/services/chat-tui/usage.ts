@@ -5,15 +5,12 @@
 import { usageStore } from "@stores/usage-store";
 import { getUserInfo } from "@providers/copilot/credentials";
 import { getCopilotUsage } from "@providers/copilot/usage";
+import { PROGRESS_BAR } from "@constants/ui";
 import type {
   ChatServiceState,
   ChatServiceCallbacks,
 } from "@/types/chat-service";
 import type { CopilotQuotaDetail } from "@/types/copilot-usage";
-
-const BAR_WIDTH = 40;
-const FILLED_CHAR = "█";
-const EMPTY_CHAR = "░";
 
 const formatNumber = (num: number): string => {
   return num.toLocaleString();
@@ -35,9 +32,12 @@ const formatDuration = (ms: number): string => {
 
 const renderBar = (percent: number): string => {
   const clampedPercent = Math.max(0, Math.min(100, percent));
-  const filledWidth = Math.round((clampedPercent / 100) * BAR_WIDTH);
-  const emptyWidth = BAR_WIDTH - filledWidth;
-  return FILLED_CHAR.repeat(filledWidth) + EMPTY_CHAR.repeat(emptyWidth);
+  const filledWidth = Math.round((clampedPercent / 100) * PROGRESS_BAR.WIDTH);
+  const emptyWidth = PROGRESS_BAR.WIDTH - filledWidth;
+  return (
+    PROGRESS_BAR.FILLED_CHAR.repeat(filledWidth) +
+    PROGRESS_BAR.EMPTY_CHAR.repeat(emptyWidth)
+  );
 };
 
 const formatQuotaBar = (
@@ -55,7 +55,7 @@ const formatQuotaBar = (
 
   if (quota.unlimited) {
     lines.push(name);
-    lines.push(FILLED_CHAR.repeat(BAR_WIDTH) + " Unlimited");
+    lines.push(PROGRESS_BAR.FILLED_CHAR.repeat(PROGRESS_BAR.WIDTH) + " Unlimited");
     return lines;
   }
 

@@ -245,6 +245,7 @@ const executeStream = (
 
             if (delta?.tool_calls) {
               for (const tc of delta.tool_calls) {
+                addDebugLog("api", `Tool call chunk: ${JSON.stringify(tc)}`);
                 onChunk({ type: "tool_call", toolCall: tc });
               }
             }

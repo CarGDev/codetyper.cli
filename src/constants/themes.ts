@@ -39,6 +39,9 @@ const DEFAULT_COLORS: ThemeColors = {
   diffContext: "#808080",
   diffHeader: "#ffffff",
   diffHunk: "#00ffff",
+  diffLineBgAdded: "#1a3d1a",
+  diffLineBgRemoved: "#3d1a1a",
+  diffLineText: "#ffffff",
 
   roleUser: "#00ffff",
   roleAssistant: "#00ff00",
@@ -92,6 +95,9 @@ const DRACULA_COLORS: ThemeColors = {
   diffContext: "#6272a4",
   diffHeader: "#f8f8f2",
   diffHunk: "#8be9fd",
+  diffLineBgAdded: "#1a3d2a",
+  diffLineBgRemoved: "#3d1a2a",
+  diffLineText: "#f8f8f2",
 
   roleUser: "#8be9fd",
   roleAssistant: "#50fa7b",
@@ -145,6 +151,9 @@ const NORD_COLORS: ThemeColors = {
   diffContext: "#4c566a",
   diffHeader: "#eceff4",
   diffHunk: "#81a1c1",
+  diffLineBgAdded: "#2e3d35",
+  diffLineBgRemoved: "#3d2e35",
+  diffLineText: "#eceff4",
 
   roleUser: "#88c0d0",
   roleAssistant: "#a3be8c",
@@ -198,6 +207,9 @@ const TOKYO_NIGHT_COLORS: ThemeColors = {
   diffContext: "#565f89",
   diffHeader: "#c0caf5",
   diffHunk: "#7dcfff",
+  diffLineBgAdded: "#1a2d1a",
+  diffLineBgRemoved: "#2d1a2a",
+  diffLineText: "#c0caf5",
 
   roleUser: "#7dcfff",
   roleAssistant: "#9ece6a",
@@ -251,6 +263,9 @@ const GRUVBOX_COLORS: ThemeColors = {
   diffContext: "#665c54",
   diffHeader: "#ebdbb2",
   diffHunk: "#8ec07c",
+  diffLineBgAdded: "#3d3a1a",
+  diffLineBgRemoved: "#3d1a1a",
+  diffLineText: "#ebdbb2",
 
   roleUser: "#83a598",
   roleAssistant: "#b8bb26",
@@ -304,6 +319,9 @@ const MONOKAI_COLORS: ThemeColors = {
   diffContext: "#75715e",
   diffHeader: "#f8f8f2",
   diffHunk: "#66d9ef",
+  diffLineBgAdded: "#2d3d1a",
+  diffLineBgRemoved: "#3d1a2a",
+  diffLineText: "#f8f8f2",
 
   roleUser: "#66d9ef",
   roleAssistant: "#a6e22e",
@@ -357,6 +375,9 @@ const CATPPUCCIN_COLORS: ThemeColors = {
   diffContext: "#6c7086",
   diffHeader: "#cdd6f4",
   diffHunk: "#89dceb",
+  diffLineBgAdded: "#1a3d2a",
+  diffLineBgRemoved: "#3d1a2a",
+  diffLineText: "#cdd6f4",
 
   roleUser: "#89dceb",
   roleAssistant: "#a6e3a1",
@@ -410,6 +431,9 @@ const ONE_DARK_COLORS: ThemeColors = {
   diffContext: "#5c6370",
   diffHeader: "#abb2bf",
   diffHunk: "#56b6c2",
+  diffLineBgAdded: "#2a3d2a",
+  diffLineBgRemoved: "#3d2a2a",
+  diffLineText: "#abb2bf",
 
   roleUser: "#56b6c2",
   roleAssistant: "#98c379",
@@ -463,6 +487,9 @@ const SOLARIZED_DARK_COLORS: ThemeColors = {
   diffContext: "#586e75",
   diffHeader: "#93a1a1",
   diffHunk: "#2aa198",
+  diffLineBgAdded: "#0a2a1a",
+  diffLineBgRemoved: "#2a0a1a",
+  diffLineText: "#93a1a1",
 
   roleUser: "#2aa198",
   roleAssistant: "#859900",
@@ -516,6 +543,9 @@ const GITHUB_DARK_COLORS: ThemeColors = {
   diffContext: "#8b949e",
   diffHeader: "#c9d1d9",
   diffHunk: "#58a6ff",
+  diffLineBgAdded: "#0d2818",
+  diffLineBgRemoved: "#2d0d0d",
+  diffLineText: "#c9d1d9",
 
   roleUser: "#58a6ff",
   roleAssistant: "#3fb950",
@@ -569,6 +599,9 @@ const ROSE_PINE_COLORS: ThemeColors = {
   diffContext: "#6e6a86",
   diffHeader: "#e0def4",
   diffHunk: "#9ccfd8",
+  diffLineBgAdded: "#1a2a3d",
+  diffLineBgRemoved: "#3d1a2a",
+  diffLineText: "#e0def4",
 
   roleUser: "#9ccfd8",
   roleAssistant: "#31748f",
@@ -622,6 +655,9 @@ const KANAGAWA_COLORS: ThemeColors = {
   diffContext: "#727169",
   diffHeader: "#dcd7ba",
   diffHunk: "#7fb4ca",
+  diffLineBgAdded: "#2a3d2a",
+  diffLineBgRemoved: "#3d2a2a",
+  diffLineText: "#dcd7ba",
 
   roleUser: "#7fb4ca",
   roleAssistant: "#98bb6c",
@@ -675,6 +711,9 @@ const AYU_DARK_COLORS: ThemeColors = {
   diffContext: "#636e78",
   diffHeader: "#bfbdb6",
   diffHunk: "#59c2ff",
+  diffLineBgAdded: "#1a3d1a",
+  diffLineBgRemoved: "#3d1a1a",
+  diffLineText: "#bfbdb6",
 
   roleUser: "#59c2ff",
   roleAssistant: "#7fd962",
@@ -728,6 +767,9 @@ const CARGDEV_CYBERPUNK_COLORS: ThemeColors = {
   diffContext: "#666666",
   diffHeader: "#f8f8f2",
   diffHunk: "#8be9fd",
+  diffLineBgAdded: "#0d2a1a",
+  diffLineBgRemoved: "#2a0d1a",
+  diffLineText: "#f8f8f2",
 
   roleUser: "#8be9fd",
   roleAssistant: "#50fa7b",

@@ -18,6 +18,7 @@ export const OLLAMA_ENDPOINTS = {
 
 export const OLLAMA_TIMEOUTS = {
   VALIDATION: 5000,
+  TAGS: 10000,
   CHAT: 120000,
 } as const;
 

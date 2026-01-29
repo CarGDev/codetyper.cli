@@ -7,6 +7,7 @@
 import type { Message } from "@/types/providers";
 import type { AgentOptions } from "@interfaces/AgentOptions";
 import type { AgentResult } from "@interfaces/AgentResult";
+import type { StreamingChatOptions } from "@interfaces/StreamingChatOptions";
 import type {
   StreamCallbacks,
   PartialToolCall,
@@ -16,13 +17,8 @@ import type { ToolCall, ToolResult } from "@/types/tools";
 import { createStreamingAgent } from "@services/agent-stream";
 import { appStore } from "@tui/index";
 
-// =============================================================================
-// Types
-// =============================================================================
-
-export interface StreamingChatOptions extends AgentOptions {
-  onModelSwitch?: (info: ModelSwitchInfo) => void;
-}
+// Re-export for convenience
+export type { StreamingChatOptions } from "@interfaces/StreamingChatOptions";
 
 // =============================================================================
 // TUI Streaming Callbacks

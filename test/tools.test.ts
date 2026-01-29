@@ -36,14 +36,14 @@ describe('Tools', () => {
 
   describe('BashTool', () => {
     it('should execute simple command', async () => {
-      const result = await bashTool.execute('echo "Hello World"');
+      const result = await bashTool.execute({ command: 'echo "Hello World"', description: 'Test command' }, { autoApprove: true, abort: new AbortController() });
       expect(result.success).toBe(true);
       expect(result.output).toContain('Hello World');
     });
 
     it('should check if command exists', async () => {
-      const exists = await bashTool.commandExists('node');
-      expect(exists).toBe(true);
+      const exists = await bashTool.execute({ command: 'command -v node', description: 'Check if node exists' }, { autoApprove: true, abort: new AbortController() });
+      expect(exists.success).toBe(true);
     });
   });
 });

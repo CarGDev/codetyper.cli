@@ -62,7 +62,7 @@ export interface FunctionDefinition {
 
 export interface BashParams {
   command: string;
-  description: string;
+  description?: string;
   workdir?: string;
   timeout?: number;
 }

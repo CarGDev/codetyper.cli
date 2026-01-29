@@ -94,11 +94,9 @@ const renderAddLine = (
         </Text>
       </>
     )}
-    <Text backgroundColor="greenBright" color="black">
-      +
+    <Text backgroundColor="#1a3d1a" color="white">
+      +{line.content}
     </Text>
-    <Text color="green"> </Text>
-    <HighlightedCode content={line.content} language={ctx.language} />
   </Box>
 );
 
@@ -123,11 +121,9 @@ const renderRemoveLine = (
         </Text>
       </>
     )}
-    <Text backgroundColor="redBright" color="black">
-      -
+    <Text backgroundColor="#3d1a1a" color="white">
+      -{line.content}
     </Text>
-    <Text color="red"> </Text>
-    <HighlightedCode content={line.content} language={ctx.language} />
   </Box>
 );
 

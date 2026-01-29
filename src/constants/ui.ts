@@ -4,10 +4,11 @@
 
 // Keyboard hints displayed in status bar
 export const STATUS_HINTS = {
-  INTERRUPT: "ctrl+c to interrupt",
-  INTERRUPT_CONFIRM: "ctrl+c again to confirm",
+  INTERRUPT: "esc to interrupt",
+  INTERRUPT_CONFIRM: "ctrl+c again to exit",
   TOGGLE_TODOS: "ctrl+t to hide todos",
   TOGGLE_TODOS_SHOW: "ctrl+t to show todos",
+  TOGGLE_PLAN: "ctrl+p to toggle plan",
 } as const;
 
 // Time formatting
@@ -38,4 +39,11 @@ export const TERMINAL_SEQUENCES = {
   CURSOR_HOME: "\x1b[H",
   HIDE_CURSOR: "\x1b[?25l",
   SHOW_CURSOR: "\x1b[?25h",
+} as const;
+
+// Progress bar display
+export const PROGRESS_BAR = {
+  WIDTH: 40,
+  FILLED_CHAR: "█",
+  EMPTY_CHAR: "░",
 } as const;

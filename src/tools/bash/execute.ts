@@ -111,10 +111,11 @@ const executeCommand = (
 ): Promise<ToolResult> => {
   const {
     command,
-    description,
     workdir,
     timeout = BASH_DEFAULTS.TIMEOUT,
   } = args;
+  // Provide default description if not specified
+  const description = args.description ?? `Running: ${command.substring(0, 50)}`;
   const cwd = workdir ?? ctx.workingDir;
 
   updateRunningStatus(ctx, description);
@@ -165,7 +166,20 @@ export const executeBash = async (
   args: BashParams,
   ctx: ToolContext,
 ): Promise<ToolResult> => {
-  const { command, description } = args;
+  const { command } = args;
+
+  // Guard against undefined command (can happen with malformed tool calls)
+  if (!command) {
+    return {
+      success: false,
+      title: "Invalid command",
+      output: "",
+      error: "Command is required but was not provided",
+    };
+  }
+
+  // Provide default description if not specified
+  const description = args.description ?? `Running: ${command.substring(0, 50)}`;
 
   const allowed = await checkPermission(
     command,

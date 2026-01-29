@@ -9,6 +9,7 @@ import {
 } from "solid-js";
 import { batch } from "solid-js";
 import { getFiles } from "@services/file-picker/files";
+import { abortCurrentOperation } from "@services/chat-tui-service";
 import versionData from "@/version.json";
 import {
   ExitProvider,
@@ -90,7 +91,7 @@ function ErrorFallback(props: { error: Error }) {
         {props.error.message}
       </text>
       <text fg={theme.colors.textDim} marginTop={2}>
-        Press Ctrl+C to exit
+        Press Ctrl+C twice to exit
       </text>
     </box>
   );
@@ -157,16 +158,29 @@ function AppContent(props: AppProps) {
   }
 
   useKeyboard((evt) => {
+    // ESC aborts current operation
+    if (evt.name === "escape") {
+      const aborted = abortCurrentOperation();
+      if (aborted) {
+        toast.info("Operation cancelled");
+        evt.preventDefault();
+        return;
+      }
+    }
+
+    // Ctrl+C exits the application
     if (evt.ctrl && evt.name === "c") {
       if (app.interruptPending()) {
         exit.exit(0);
-      } else {
-        app.setInterruptPending(true);
-        toast.warning("Press Ctrl+C again to exit");
-        setTimeout(() => {
-          app.setInterruptPending(false);
-        }, 2000);
+        evt.preventDefault();
+        return;
       }
+
+      app.setInterruptPending(true);
+      toast.warning("Press Ctrl+C again to exit");
+      setTimeout(() => {
+        app.setInterruptPending(false);
+      }, 2000);
       evt.preventDefault();
       return;
     }
