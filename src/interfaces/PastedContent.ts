@@ -2,6 +2,8 @@
  * Interface for tracking pasted content with virtual text
  */
 
+import type { PastedImage } from "@/types/image";
+
 export interface PastedContent {
   /** Unique identifier for the pasted block */
   id: string;
@@ -22,9 +24,12 @@ export interface PasteState {
   pastedBlocks: Map<string, PastedContent>;
   /** Counter for generating unique IDs */
   pasteCounter: number;
+  /** List of pasted images */
+  pastedImages: PastedImage[];
 }
 
 export const createInitialPasteState = (): PasteState => ({
   pastedBlocks: new Map(),
   pasteCounter: 0,
+  pastedImages: [],
 });

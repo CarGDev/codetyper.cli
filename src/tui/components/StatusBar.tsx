@@ -18,7 +18,7 @@ import {
   type ModeDisplayConfig,
 } from "@constants/tui-components";
 import type { AppMode, ToolCall } from "@/types/tui";
-import { useTodoStore } from "@stores/todo-store";
+import { useTodoStore } from "@tui/hooks/useTodoStore";
 
 const formatDuration = (ms: number): string => {
   const totalSeconds = Math.floor(ms / TIME_UNITS.SECOND);

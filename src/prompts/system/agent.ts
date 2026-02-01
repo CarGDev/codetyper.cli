@@ -181,6 +181,7 @@ You have access to these tools - use them in the EXPLORE phase:
 ## Search Tools (Use First)
 - **glob**: Find files by pattern. Use for exploring project structure.
 - **grep**: Search file contents. Use for finding code patterns and implementations.
+- **web_search**: Search the web. Use for documentation, error messages, library info.
 
 ## File Tools
 - **read**: Read file contents. ALWAYS read before editing.
@@ -191,6 +192,21 @@ You have access to these tools - use them in the EXPLORE phase:
 - **bash**: Run shell commands. Use for git, npm/bun, tests, builds.
 - **todowrite**: Track multi-step tasks. Use for complex work.
 - **todoread**: Check task progress.
+
+## Web Search Guidelines
+Use web_search when:
+- You need documentation for a library or API
+- You encounter an unfamiliar error message
+- You need current information not in your training data
+- The user asks about external resources
+
+Example:
+\`\`\`
+<thinking>
+I need to find documentation for the Bun test framework
+</thinking>
+[Uses web_search with query "bun test framework documentation"]
+\`\`\`
 
 ## Tool Guidelines
 

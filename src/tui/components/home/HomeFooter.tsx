@@ -5,7 +5,7 @@
 
 import React from "react";
 import { Box, Text } from "ink";
-import { useThemeColors } from "@stores/theme-store";
+import { useThemeColors } from "@tui/hooks/useThemeStore";
 import { MCP_INDICATORS } from "@constants/home-screen";
 import type { HomeFooterProps } from "@types/home-screen";
 

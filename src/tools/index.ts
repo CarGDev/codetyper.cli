@@ -11,6 +11,8 @@ export { todoWriteTool } from "@tools/todo-write";
 export { todoReadTool } from "@tools/todo-read";
 export { globToolDefinition } from "@tools/glob/definition";
 export { grepToolDefinition } from "@tools/grep/definition";
+export { webSearchTool } from "@tools/web-search";
+export { lspTool } from "@tools/lsp";
 
 import type { ToolDefinition, FunctionDefinition } from "@tools/types";
 import { toolToFunction } from "@tools/types";
@@ -22,11 +24,18 @@ import { todoWriteTool } from "@tools/todo-write";
 import { todoReadTool } from "@tools/todo-read";
 import { globToolDefinition } from "@tools/glob/definition";
 import { grepToolDefinition } from "@tools/grep/definition";
+import { webSearchTool } from "@tools/web-search";
+import { lspTool } from "@tools/lsp";
 import {
   isMCPTool,
   executeMCPTool,
   getMCPToolsForApi,
 } from "@services/mcp/tools";
+import {
+  isPluginTool,
+  getPluginTool,
+  getPluginToolsForApi,
+} from "@services/plugin-service";
 import { z } from "zod";
 
 // All available tools
@@ -39,6 +48,8 @@ export const tools: ToolDefinition[] = [
   grepToolDefinition,
   todoWriteTool,
   todoReadTool,
+  webSearchTool,
+  lspTool,
 ];
 
 // Tools that are read-only (allowed in chat mode)
@@ -47,6 +58,8 @@ const READ_ONLY_TOOLS = new Set([
   "glob",
   "grep",
   "todo_read",
+  "web_search",
+  "lsp",
 ]);
 
 // Map of tools by name
@@ -58,13 +71,18 @@ export const toolMap: Map<string, ToolDefinition> = new Map(
 let mcpToolsCache: Awaited<ReturnType<typeof getMCPToolsForApi>> | null = null;
 
 /**
- * Get tool by name (including MCP tools)
+ * Get tool by name (including MCP tools and plugin tools)
  */
 export function getTool(name: string): ToolDefinition | undefined {
   // Check built-in tools first
   const builtInTool = toolMap.get(name);
   if (builtInTool) {
     return builtInTool;
+  }
+
+  // Check if it's a plugin tool
+  if (isPluginTool(name)) {
+    return getPluginTool(name);
   }
 
   // Check if it's an MCP tool
@@ -132,13 +150,15 @@ export async function getToolsForApiAsync(
     return builtInTools;
   }
 
-  // Get MCP tools (uses cache if available)
+  // Get MCP tools and plugin tools
   try {
     mcpToolsCache = await getMCPToolsForApi();
-    return [...builtInTools, ...mcpToolsCache];
+    const pluginTools = getPluginToolsForApi();
+    return [...builtInTools, ...pluginTools, ...mcpToolsCache];
   } catch {
-    // If MCP tools fail to load, just return built-in tools
-    return builtInTools;
+    // If MCP tools fail to load, still include plugin tools
+    const pluginTools = getPluginToolsForApi();
+    return [...builtInTools, ...pluginTools];
   }
 }
 
@@ -163,12 +183,15 @@ export function getToolsForApi(
     return builtInTools;
   }
 
+  // Include plugin tools
+  const pluginTools = getPluginToolsForApi();
+
   // Include cached MCP tools if available
   if (mcpToolsCache) {
-    return [...builtInTools, ...mcpToolsCache];
+    return [...builtInTools, ...pluginTools, ...mcpToolsCache];
   }
 
-  return builtInTools;
+  return [...builtInTools, ...pluginTools];
 }
 
 /**

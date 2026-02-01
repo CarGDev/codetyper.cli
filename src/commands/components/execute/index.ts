@@ -23,6 +23,7 @@ import {
 } from "@utils/terminal";
 import { createCallbacks } from "@commands/chat-tui";
 import { agentLoader } from "@services/agent-loader";
+import { projectSetupService } from "@services/project-setup-service";
 
 interface ExecuteContext {
   state: ChatServiceState | null;
@@ -149,6 +150,9 @@ const execute = async (options: ChatTUIOptions): Promise<void> => {
     state: null,
     baseSystemPrompt: null,
   };
+
+  // Setup project on startup (add .codetyper to gitignore, create default agents)
+  await projectSetupService.setupProject(process.cwd());
 
   const { state, session } = await initializeChatService(options);
   ctx.state = state;

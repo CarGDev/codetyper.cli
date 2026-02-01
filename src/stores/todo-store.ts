@@ -216,3 +216,7 @@ export const todoStore = {
   getHistory: () => store.getState().history,
   subscribe: store.subscribe,
 };
+
+// Export store for React hooks (in tui/hooks/useTodoStore.ts)
+export { store as todoStoreVanilla };
+export type { TodoState };

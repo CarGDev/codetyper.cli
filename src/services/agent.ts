@@ -23,6 +23,11 @@ import { chat as providerChat } from "@providers/index";
 import { getTool, getToolsForApi, refreshMCPTools } from "@tools/index";
 import type { ToolContext, ToolCall, ToolResult } from "@/types/tools";
 import { initializePermissions } from "@services/permissions";
+import {
+  loadHooks,
+  executePreToolUseHooks,
+  executePostToolUseHooks,
+} from "@services/hooks-service";
 import { MAX_ITERATIONS } from "@constants/agent";
 import { usageStore } from "@stores/usage-store";
 
@@ -130,12 +135,40 @@ const callLLM = async (
 };
 
 /**
- * Execute a tool call
+ * Execute a tool call with hook support
  */
 const executeTool = async (
   state: AgentState,
   toolCall: ToolCall,
 ): Promise<ToolResult> => {
+  // Execute PreToolUse hooks
+  const hookResult = await executePreToolUseHooks(
+    state.sessionId,
+    toolCall.name,
+    toolCall.arguments,
+    state.workingDir,
+  );
+
+  // Handle hook results
+  if (hookResult.action === "block") {
+    return {
+      success: false,
+      title: "Blocked by hook",
+      output: "",
+      error: hookResult.message,
+    };
+  }
+
+  if (hookResult.action === "warn") {
+    state.options.onWarning?.(hookResult.message);
+  }
+
+  // Apply modified arguments if hook returned them
+  const effectiveArgs =
+    hookResult.action === "modify"
+      ? { ...toolCall.arguments, ...hookResult.updatedInput }
+      : toolCall.arguments;
+
   const tool = getTool(toolCall.name);
 
   if (!tool) {
@@ -160,19 +193,34 @@ const executeTool = async (
     },
   };
 
+  let result: ToolResult;
+
   try {
     // Validate arguments
-    const validatedArgs = tool.parameters.parse(toolCall.arguments);
-    return await tool.execute(validatedArgs, ctx);
+    const validatedArgs = tool.parameters.parse(effectiveArgs);
+    result = await tool.execute(validatedArgs, ctx);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    return {
+    result = {
       success: false,
       title: "Tool error",
       output: "",
       error: errorMessage,
     };
   }
+
+  // Execute PostToolUse hooks (fire-and-forget, don't block on result)
+  executePostToolUseHooks(
+    state.sessionId,
+    toolCall.name,
+    effectiveArgs,
+    result,
+    state.workingDir,
+  ).catch(() => {
+    // Silently ignore post-hook errors
+  });
+
+  return result;
 };
 
 /**
@@ -189,6 +237,9 @@ export const runAgentLoop = async (
 
   // Initialize permissions
   await initializePermissions();
+
+  // Load hooks
+  await loadHooks(state.workingDir);
 
   // Refresh MCP tools if available
   await refreshMCPTools();

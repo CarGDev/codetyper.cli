@@ -193,6 +193,7 @@ Read-only tools only:
 - **grep**: Search file contents for patterns
 - **read**: Read file contents
 - **todo_read**: View existing task lists
+- **web_search**: Search the web for documentation, error messages, library info
 
 # Tone and Style
 

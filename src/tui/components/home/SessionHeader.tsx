@@ -5,7 +5,7 @@
 
 import React from "react";
 import { Box, Text } from "ink";
-import { useThemeColors } from "@stores/theme-store";
+import { useThemeColors } from "@tui/hooks/useThemeStore";
 import type { SessionHeaderProps } from "@types/home-screen";
 
 const formatCost = (cost: number): string => {

@@ -90,6 +90,28 @@ Full-screen terminal interface with real-time streaming responses.
 - `Shift+Up/Down` - Scroll log panel
 - `Ctrl+C` (twice) - Exit
 
+### Vim Motions
+
+Optional vim-style keyboard navigation for power users. Enable in settings.
+
+**Normal Mode:**
+- `j/k` - Scroll down/up
+- `gg/G` - Jump to top/bottom
+- `Ctrl+d/u` - Half page scroll
+- `/` - Search, `n/N` - Next/prev match
+- `i` - Enter insert mode
+- `:` - Command mode (`:q` quit, `:w` save)
+
+**Configuration:**
+```json
+{
+  "vim": {
+    "enabled": true,
+    "startInNormalMode": true
+  }
+}
+```
+
 ### Command Menu
 
 Press `/` to access all commands organized by category.
@@ -250,6 +272,10 @@ CodeTyper has access to these built-in tools:
 | `read` | Read file contents |
 | `write` | Create or overwrite files |
 | `edit` | Find and replace in files |
+| `glob` | Find files by pattern |
+| `grep` | Search file contents |
+| `lsp` | Language Server Protocol operations |
+| `web_search` | Search the web |
 | `todo-read` | Read current todo list |
 | `todo-write` | Update todo list |
 
@@ -262,6 +288,87 @@ Connect external MCP (Model Context Protocol) servers for extended capabilities:
 /mcp
 # Then add a new server
 ```
+
+## Extensibility
+
+### Hooks System
+
+Lifecycle hooks for intercepting tool execution and session events.
+
+**Hook Events:**
+- `PreToolUse` - Validate/modify before tool execution
+- `PostToolUse` - Side effects after tool execution
+- `SessionStart` - At session initialization
+- `SessionEnd` - At session termination
+- `UserPromptSubmit` - When user submits input
+- `Stop` - When execution stops
+
+**Configuration** (`.codetyper/hooks.json`):
+```json
+{
+  "hooks": [
+    { "event": "PreToolUse", "script": ".codetyper/hooks/validate.sh", "timeout": 5000 },
+    { "event": "PostToolUse", "script": ".codetyper/hooks/notify.sh" }
+  ]
+}
+```
+
+**Exit Codes:**
+- `0` - Allow (optionally output `{"updatedInput": {...}}` to modify args)
+- `1` - Warn but continue
+- `2` - Block execution
+
+### Plugin System
+
+Extend CodeTyper with custom tools, commands, and hooks.
+
+**Plugin Structure:**
+```
+.codetyper/plugins/{name}/
+├── plugin.json          # Manifest
+├── tools/
+│   └── *.ts             # Custom tool definitions
+├── commands/
+│   └── *.md             # Slash commands
+└── hooks/
+    └── *.sh             # Plugin-specific hooks
+```
+
+**Manifest** (`plugin.json`):
+```json
+{
+  "name": "my-plugin",
+  "version": "1.0.0",
+  "tools": [{ "name": "custom_tool", "file": "tool.ts" }],
+  "commands": [{ "name": "mycommand", "file": "cmd.md" }]
+}
+```
+
+**Custom Tool Definition:**
+```typescript
+import { z } from "zod";
+export default {
+  name: "custom_tool",
+  description: "Does something",
+  parameters: z.object({ input: z.string() }),
+  execute: async (args, ctx) => ({ success: true, title: "Done", output: "..." }),
+};
+```
+
+### Session Forking
+
+Branch and rewind session history for experimentation.
+
+**Commands:**
+| Command | Description |
+|---------|-------------|
+| `/snapshot [name]` | Create checkpoint |
+| `/rewind [n\|name]` | Go back to snapshot |
+| `/fork [name]` | Branch current session |
+| `/forks` | List all forks |
+| `/switch [name]` | Switch to fork |
+
+Sessions are stored in `.codetyper/sessions/` with automatic commit message suggestions.
 
 ## Development
 

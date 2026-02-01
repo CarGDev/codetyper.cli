@@ -135,11 +135,21 @@ docs: update README with new CLI options
 src/
 ├── index.ts          # Entry point only
 ├── commands/         # CLI command implementations
+├── constants/        # Centralized constants
+├── interfaces/       # Interface definitions
 ├── providers/        # LLM provider integrations
+├── services/         # Business logic services
+│   ├── hooks-service.ts    # Lifecycle hooks
+│   ├── plugin-service.ts   # Plugin management
+│   ├── plugin-loader.ts    # Plugin discovery
+│   └── session-fork-service.ts  # Session forking
+├── stores/           # Zustand state stores
+│   └── vim-store.ts  # Vim mode state
 ├── tools/            # Agent tools (bash, read, write, edit)
 ├── tui/              # Terminal UI components
-│   └── components/   # Reusable UI components
-└── types.ts          # Shared type definitions
+│   ├── components/   # Reusable UI components
+│   └── hooks/        # React hooks (useVimMode, etc.)
+└── types/            # Type definitions
 ```
 
 ### Testing
@@ -170,11 +180,16 @@ describe('PermissionManager', () => {
 | File | Purpose |
 |------|---------|
 | `src/index.ts` | CLI entry point, command registration |
-| `src/agent.ts` | Agent loop, tool orchestration |
-| `src/permissions.ts` | Permission system |
+| `src/services/agent.ts` | Agent loop, tool orchestration |
+| `src/services/permissions.ts` | Permission system |
+| `src/services/hooks-service.ts` | Lifecycle hooks |
+| `src/services/plugin-service.ts` | Plugin management |
+| `src/services/session-fork-service.ts` | Session forking |
 | `src/commands/chat-tui.tsx` | Main TUI command |
 | `src/tui/App.tsx` | Root TUI component |
 | `src/tui/store.ts` | Zustand state management |
+| `src/stores/vim-store.ts` | Vim mode state |
+| `src/tui/hooks/useVimMode.ts` | Vim keyboard handling |
 
 ### Adding a New Provider
 
@@ -191,6 +206,28 @@ describe('PermissionManager', () => {
 3. Implement `execute` function
 4. Register in `src/tools/index.ts`
 5. Add permission handling if needed
+
+### Adding a Hook Event
+
+1. Add event type to `src/types/hooks.ts`
+2. Add constants to `src/constants/hooks.ts`
+3. Add input type for the event
+4. Implement execution in `src/services/hooks-service.ts`
+5. Call hook from appropriate location
+
+### Creating a Plugin
+
+1. Create directory in `.codetyper/plugins/{name}/`
+2. Add `plugin.json` manifest
+3. Add tools in `tools/*.ts`
+4. Add commands in `commands/*.md`
+5. Add hooks in `hooks/*.sh`
+
+### Adding Vim Bindings
+
+1. Add binding to `VIM_DEFAULT_BINDINGS` in `src/constants/vim.ts`
+2. Add action handler in `src/tui/hooks/useVimMode.ts`
+3. Update documentation
 
 ## Questions?
 

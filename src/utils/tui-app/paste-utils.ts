@@ -79,6 +79,7 @@ export const addPastedBlock = (
     newState: {
       pastedBlocks: newBlocks,
       pasteCounter: newCounter,
+      pastedImages: state.pastedImages ?? [],
     },
     pastedContent,
   };
@@ -201,9 +202,10 @@ export const normalizeLineEndings = (text: string): string => {
 };
 
 /**
- * Clears all pasted blocks
+ * Clears all pasted blocks and images
  */
 export const clearPastedBlocks = (): PasteState => ({
   pastedBlocks: new Map(),
   pasteCounter: 0,
+  pastedImages: [],
 });

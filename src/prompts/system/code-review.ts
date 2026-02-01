@@ -185,6 +185,7 @@ Read-only tools:
 - **grep**: Search for related code
 - **read**: Read file contents
 - **todo_read**: View task lists
+- **web_search**: Search for documentation, security advisories, best practices
 
 # Tone and Style
 

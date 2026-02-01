@@ -5,6 +5,12 @@
  */
 
 import type { AgentConfig } from "@/types/agent-config";
+import type { PastedImage } from "@/types/image";
+
+export interface SubmitOptions {
+  /** Pasted images to include with the message */
+  images?: PastedImage[];
+}
 
 export interface AppProps {
   /** Unique session identifier */
@@ -18,7 +24,7 @@ export interface AppProps {
   /** Application version */
   version: string;
   /** Called when user submits a message */
-  onSubmit: (message: string) => Promise<void>;
+  onSubmit: (message: string, options?: SubmitOptions) => Promise<void>;
   /** Called when user exits the application */
   onExit: () => void;
   /** Called when user executes a slash command */

@@ -4,6 +4,23 @@
 
 export type AgentType = "coder" | "tester" | "refactorer" | "documenter";
 
+// Re-export image types
+export type {
+  ImageMediaType,
+  ImageContent,
+  TextContent,
+  MessageContent,
+  MultimodalMessage,
+  PastedImage,
+} from "@/types/image";
+
+export {
+  isImageContent,
+  isTextContent,
+  createTextContent,
+  createImageContent,
+} from "@/types/image";
+
 export type IntentType =
   | "ask"
   | "code"

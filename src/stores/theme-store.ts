@@ -48,3 +48,7 @@ export const themeActions = {
 
   subscribe: store.subscribe,
 };
+
+// Export store for React hooks (in tui/hooks/useThemeStore.ts)
+export { store as themeStoreVanilla };
+export type { ThemeState };

@@ -7,7 +7,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Box, Text, useInput } from "ink";
-import { useThemeStore, useThemeColors } from "@stores/theme-store";
+import { useThemeStore, useThemeColors } from "@tui/hooks/useThemeStore";
 import { THEMES } from "@constants/themes";
 
 interface ThemeSelectProps {

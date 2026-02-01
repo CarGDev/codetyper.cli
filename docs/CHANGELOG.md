@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Hooks System**: Lifecycle hooks for extensibility
+  - 6 hook events: PreToolUse, PostToolUse, SessionStart, SessionEnd, UserPromptSubmit, Stop
+  - Exit code control flow (0=allow, 1=warn, 2=block)
+  - JSON input/output via stdin/stdout
+  - Modified arguments via `updatedInput`
+  - Global + local configuration support
+  - Configurable timeout per hook
+
+- **Plugin System**: Custom tools, commands, and hooks
+  - Plugin manifest with version and capabilities
+  - Custom tool definitions via TypeScript
+  - Custom slash commands via Markdown with frontmatter
+  - Plugin-specific hooks
+  - Global (~/.config/codetyper/plugins/) + local (.codetyper/plugins/)
+  - Dynamic tool/command registration
+
+- **Session Forking/Rewind**: Branch and time-travel session history
+  - Named snapshots at any point in conversation
+  - Rewind to any snapshot by name or index
+  - Fork branches from any snapshot
+  - Switch between forks
+  - Suggested commit messages based on session content
+  - Commands: /snapshot, /rewind, /fork, /forks, /switch
+
+- **Vim Motions**: Vim-style keyboard navigation
+  - 4 modes: Normal, Insert, Command, Visual
+  - Scroll navigation (j/k, gg/G, Ctrl+d/u)
+  - Search with highlighting (/, n/N)
+  - Command mode (:q, :w, :wq, :nohl)
+  - Mode indicator in status line
+  - Configurable via settings.json
+
 - **Home Screen**: New welcome screen with centered gradient logo
   - Displays version, provider, and model info
   - Transitions to session view on first message

@@ -27,7 +27,7 @@ import {
   SessionHeader,
 } from "@tui/components/index";
 import { InputLine, calculateLineStartPos } from "@tui/components/input-line";
-import { useThemeStore, useThemeColors } from "@stores/theme-store";
+import { useThemeStore, useThemeColors } from "@tui/hooks/useThemeStore";
 import type { AgentConfig } from "@/types/agent-config";
 import { createFilePickerState } from "@/services/file-picker-service";
 import { INTERRUPT_TIMEOUT } from "@constants/ui";
@@ -53,6 +53,8 @@ import { PAGE_SCROLL_LINES, MOUSE_SCROLL_LINES } from "@constants/auto-scroll";
 import { useMouseScroll } from "@tui/hooks";
 import type { PasteState } from "@interfaces/PastedContent";
 import { createInitialPasteState } from "@interfaces/PastedContent";
+import { readClipboardImage } from "@services/clipboard-service";
+import { ImageAttachment } from "@tui/components/ImageAttachment";
 
 // Re-export for backwards compatibility
 export type { AppProps } from "@interfaces/AppProps";
@@ -171,6 +173,11 @@ export function App({
         pasteState.pastedBlocks,
       );
 
+      // Capture images before clearing
+      const images = pasteState.pastedImages.length > 0
+        ? [...pasteState.pastedImages]
+        : undefined;
+
       // Clear paste state after expanding
       setPasteState(clearPastedBlocks());
 
@@ -179,12 +186,17 @@ export function App({
         setScreenMode("session");
       }
 
-      addLog({ type: "user", content: expandedMessage });
+      // Build log content with image indicator
+      const logContent = images
+        ? `${expandedMessage}\n[${images.length} image${images.length > 1 ? "s" : ""} attached]`
+        : expandedMessage;
+
+      addLog({ type: "user", content: logContent });
       setMode("thinking");
       startThinking();
 
       try {
-        await onSubmit(expandedMessage);
+        await onSubmit(expandedMessage, { images });
       } finally {
         stopThinking();
         setMode("idle");
@@ -199,6 +211,7 @@ export function App({
       screenMode,
       setScreenMode,
       pasteState.pastedBlocks,
+      pasteState.pastedImages,
     ],
   );
 
@@ -527,7 +540,38 @@ export function App({
               pastedBlocks: updatedBlocks,
             }));
           }
+        } else if (input === "v") {
+          // Handle Ctrl+V for image paste
+          readClipboardImage().then((image) => {
+            if (image) {
+              setPasteState((prev) => ({
+                ...prev,
+                pastedImages: [...prev.pastedImages, image],
+              }));
+              addLog({
+                type: "system",
+                content: `Image attached (${image.mediaType})`,
+              });
+            }
+          });
         }
+        return;
+      }
+
+      // Handle Cmd+V (macOS) for image paste
+      if (key.meta && input === "v") {
+        readClipboardImage().then((image) => {
+          if (image) {
+            setPasteState((prev) => ({
+              ...prev,
+              pastedImages: [...prev.pastedImages, image],
+            }));
+            addLog({
+              type: "system",
+              content: `Image attached (${image.mediaType})`,
+            });
+          }
+        });
         return;
       }
 
@@ -633,10 +677,12 @@ export function App({
         {isHomeMode ? (
           <HomeContent provider={provider} model={model} version={version} />
         ) : (
-          <>
+          <Box flexDirection="row" flexGrow={1}>
+            <Box flexDirection="column" flexGrow={1}>
+              <LogPanel />
+            </Box>
             <TodoPanel />
-            <LogPanel />
-          </>
+          </Box>
         )}
         <PermissionModal />
         <LearningModal />
@@ -712,6 +758,11 @@ export function App({
           }
           paddingX={1}
         >
+          {/* Show attached images */}
+          {pasteState.pastedImages.length > 0 && (
+            <ImageAttachment images={pasteState.pastedImages} />
+          )}
+
           {isLocked ? (
             <Text dimColor>Input locked during execution...</Text>
           ) : isEmpty ? (
@@ -741,7 +792,7 @@ export function App({
 
           <Box marginTop={1}>
             <Text dimColor>
-              Enter to send • Alt+Enter for newline • @ to add files
+              Enter to send • Alt+Enter for newline • @ to add files • Ctrl+V to paste image
             </Text>
           </Box>
         </Box>

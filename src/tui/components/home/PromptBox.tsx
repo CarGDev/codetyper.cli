@@ -5,7 +5,7 @@
 
 import React, { useState, useCallback } from "react";
 import { Box, Text, useInput } from "ink";
-import { useThemeColors } from "@stores/theme-store";
+import { useThemeColors } from "@tui/hooks/useThemeStore";
 import { PLACEHOLDERS } from "@constants/home-screen";
 
 interface PromptBoxProps {

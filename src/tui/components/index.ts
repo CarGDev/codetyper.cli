@@ -16,12 +16,17 @@ export { ThemeSelect } from "@tui/components/ThemeSelect";
 export { MCPSelect } from "@tui/components/MCPSelect";
 export { TodoPanel } from "@tui/components/TodoPanel";
 export { LearningModal } from "@tui/components/LearningModal";
+export { ImageAttachment, ImageAttachmentCompact } from "@tui/components/ImageAttachment";
 export { BouncingLoader } from "@tui/components/BouncingLoader";
 export {
   DiffView,
   parseDiffOutput,
   isDiffContent,
 } from "@tui/components/DiffView";
+export {
+  VimStatusLine,
+  VimModeIndicator,
+} from "@tui/components/VimStatusLine";
 
 // Home screen components
 export {
