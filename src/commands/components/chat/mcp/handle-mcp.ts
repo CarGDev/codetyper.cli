@@ -20,7 +20,7 @@ import {
   MCP_CATEGORY_ICONS,
 } from "@constants/mcp-registry";
 import { showMCPStatus } from "@commands/components/chat/mcp/show-mcp-status";
-import { appStore } from "@tui-solid/context/app";
+import { appStore } from "@tui/index";
 
 /**
  * Handle MCP subcommands

@@ -793,9 +793,39 @@ export const setAppStoreRef = (store: AppContextValue): void => {
   storeRef = store;
 };
 
+// Default state for when store is not yet initialized
+const defaultAppState = {
+  mode: "idle" as AppMode,
+  screenMode: "home" as ScreenMode,
+  interactionMode: "agent" as InteractionMode,
+  currentAgent: "default",
+  inputBuffer: "",
+  logs: [] as LogEntry[],
+  currentToolCall: null,
+  permissionRequest: null,
+  learningPrompt: null,
+  thinkingMessage: null,
+  sessionId: null,
+  provider: "copilot",
+  model: "",
+  version: "0.1.0",
+  sessionStats: createInitialSessionStats(),
+  cascadeEnabled: true,
+  todosVisible: true,
+  debugLogVisible: false,
+  interruptPending: false,
+  exitPending: false,
+  isCompacting: false,
+  streamingLog: createInitialStreamingState(),
+  suggestions: createInitialSuggestionState(),
+};
+
 export const appStore = {
   getState: () => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) {
+      // Return default state when store is not yet initialized
+      return defaultAppState;
+    }
     return {
       mode: storeRef.mode(),
       screenMode: storeRef.screenMode(),
@@ -824,177 +854,177 @@ export const appStore = {
   },
 
   addLog: (entry: Omit<LogEntry, "id" | "timestamp">): string => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return "";
     return storeRef.addLog(entry);
   },
 
   updateLog: (id: string, updates: Partial<LogEntry>): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.updateLog(id, updates);
   },
 
   setMode: (mode: AppMode): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.setMode(mode);
   },
 
   toggleInteractionMode: (): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.toggleInteractionMode();
   },
 
   setCurrentAgent: (agent: string): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.setCurrentAgent(agent);
   },
 
   setCurrentToolCall: (toolCall: ToolCall | null): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.setCurrentToolCall(toolCall);
   },
 
   updateToolCall: (updates: Partial<ToolCall>): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.updateToolCall(updates);
   },
 
   setThinkingMessage: (message: string | null): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.setThinkingMessage(message);
   },
 
   setPermissionRequest: (request: PermissionRequest | null): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.setPermissionRequest(request);
   },
 
   setLearningPrompt: (prompt: LearningPrompt | null): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.setLearningPrompt(prompt);
   },
 
   clearInput: (): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.clearInput();
   },
 
   clearLogs: (): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.clearLogs();
   },
 
   openCommandMenu: (): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.openCommandMenu();
   },
 
   closeCommandMenu: (): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.closeCommandMenu();
   },
 
   transitionFromCommandMenu: (newMode: AppMode): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.transitionFromCommandMenu(newMode);
   },
 
   setAvailableModels: (models: ProviderModel[]): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.setAvailableModels(models);
   },
 
   setModel: (model: string): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.setModel(model);
   },
 
   startThinking: (): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.startThinking();
   },
 
   stopThinking: (): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.stopThinking();
   },
 
   addTokens: (input: number, output: number): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.addTokens(input, output);
   },
 
   resetSessionStats: (): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.resetSessionStats();
   },
 
   toggleTodos: (): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.toggleTodos();
   },
 
   toggleDebugLog: (): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.toggleDebugLog();
   },
 
   setInterruptPending: (pending: boolean): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.setInterruptPending(pending);
   },
 
   setIsCompacting: (compacting: boolean): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.setIsCompacting(compacting);
   },
 
   startStreaming: (): string => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return "";
     return storeRef.startStreaming();
   },
 
   appendStreamContent: (content: string): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.appendStreamContent(content);
   },
 
   completeStreaming: (): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.completeStreaming();
   },
 
   cancelStreaming: (): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.cancelStreaming();
   },
 
   setSuggestions: (suggestions: SuggestionPrompt[]): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.setSuggestions(suggestions);
   },
 
   clearSuggestions: (): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.clearSuggestions();
   },
 
   hideSuggestions: (): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.hideSuggestions();
   },
 
   setProvider: (provider: string): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.setProvider(provider);
   },
 
   setCascadeEnabled: (enabled: boolean): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.setCascadeEnabled(enabled);
   },
 
   toggleCascadeEnabled: (): void => {
-    if (!storeRef) throw new Error("AppStore not initialized");
+    if (!storeRef) return;
     storeRef.toggleCascadeEnabled();
   },
 };
