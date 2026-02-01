@@ -21,6 +21,7 @@ import {
   AgentSelect,
   ThemeSelect,
   MCPSelect,
+  MCPBrowser,
   TodoPanel,
   FilePicker,
   HomeContent,
@@ -130,6 +131,7 @@ export function App({
   const isAgentSelectOpen = mode === "agent_select";
   const isThemeSelectOpen = mode === "theme_select";
   const isMCPSelectOpen = mode === "mcp_select";
+  const isMCPBrowserOpen = mode === "mcp_browse";
   const isLearningPromptOpen = mode === "learning_prompt";
 
   // Theme colors
@@ -296,6 +298,11 @@ export function App({
     setMode("idle");
   }, [setMode]);
 
+  // Handle MCP browser close
+  const handleMCPBrowserClose = useCallback(() => {
+    setMode("idle");
+  }, [setMode]);
+
   // Handle file selection from picker
   const handleFileSelect = useCallback(
     (path: string): void => {
@@ -400,6 +407,7 @@ export function App({
         isAgentSelectOpen ||
         isThemeSelectOpen ||
         isMCPSelectOpen ||
+        isMCPBrowserOpen ||
         isLearningPromptOpen
       ) {
         closeCommandMenu();
@@ -729,6 +737,14 @@ export function App({
           <MCPSelect
             onClose={handleMCPSelectClose}
             isActive={isMCPSelectOpen}
+          />
+        )}
+
+        {/* MCP Browser Overlay */}
+        {isMCPBrowserOpen && (
+          <MCPBrowser
+            onClose={handleMCPBrowserClose}
+            isActive={isMCPBrowserOpen}
           />
         )}
 

@@ -14,6 +14,7 @@ export { ModelSelect } from "@tui/components/ModelSelect";
 export { AgentSelect } from "@tui/components/AgentSelect";
 export { ThemeSelect } from "@tui/components/ThemeSelect";
 export { MCPSelect } from "@tui/components/MCPSelect";
+export { MCPBrowser } from "@tui/components/MCPBrowser";
 export { TodoPanel } from "@tui/components/TodoPanel";
 export { LearningModal } from "@tui/components/LearningModal";
 export { ImageAttachment, ImageAttachmentCompact } from "@tui/components/ImageAttachment";

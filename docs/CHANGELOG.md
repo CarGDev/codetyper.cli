@@ -51,6 +51,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Use tools from connected servers
   - `/mcp` command for server management
   - Status display in UI
+  - **MCP Server Browser**: Search and discover MCP servers
+    - Interactive browser with `/mcp browse`
+    - Search servers with `/mcp search <query>`
+    - Filter by category (database, web, AI, dev-tools, etc.)
+    - View server details and required environment variables
+    - One-click install with `/mcp install <id>`
+    - 15+ curated verified servers from Anthropic
+    - Registry integration with Smithery
 
 - **Reasoning System**: Advanced agent orchestration
   - Memory selection for context optimization

@@ -284,10 +284,30 @@ CodeTyper has access to these built-in tools:
 Connect external MCP (Model Context Protocol) servers for extended capabilities:
 
 ```bash
-# In the TUI
-/mcp
-# Then add a new server
+# Browse and search available servers
+/mcp browse        # Interactive browser
+/mcp search <query> # Search by keyword
+/mcp popular       # Show popular servers
+/mcp categories    # List all categories
+
+# Install a server
+/mcp install sqlite
+/mcp install github
+
+# Manage servers
+/mcp status        # Show connected servers
+/mcp connect       # Connect all servers
+/mcp disconnect    # Disconnect all servers
+/mcp tools         # List available tools
+/mcp add           # Add custom server
 ```
+
+**MCP Browser Features:**
+- Search by name, description, or tags
+- Filter by category (database, web, AI, etc.)
+- View server details and required environment variables
+- One-click installation and connection
+- 15+ verified servers from Anthropic
 
 ## Extensibility
 

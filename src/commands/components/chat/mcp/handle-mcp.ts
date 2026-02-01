@@ -10,7 +10,15 @@ import {
   connectAllServers,
   disconnectAllServers,
   getAllTools,
+  searchServers,
+  getPopularServers,
+  installServerById,
+  getCategoriesWithCounts,
 } from "@services/mcp/index";
+import {
+  MCP_CATEGORY_LABELS,
+  MCP_CATEGORY_ICONS,
+} from "@constants/mcp-registry";
 import { showMCPStatus } from "@commands/components/chat/mcp/show-mcp-status";
 import { appStore } from "@tui-solid/context/app";
 
@@ -26,13 +34,18 @@ export const handleMCP = async (args: string[]): Promise<void> => {
     disconnect: handleDisconnect,
     tools: handleTools,
     add: handleAdd,
+    search: handleSearch,
+    browse: handleBrowse,
+    install: handleInstall,
+    popular: handlePopular,
+    categories: handleCategories,
   };
 
   const handler = handlers[subcommand];
   if (!handler) {
     console.log(chalk.yellow(`Unknown MCP command: ${subcommand}`));
     console.log(
-      chalk.gray("Available: status, connect, disconnect, tools, add"),
+      chalk.gray("Available: status, connect, disconnect, tools, add, search, browse, install, popular, categories"),
     );
     return;
   }
@@ -140,4 +153,138 @@ const handleTools = async (_args: string[]): Promise<void> => {
  */
 const handleAdd = async (_args: string[]): Promise<void> => {
   appStore.setMode("mcp_add");
+};
+
+/**
+ * Search for MCP servers
+ */
+const handleSearch = async (args: string[]): Promise<void> => {
+  const query = args.join(" ");
+
+  if (!query) {
+    console.log(chalk.yellow("\nUsage: /mcp search <query>"));
+    console.log(chalk.gray("Example: /mcp search database"));
+    console.log(chalk.gray("Or use /mcp browse for interactive browser"));
+    console.log();
+    return;
+  }
+
+  console.log(chalk.gray(`\nSearching for "${query}"...`));
+
+  try {
+    const result = await searchServers({ query, limit: 10 });
+
+    if (result.servers.length === 0) {
+      console.log(chalk.yellow("\nNo servers found matching your search."));
+      console.log(chalk.gray("Try /mcp popular to see popular servers"));
+      console.log();
+      return;
+    }
+
+    console.log(chalk.bold(`\nFound ${result.total} servers:\n`));
+
+    for (const server of result.servers) {
+      const icon = MCP_CATEGORY_ICONS[server.category];
+      const verified = server.verified ? chalk.green(" ✓") : "";
+      console.log(`${icon} ${chalk.white(server.name)}${verified}`);
+      console.log(`   ${chalk.gray(server.description)}`);
+      console.log(`   ${chalk.cyan("Install:")} /mcp install ${server.id}`);
+      console.log();
+    }
+  } catch (error) {
+    console.log(chalk.red(`\nSearch failed: ${error}`));
+    console.log();
+  }
+};
+
+/**
+ * Open interactive MCP browser
+ */
+const handleBrowse = async (_args: string[]): Promise<void> => {
+  appStore.setMode("mcp_browse");
+};
+
+/**
+ * Install an MCP server by ID
+ */
+const handleInstall = async (args: string[]): Promise<void> => {
+  const serverId = args[0];
+
+  if (!serverId) {
+    console.log(chalk.yellow("\nUsage: /mcp install <server-id>"));
+    console.log(chalk.gray("Example: /mcp install sqlite"));
+    console.log(chalk.gray("Use /mcp search to find server IDs"));
+    console.log();
+    return;
+  }
+
+  console.log(chalk.gray(`\nInstalling ${serverId}...`));
+
+  try {
+    const result = await installServerById(serverId, { connect: true });
+
+    if (result.success) {
+      console.log(chalk.green(`\n✓ Installed ${result.serverName}`));
+      if (result.connected) {
+        console.log(chalk.gray("  Server is now connected"));
+      }
+    } else {
+      console.log(chalk.red(`\n✗ Installation failed: ${result.error}`));
+    }
+    console.log();
+  } catch (error) {
+    console.log(chalk.red(`\nInstallation failed: ${error}`));
+    console.log();
+  }
+};
+
+/**
+ * Show popular MCP servers
+ */
+const handlePopular = async (_args: string[]): Promise<void> => {
+  console.log(chalk.gray("\nFetching popular servers..."));
+
+  try {
+    const servers = await getPopularServers(10);
+
+    console.log(chalk.bold("\nPopular MCP Servers:\n"));
+
+    for (const server of servers) {
+      const icon = MCP_CATEGORY_ICONS[server.category];
+      const verified = server.verified ? chalk.green(" ✓") : "";
+      console.log(`${icon} ${chalk.white(server.name)}${verified}`);
+      console.log(`   ${chalk.gray(server.description)}`);
+      console.log(`   ${chalk.cyan("Install:")} /mcp install ${server.id}`);
+      console.log();
+    }
+  } catch (error) {
+    console.log(chalk.red(`\nFailed to fetch servers: ${error}`));
+    console.log();
+  }
+};
+
+/**
+ * Show MCP server categories
+ */
+const handleCategories = async (_args: string[]): Promise<void> => {
+  console.log(chalk.gray("\nFetching categories..."));
+
+  try {
+    const categories = await getCategoriesWithCounts();
+
+    console.log(chalk.bold("\nMCP Server Categories:\n"));
+
+    for (const { category, count } of categories) {
+      const icon = MCP_CATEGORY_ICONS[category];
+      const label = MCP_CATEGORY_LABELS[category];
+      console.log(`${icon} ${chalk.white(label)} ${chalk.gray(`(${count} servers)`)}`);
+    }
+
+    console.log();
+    console.log(chalk.gray("Use /mcp search <category> to filter by category"));
+    console.log();
+  } catch (error) {
+    console.log(chalk.red(`\nFailed to fetch categories: ${error}`));
+    console.log();
+  }
 };

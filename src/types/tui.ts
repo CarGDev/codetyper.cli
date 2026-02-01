@@ -23,6 +23,7 @@ export type AppMode =
   | "mode_select"
   | "mcp_select"
   | "mcp_add"
+  | "mcp_browse"
   | "file_picker"
   | "provider_select"
   | "learning_prompt"
