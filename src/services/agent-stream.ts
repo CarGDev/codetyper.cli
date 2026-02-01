@@ -325,7 +325,14 @@ export const runAgentLoopStream = async (
 
   // Initialize
   await initializePermissions();
-  await refreshMCPTools();
+
+  // Refresh MCP tools and log results
+  const mcpResult = await refreshMCPTools();
+  if (mcpResult.success && mcpResult.toolCount > 0) {
+    state.options.onText?.(`[Loaded ${mcpResult.toolCount} MCP tool(s)]\n`);
+  } else if (mcpResult.error) {
+    state.options.onWarning?.(`MCP tools unavailable: ${mcpResult.error}`);
+  }
 
   const agentMessages: AgentMessage[] = [...messages];
 

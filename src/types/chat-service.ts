@@ -8,7 +8,7 @@ import type {
   PermissionPromptResponse,
 } from "@/types/permissions";
 import type { LearningCandidate } from "@services/learning-service";
-import type { LearningResponse } from "@/types/tui";
+import type { LearningResponse, InteractionMode } from "@/types/tui";
 
 export interface ChatServiceState {
   provider: ProviderName;
@@ -16,6 +16,7 @@ export interface ChatServiceState {
   messages: Message[];
   contextFiles: Map<string, string>;
   systemPrompt: string;
+  currentMode: InteractionMode;
   verbose: boolean;
   autoApprove: boolean;
 }

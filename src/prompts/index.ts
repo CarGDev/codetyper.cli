@@ -7,6 +7,7 @@
 // System prompts
 export { DEFAULT_SYSTEM_PROMPT } from "@prompts/system/default";
 export { AGENTIC_SYSTEM_PROMPT, buildAgenticPrompt } from "@prompts/system/agent";
+export { ASK_SYSTEM_PROMPT, buildAskPrompt } from "@prompts/system/ask";
 export { PLAN_SYSTEM_PROMPT } from "@prompts/system/planner";
 export {
   DEBUGGING_SYSTEM_PROMPT,
@@ -15,6 +16,7 @@ export {
 export {
   CODE_REVIEW_SYSTEM_PROMPT,
   CODE_REVIEW_CONTEXT_TEMPLATE,
+  buildCodeReviewPrompt,
 } from "@prompts/system/code-review";
 export {
   REFACTORING_SYSTEM_PROMPT,

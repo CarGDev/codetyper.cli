@@ -26,6 +26,7 @@ import {
 } from "@services/chat-tui/files";
 import { getToolDescription } from "@services/chat-tui/utils";
 import { processLearningsFromExchange } from "@services/chat-tui/learnings";
+import { rebuildSystemPromptForMode } from "@services/chat-tui/initialize";
 import {
   compactConversation,
   createCompactionSummary,
@@ -61,6 +62,10 @@ import {
   detectCommand,
   executeDetectedCommand,
 } from "@services/command-detection";
+import {
+  detectSkillCommand,
+  executeSkill,
+} from "@services/skill-service";
 
 // Track last response for feedback learning
 let lastResponseContext: {
@@ -276,6 +281,30 @@ export const handleMessage = async (
   // Check for feedback on previous response
   await checkUserFeedback(message, callbacks);
 
+  // Check for skill commands (e.g., /review, /commit)
+  const skillMatch = await detectSkillCommand(message);
+  if (skillMatch) {
+    addDebugLog("info", `Detected skill: /${skillMatch.skill.command}`);
+    callbacks.onLog(
+      "system",
+      `Running skill: ${skillMatch.skill.name}`,
+    );
+
+    // Execute the skill and get the expanded prompt
+    const { expandedPrompt } = executeSkill(skillMatch.skill, skillMatch.args);
+
+    // Show the original command
+    appStore.addLog({
+      type: "user",
+      content: message,
+    });
+
+    // Process the expanded prompt as the actual message
+    // Fall through to normal processing with the expanded prompt
+    message = expandedPrompt;
+    addDebugLog("info", `Expanded skill prompt: ${expandedPrompt.substring(0, 100)}...`);
+  }
+
   // Detect explicit command requests and execute directly
   const detected = detectCommand(message);
   if (detected.detected && detected.command) {
@@ -324,11 +353,20 @@ export const handleMessage = async (
   const { interactionMode, cascadeEnabled } = appStore.getState();
   const isReadOnlyMode = interactionMode === "ask" || interactionMode === "code-review";
 
+  // Rebuild system prompt if mode has changed
+  if (state.currentMode !== interactionMode) {
+    await rebuildSystemPromptForMode(state, interactionMode);
+    callbacks.onLog(
+      "system",
+      `Switched to ${interactionMode} mode`,
+    );
+  }
+
   if (isReadOnlyMode) {
     const modeLabel = interactionMode === "ask" ? "Ask" : "Code Review";
     callbacks.onLog(
       "system",
-      `${modeLabel} mode: Read-only responses (Ctrl+Tab to switch modes)`,
+      `${modeLabel} mode: Read-only tools only (Ctrl+Tab to switch modes)`,
     );
   }
 

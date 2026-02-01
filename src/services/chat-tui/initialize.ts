@@ -11,24 +11,24 @@ import {
 } from "@services/session";
 import { getConfig } from "@services/config";
 import { initializePermissions } from "@services/permissions";
-import { projectConfig } from "@services/project-config";
 import { getProviderStatus } from "@providers/index";
 import { appStore } from "@tui/index";
 import { themeActions } from "@stores/theme-store";
 import {
-  AGENTIC_SYSTEM_PROMPT,
-  buildAgenticPrompt,
-  buildSystemPromptWithRules,
-} from "@prompts/index";
+  buildBaseContext,
+  buildCompletePrompt,
+} from "@services/prompt-builder";
 import { initSuggestionService } from "@services/command-suggestion-service";
 import { addContextFile } from "@services/chat-tui/files";
 import type { ProviderName, Message } from "@/types/providers";
 import type { ChatSession } from "@/types/index";
 import type { ChatTUIOptions } from "@interfaces/ChatTUIOptions";
 import type { ChatServiceState } from "@/types/chat-service";
+import type { InteractionMode } from "@/types/tui";
 
 const createInitialState = async (
   options: ChatTUIOptions,
+  initialMode: InteractionMode = "agent",
 ): Promise<ChatServiceState> => {
   const config = await getConfig();
 
@@ -37,7 +37,8 @@ const createInitialState = async (
     model: options.model || config.get("model") || undefined,
     messages: [],
     contextFiles: new Map(),
-    systemPrompt: AGENTIC_SYSTEM_PROMPT,
+    systemPrompt: "",
+    currentMode: initialMode,
     verbose: options.verbose || false,
     autoApprove: options.autoApprove || false,
   };
@@ -52,26 +53,6 @@ const validateProvider = async (state: ChatServiceState): Promise<void> => {
   }
 };
 
-const getGitContext = async (): Promise<{
-  isGitRepo: boolean;
-  branch?: string;
-  status?: string;
-  recentCommits?: string[];
-}> => {
-  try {
-    const { execSync } = await import("child_process");
-    const branch = execSync("git branch --show-current", { encoding: "utf-8" }).trim();
-    const status = execSync("git status --short", { encoding: "utf-8" }).trim() || "(clean)";
-    const commits = execSync("git log --oneline -5", { encoding: "utf-8" })
-      .trim()
-      .split("\n")
-      .filter(Boolean);
-    return { isGitRepo: true, branch, status, recentCommits: commits };
-  } catch {
-    return { isGitRepo: false };
-  }
-};
-
 const buildSystemPrompt = async (
   state: ChatServiceState,
   options: ChatTUIOptions,
@@ -81,42 +62,20 @@ const buildSystemPrompt = async (
     return;
   }
 
-  // Build agentic prompt with environment context
-  const gitContext = await getGitContext();
-  const basePrompt = buildAgenticPrompt({
-    workingDir: process.cwd(),
-    isGitRepo: gitContext.isGitRepo,
-    platform: process.platform,
-    today: new Date().toISOString().split("T")[0],
-    model: state.model,
-    gitBranch: gitContext.branch,
-    gitStatus: gitContext.status,
-    recentCommits: gitContext.recentCommits,
-  });
+  const context = await buildBaseContext(state.model);
+  const { prompt, rulesPaths } = await buildCompletePrompt(
+    state.currentMode,
+    context,
+    options.appendSystemPrompt,
+  );
 
-  // Add project rules
-  const { prompt: promptWithRules, rulesPaths } =
-    await buildSystemPromptWithRules(basePrompt, process.cwd());
-  state.systemPrompt = promptWithRules;
+  state.systemPrompt = prompt;
 
   if (rulesPaths.length > 0 && state.verbose) {
     infoMessage(`Loaded ${rulesPaths.length} rule file(s):`);
     for (const rulePath of rulesPaths) {
       infoMessage(`  - ${rulePath}`);
     }
-  }
-
-  const learningsContext = await projectConfig.buildLearningsContext();
-  if (learningsContext) {
-    state.systemPrompt = state.systemPrompt + "\n\n" + learningsContext;
-    if (state.verbose) {
-      infoMessage("Loaded project learnings");
-    }
-  }
-
-  if (options.appendSystemPrompt) {
-    state.systemPrompt =
-      state.systemPrompt + "\n\n" + options.appendSystemPrompt;
   }
 };
 
@@ -188,10 +147,36 @@ const initializeTheme = async (): Promise<void> => {
   }
 };
 
+/**
+ * Rebuild system prompt when interaction mode changes
+ * Updates both the state and the first message in the conversation
+ */
+export const rebuildSystemPromptForMode = async (
+  state: ChatServiceState,
+  newMode: InteractionMode,
+  appendPrompt?: string,
+): Promise<void> => {
+  if (state.currentMode === newMode) {
+    return;
+  }
+
+  state.currentMode = newMode;
+
+  const context = await buildBaseContext(state.model);
+  const { prompt } = await buildCompletePrompt(newMode, context, appendPrompt);
+
+  state.systemPrompt = prompt;
+
+  if (state.messages.length > 0 && state.messages[0].role === "system") {
+    state.messages[0].content = prompt;
+  }
+};
+
 export const initializeChatService = async (
   options: ChatTUIOptions,
 ): Promise<{ state: ChatServiceState; session: ChatSession }> => {
-  const state = await createInitialState(options);
+  const initialMode = appStore.getState().interactionMode;
+  const state = await createInitialState(options, initialMode);
 
   await validateProvider(state);
   await buildSystemPrompt(state, options);

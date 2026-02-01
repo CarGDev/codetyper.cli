@@ -173,11 +173,26 @@ export function getToolsForApi(
 
 /**
  * Refresh MCP tools cache
+ * Returns information about the refresh result for logging
  */
-export async function refreshMCPTools(): Promise<void> {
+export async function refreshMCPTools(): Promise<{
+  success: boolean;
+  toolCount: number;
+  error?: string;
+}> {
   try {
     mcpToolsCache = await getMCPToolsForApi();
-  } catch {
+    return {
+      success: true,
+      toolCount: mcpToolsCache.length,
+    };
+  } catch (err) {
     mcpToolsCache = null;
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    return {
+      success: false,
+      toolCount: 0,
+      error: errorMessage,
+    };
   }
 }
