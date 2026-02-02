@@ -4,8 +4,8 @@
 
 import fs from "fs/promises";
 import path from "path";
-import os from "os";
 import { MCPClient } from "@services/mcp/client";
+import { DIRS, LOCAL_CONFIG_DIR } from "@constants/paths";
 import type {
   MCPConfig,
   MCPServerConfig,
@@ -16,10 +16,11 @@ import type {
 
 /**
  * MCP Configuration file locations
+ * Uses XDG-compliant paths from constants/paths.ts
  */
 const CONFIG_LOCATIONS = {
-  global: path.join(os.homedir(), ".codetyper", "mcp.json"),
-  local: path.join(process.cwd(), ".codetyper", "mcp.json"),
+  global: path.join(DIRS.config, "mcp.json"),
+  local: path.join(process.cwd(), LOCAL_CONFIG_DIR, "mcp.json"),
 };
 
 /**

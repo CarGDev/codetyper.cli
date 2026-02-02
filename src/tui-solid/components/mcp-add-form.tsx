@@ -17,14 +17,14 @@ const FIELD_ORDER: FormField[] = ["name", "command", "args", "scope"];
 const FIELD_LABELS: Record<FormField, string> = {
   name: "Server Name",
   command: "Command",
-  args: "Arguments (space-separated)",
+  args: "Arguments (use quotes for paths with spaces)",
   scope: "Scope",
 };
 
 const FIELD_PLACEHOLDERS: Record<FormField, string> = {
-  name: "e.g., sqlite",
+  name: "e.g., filesystem",
   command: "e.g., npx",
-  args: "e.g., @modelcontextprotocol/server-sqlite",
+  args: "e.g., -y @modelcontextprotocol/server-filesystem \"/path/to/dir\"",
   scope: "",
 };
 
@@ -165,8 +165,32 @@ export function MCPAddForm(props: MCPAddFormProps) {
       return;
     }
 
+    // Handle space key
+    if (evt.name === "space") {
+      setFieldValue(field, getFieldValue(field) + " ");
+      setError(null);
+      evt.preventDefault();
+      return;
+    }
+
+    // Handle paste (Ctrl+V) - terminal paste usually comes as sequence of characters
+    // but some terminals send the full pasted text as a single event
+    if (evt.ctrl && evt.name === "v") {
+      // Let the terminal handle paste - don't prevent default
+      return;
+    }
+
+    // Handle regular character input
     if (evt.name.length === 1 && !evt.ctrl && !evt.meta) {
       setFieldValue(field, getFieldValue(field) + evt.name);
+      setError(null);
+      evt.preventDefault();
+      return;
+    }
+
+    // Handle multi-character input (e.g., pasted text from terminal)
+    if (evt.sequence && evt.sequence.length > 1 && !evt.ctrl && !evt.meta) {
+      setFieldValue(field, getFieldValue(field) + evt.sequence);
       setError(null);
       evt.preventDefault();
     }

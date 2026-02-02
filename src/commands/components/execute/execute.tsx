@@ -51,10 +51,49 @@ export interface RenderAppProps {
   } | null;
 }
 
+/**
+ * Parse arguments string, respecting quoted strings
+ * Supports both single and double quotes for arguments with spaces
+ * Example: '-y @modelcontextprotocol/server-filesystem "/path/with spaces"'
+ */
+const parseArgs = (argsString: string): string[] | undefined => {
+  const trimmed = argsString.trim();
+  if (!trimmed) return undefined;
+
+  const args: string[] = [];
+  let current = "";
+  let inQuote: string | null = null;
+
+  for (let i = 0; i < trimmed.length; i++) {
+    const char = trimmed[i];
+
+    if (inQuote) {
+      if (char === inQuote) {
+        inQuote = null;
+      } else {
+        current += char;
+      }
+    } else if (char === '"' || char === "'") {
+      inQuote = char;
+    } else if (char === " " || char === "\t") {
+      if (current) {
+        args.push(current);
+        current = "";
+      }
+    } else {
+      current += char;
+    }
+  }
+
+  if (current) {
+    args.push(current);
+  }
+
+  return args.length > 0 ? args : undefined;
+};
+
 const defaultHandleMCPAdd = async (data: MCPAddFormData): Promise<void> => {
-  const serverArgs = data.args.trim()
-    ? data.args.trim().split(/\s+/)
-    : undefined;
+  const serverArgs = parseArgs(data.args);
 
   await addServer(
     data.name,
