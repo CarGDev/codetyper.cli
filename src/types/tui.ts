@@ -247,6 +247,19 @@ export interface StreamingLogState {
 }
 
 // ============================================================================
+// MCP Types (for UI display)
+// ============================================================================
+
+export type MCPServerStatus = "connected" | "disconnected" | "error";
+
+export interface MCPServerDisplay {
+  id: string;
+  name: string;
+  status: MCPServerStatus;
+  description?: string;
+}
+
+// ============================================================================
 // Component Props Types
 // ============================================================================
 

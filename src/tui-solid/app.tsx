@@ -28,19 +28,13 @@ import { ToastProvider, Toast, useToast } from "@tui-solid/ui/toast";
 import { Home } from "@tui-solid/routes/home";
 import { Session } from "@tui-solid/routes/session";
 import type { TuiInput, TuiOutput } from "@tui-solid/types";
+import type { MCPServerDisplay } from "@/types/tui";
 import type { PermissionScope, LearningScope } from "@/types/tui";
 import type { MCPAddFormData } from "@/types/mcp";
 
 interface AgentOption {
   id: string;
   name: string;
-  description?: string;
-}
-
-interface MCPServer {
-  id: string;
-  name: string;
-  status: "connected" | "disconnected" | "error";
   description?: string;
 }
 
@@ -72,7 +66,7 @@ interface AppProps extends TuiInput {
   } | null;
   agents?: AgentOption[];
   currentAgent?: string;
-  mcpServers?: MCPServer[];
+  mcpServers?: MCPServerDisplay[];
   files?: string[];
 }
 
@@ -450,7 +444,7 @@ export interface TuiRenderOptions extends TuiInput {
   } | null;
   agents?: AgentOption[];
   currentAgent?: string;
-  mcpServers?: MCPServer[];
+  mcpServers?: MCPServerDisplay[];
   files?: string[];
 }
 

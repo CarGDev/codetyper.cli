@@ -105,7 +105,20 @@ const defaultHandleMCPAdd = async (data: MCPAddFormData): Promise<void> => {
     data.isGlobal,
   );
 
-  await connectServer(data.name);
+  // Add to store with "connecting" status
+  appStore.addMcpServer({
+    id: data.name,
+    name: data.name,
+    status: "disconnected",
+    description: data.command,
+  });
+
+  try {
+    await connectServer(data.name);
+    appStore.updateMcpServerStatus(data.name, "connected");
+  } catch {
+    appStore.updateMcpServerStatus(data.name, "error");
+  }
 };
 
 const defaultHandleBrainSetJwtToken = async (jwtToken: string): Promise<void> => {

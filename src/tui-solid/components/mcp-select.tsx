@@ -2,23 +2,17 @@ import { createSignal, createMemo, For, Show } from "solid-js";
 import { useKeyboard } from "@opentui/solid";
 import { TextAttributes } from "@opentui/core";
 import { useTheme } from "@tui-solid/context/theme";
-
-interface MCPServer {
-  id: string;
-  name: string;
-  status: "connected" | "disconnected" | "error";
-  description?: string;
-}
+import type { MCPServerDisplay } from "@/types/tui";
 
 interface MCPSelectProps {
-  servers: MCPServer[];
+  servers: MCPServerDisplay[];
   onSelect: (serverId: string) => void;
   onAddNew: () => void;
   onClose: () => void;
   isActive?: boolean;
 }
 
-const STATUS_COLORS: Record<MCPServer["status"], string> = {
+const STATUS_COLORS: Record<MCPServerDisplay["status"], string> = {
   connected: "success",
   disconnected: "textDim",
   error: "error",

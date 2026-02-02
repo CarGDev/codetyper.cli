@@ -1,4 +1,4 @@
-import { Show, Switch, Match, createSignal } from "solid-js";
+import { Show, Switch, Match, createSignal, createMemo, onMount } from "solid-js";
 import { useTheme } from "@tui-solid/context/theme";
 import { useAppStore } from "@tui-solid/context/app";
 import { Header } from "@tui-solid/components/header";
@@ -23,19 +23,12 @@ import { CenteredModal } from "@tui-solid/components/centered-modal";
 import { DebugLogPanel } from "@tui-solid/components/debug-log-panel";
 import { BrainMenu } from "@tui-solid/components/brain-menu";
 import { BRAIN_DISABLED } from "@constants/brain";
-import type { PermissionScope, LearningScope, InteractionMode } from "@/types/tui";
+import type { PermissionScope, LearningScope, InteractionMode, MCPServerDisplay } from "@/types/tui";
 import type { MCPAddFormData } from "@/types/mcp";
 
 interface AgentOption {
   id: string;
   name: string;
-  description?: string;
-}
-
-interface MCPServer {
-  id: string;
-  name: string;
-  status: "connected" | "disconnected" | "error";
   description?: string;
 }
 
@@ -72,7 +65,7 @@ interface SessionProps {
   } | null;
   agents?: AgentOption[];
   currentAgent?: string;
-  mcpServers?: MCPServer[];
+  mcpServers?: MCPServerDisplay[];
   files?: string[];
   providerStatuses?: Record<string, ProviderStatus>;
   providerScores?: Record<string, number>;
@@ -81,6 +74,16 @@ interface SessionProps {
 export function Session(props: SessionProps) {
   const theme = useTheme();
   const app = useAppStore();
+
+  // Initialize MCP servers from props on mount
+  onMount(() => {
+    if (props.mcpServers && props.mcpServers.length > 0) {
+      app.setMcpServers(props.mcpServers);
+    }
+  });
+
+  // Use store's mcpServers (reactive, updated when servers are added)
+  const mcpServers = createMemo(() => app.mcpServers());
 
   // Local state for help menu
   const [selectedHelpTopic, setSelectedHelpTopic] = createSignal<string | null>(
@@ -291,7 +294,7 @@ export function Session(props: SessionProps) {
         <Match when={app.mode() === "mcp_select"}>
           <CenteredModal>
             <MCPSelect
-              servers={props.mcpServers ?? []}
+              servers={mcpServers()}
               onSelect={props.onMCPSelect}
               onAddNew={handleMCPAddNew}
               onClose={handleMCPClose}

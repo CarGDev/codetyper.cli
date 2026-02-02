@@ -14,6 +14,7 @@ import type {
   CommandMenuState,
   StreamingLogState,
   SuggestionState,
+  MCPServerDisplay,
 } from "@/types/tui";
 import type { ProviderModel } from "@/types/providers";
 import type { BrainConnectionStatus, BrainUser } from "@/types/brain";
@@ -45,6 +46,7 @@ interface AppStore {
   streamingLog: StreamingLogState;
   suggestions: SuggestionState;
   cascadeEnabled: boolean;
+  mcpServers: MCPServerDisplay[];
   brain: {
     status: BrainConnectionStatus;
     user: BrainUser | null;
@@ -89,6 +91,7 @@ interface AppContextValue {
   streamingLogIsActive: Accessor<boolean>;
   suggestions: Accessor<SuggestionState>;
   cascadeEnabled: Accessor<boolean>;
+  mcpServers: Accessor<MCPServerDisplay[]>;
   brain: Accessor<{
     status: BrainConnectionStatus;
     user: BrainUser | null;
@@ -184,6 +187,11 @@ interface AppContextValue {
   setBrainShowBanner: (show: boolean) => void;
   dismissBrainBanner: () => void;
 
+  // MCP actions
+  setMcpServers: (servers: MCPServerDisplay[]) => void;
+  addMcpServer: (server: MCPServerDisplay) => void;
+  updateMcpServerStatus: (id: string, status: MCPServerDisplay["status"]) => void;
+
   // Computed
   isInputLocked: () => boolean;
 }
@@ -249,6 +257,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         streamingLog: createInitialStreamingState(),
         suggestions: createInitialSuggestionState(),
         cascadeEnabled: true,
+        mcpServers: [],
         brain: {
           status: "disconnected" as BrainConnectionStatus,
           user: null,
@@ -303,6 +312,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
       const streamingLogIsActive = (): boolean => store.streamingLog.isStreaming;
       const suggestions = (): SuggestionState => store.suggestions;
       const cascadeEnabled = (): boolean => store.cascadeEnabled;
+      const mcpServers = (): MCPServerDisplay[] => store.mcpServers;
       const brain = () => store.brain;
 
       // Mode actions
@@ -520,6 +530,36 @@ export const { provider: AppStoreProvider, use: useAppStore } =
 
       const dismissBrainBanner = (): void => {
         setStore("brain", { ...store.brain, showBanner: false });
+      };
+
+      // MCP actions
+      const setMcpServers = (servers: MCPServerDisplay[]): void => {
+        setStore("mcpServers", servers);
+      };
+
+      const addMcpServer = (server: MCPServerDisplay): void => {
+        setStore(
+          produce((s) => {
+            // Replace if exists, otherwise add
+            const existingIndex = s.mcpServers.findIndex((srv) => srv.id === server.id);
+            if (existingIndex !== -1) {
+              s.mcpServers[existingIndex] = server;
+            } else {
+              s.mcpServers.push(server);
+            }
+          }),
+        );
+      };
+
+      const updateMcpServerStatus = (id: string, status: MCPServerDisplay["status"]): void => {
+        setStore(
+          produce((s) => {
+            const server = s.mcpServers.find((srv) => srv.id === id);
+            if (server) {
+              server.status = status;
+            }
+          }),
+        );
       };
 
       // Session stats actions
@@ -758,6 +798,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         streamingLogIsActive,
         suggestions,
         cascadeEnabled,
+        mcpServers,
         brain,
 
         // Mode actions
@@ -819,6 +860,11 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         setBrainCounts,
         setBrainShowBanner,
         dismissBrainBanner,
+
+        // MCP actions
+        setMcpServers,
+        addMcpServer,
+        updateMcpServerStatus,
 
         // Session stats actions
         startThinking,
@@ -887,6 +933,7 @@ const defaultAppState = {
   isCompacting: false,
   streamingLog: createInitialStreamingState(),
   suggestions: createInitialSuggestionState(),
+  mcpServers: [] as MCPServerDisplay[],
   brain: {
     status: "disconnected" as BrainConnectionStatus,
     user: null,
@@ -926,6 +973,7 @@ export const appStore = {
       isCompacting: storeRef.isCompacting(),
       streamingLog: storeRef.streamingLog(),
       suggestions: storeRef.suggestions(),
+      mcpServers: storeRef.mcpServers(),
       brain: storeRef.brain(),
     };
   },
@@ -1133,5 +1181,20 @@ export const appStore = {
   dismissBrainBanner: (): void => {
     if (!storeRef) return;
     storeRef.dismissBrainBanner();
+  },
+
+  setMcpServers: (servers: MCPServerDisplay[]): void => {
+    if (!storeRef) return;
+    storeRef.setMcpServers(servers);
+  },
+
+  addMcpServer: (server: MCPServerDisplay): void => {
+    if (!storeRef) return;
+    storeRef.addMcpServer(server);
+  },
+
+  updateMcpServerStatus: (id: string, status: MCPServerDisplay["status"]): void => {
+    if (!storeRef) return;
+    storeRef.updateMcpServerStatus(id, status);
   },
 };
