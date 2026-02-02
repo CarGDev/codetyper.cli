@@ -23,6 +23,7 @@ import { CenteredModal } from "@tui-solid/components/centered-modal";
 import { DebugLogPanel } from "@tui-solid/components/debug-log-panel";
 import { BrainMenu } from "@tui-solid/components/brain-menu";
 import { BRAIN_DISABLED } from "@constants/brain";
+import { initializeMCP, getServerInstances } from "@services/mcp";
 import type { PermissionScope, LearningScope, InteractionMode, MCPServerDisplay } from "@/types/tui";
 import type { MCPAddFormData } from "@/types/mcp";
 
@@ -75,10 +76,34 @@ export function Session(props: SessionProps) {
   const theme = useTheme();
   const app = useAppStore();
 
-  // Initialize MCP servers from props on mount
-  onMount(() => {
+  // Initialize MCP servers from config on mount
+  onMount(async () => {
+    // First set any servers passed as props
     if (props.mcpServers && props.mcpServers.length > 0) {
       app.setMcpServers(props.mcpServers);
+    }
+
+    // Then load servers from config file
+    try {
+      await initializeMCP();
+      const instances = getServerInstances();
+      const servers: MCPServerDisplay[] = [];
+
+      for (const [id, instance] of instances) {
+        servers.push({
+          id,
+          name: instance.config.name || id,
+          status: instance.state === "connected" ? "connected" :
+                  instance.state === "error" ? "error" : "disconnected",
+          description: instance.config.command,
+        });
+      }
+
+      if (servers.length > 0) {
+        app.setMcpServers(servers);
+      }
+    } catch {
+      // Silently fail - MCP is optional
     }
   });
 
