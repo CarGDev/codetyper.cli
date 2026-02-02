@@ -74,7 +74,37 @@ const MODE_PROMPT_BUILDERS: Record<
 };
 
 /**
- * Get git context for prompt building
+ * Execute git command asynchronously
+ */
+const execGitCommand = (args: string[]): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const { spawn } = require("child_process");
+    const proc = spawn("git", args, { cwd: process.cwd() });
+    let stdout = "";
+    let stderr = "";
+
+    proc.stdout.on("data", (data: Buffer) => {
+      stdout += data.toString();
+    });
+
+    proc.stderr.on("data", (data: Buffer) => {
+      stderr += data.toString();
+    });
+
+    proc.on("close", (code: number) => {
+      if (code === 0) {
+        resolve(stdout.trim());
+      } else {
+        reject(new Error(stderr || `git exited with code ${code}`));
+      }
+    });
+
+    proc.on("error", reject);
+  });
+};
+
+/**
+ * Get git context for prompt building (async, non-blocking)
  */
 export const getGitContext = async (): Promise<{
   isGitRepo: boolean;
@@ -83,16 +113,15 @@ export const getGitContext = async (): Promise<{
   recentCommits?: string[];
 }> => {
   try {
-    const { execSync } = await import("child_process");
-    const branch = execSync("git branch --show-current", {
-      encoding: "utf-8",
-    }).trim();
-    const status =
-      execSync("git status --short", { encoding: "utf-8" }).trim() || "(clean)";
-    const commits = execSync("git log --oneline -5", { encoding: "utf-8" })
-      .trim()
-      .split("\n")
-      .filter(Boolean);
+    // Run all git commands in parallel for faster execution
+    const [branch, status, commits] = await Promise.all([
+      execGitCommand(["branch", "--show-current"]),
+      execGitCommand(["status", "--short"]).then((s) => s || "(clean)"),
+      execGitCommand(["log", "--oneline", "-5"]).then((s) =>
+        s.split("\n").filter(Boolean),
+      ),
+    ]);
+
     return { isGitRepo: true, branch, status, recentCommits: commits };
   } catch {
     return { isGitRepo: false };

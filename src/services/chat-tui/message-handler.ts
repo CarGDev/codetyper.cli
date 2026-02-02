@@ -366,7 +366,7 @@ export const handleMessage = async (
     const modeLabel = interactionMode === "ask" ? "Ask" : "Code Review";
     callbacks.onLog(
       "system",
-      `${modeLabel} mode: Read-only tools only (Ctrl+Tab to switch modes)`,
+      `${modeLabel} mode: Read-only tools only (Ctrl+M to switch modes)`,
     );
   }
 

@@ -5,6 +5,7 @@
  */
 
 import type { ProviderModel } from "@/types/providers";
+import type { BrainConnectionStatus, BrainUser } from "@/types/brain";
 
 // ============================================================================
 // App Mode Types
@@ -28,7 +29,9 @@ export type AppMode =
   | "provider_select"
   | "learning_prompt"
   | "help_menu"
-  | "help_detail";
+  | "help_detail"
+  | "brain_menu"
+  | "brain_login";
 
 /** Screen mode for determining which view to show */
 export type ScreenMode = "home" | "session";
@@ -230,6 +233,7 @@ export interface SessionStats {
   outputTokens: number;
   thinkingStartTime: number | null;
   lastThinkingDuration: number;
+  contextMaxTokens: number;
 }
 
 // ============================================================================
@@ -269,6 +273,9 @@ export interface AppState {
 
   // Screen mode (home vs session)
   screenMode: ScreenMode;
+
+  // Interaction mode (agent, ask, code-review)
+  interactionMode: InteractionMode;
 
   // Input state
   inputBuffer: string;
@@ -318,9 +325,20 @@ export interface AppState {
   // Suggestion prompts state
   suggestions: SuggestionState;
 
+  // Brain state
+  brain: {
+    status: BrainConnectionStatus;
+    user: BrainUser | null;
+    knowledgeCount: number;
+    memoryCount: number;
+    showBanner: boolean;
+  };
+
   // Actions
   setMode: (mode: AppMode) => void;
   setScreenMode: (screenMode: ScreenMode) => void;
+  setInteractionMode: (mode: InteractionMode) => void;
+  toggleInteractionMode: () => void;
   setInputBuffer: (buffer: string) => void;
   setInputCursorPosition: (position: number) => void;
   appendToInput: (text: string) => void;
@@ -388,6 +406,13 @@ export interface AppState {
   prevSuggestion: () => void;
   hideSuggestions: () => void;
   showSuggestions: () => void;
+
+  // Brain actions
+  setBrainStatus: (status: BrainConnectionStatus) => void;
+  setBrainUser: (user: BrainUser | null) => void;
+  setBrainCounts: (knowledge: number, memory: number) => void;
+  setBrainShowBanner: (show: boolean) => void;
+  dismissBrainBanner: () => void;
 
   // Computed
   isInputLocked: () => boolean;

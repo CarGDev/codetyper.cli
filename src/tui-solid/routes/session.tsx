@@ -21,6 +21,8 @@ import { HelpDetail } from "@tui-solid/components/help-detail";
 import { TodoPanel } from "@tui-solid/components/todo-panel";
 import { CenteredModal } from "@tui-solid/components/centered-modal";
 import { DebugLogPanel } from "@tui-solid/components/debug-log-panel";
+import { BrainMenu } from "@tui-solid/components/brain-menu";
+import { BRAIN_DISABLED } from "@constants/brain";
 import type { PermissionScope, LearningScope, InteractionMode } from "@/types/tui";
 import type { MCPAddFormData } from "@/types/mcp";
 
@@ -60,6 +62,9 @@ interface SessionProps {
     scope?: LearningScope,
     editedContent?: string,
   ) => void;
+  onBrainSetJwtToken?: (jwtToken: string) => Promise<void>;
+  onBrainSetApiKey?: (apiKey: string) => Promise<void>;
+  onBrainLogout?: () => Promise<void>;
   plan?: {
     id: string;
     title: string;
@@ -111,6 +116,10 @@ export function Session(props: SessionProps) {
     }
     if (lowerCommand === "help" || lowerCommand === "h" || lowerCommand === "?") {
       app.transitionFromCommandMenu("help_menu");
+      return;
+    }
+    if (lowerCommand === "brain" && !BRAIN_DISABLED) {
+      app.transitionFromCommandMenu("brain_menu");
       return;
     }
     // For other commands, close menu and process through handler
@@ -190,6 +199,22 @@ export function Session(props: SessionProps) {
   const handleHelpDetailClose = (): void => {
     setSelectedHelpTopic(null);
     app.setMode("idle");
+  };
+
+  const handleBrainMenuClose = (): void => {
+    app.setMode("idle");
+  };
+
+  const handleBrainSetJwtToken = async (jwtToken: string): Promise<void> => {
+    await props.onBrainSetJwtToken?.(jwtToken);
+  };
+
+  const handleBrainSetApiKey = async (apiKey: string): Promise<void> => {
+    await props.onBrainSetApiKey?.(apiKey);
+  };
+
+  const handleBrainLogout = async (): Promise<void> => {
+    await props.onBrainLogout?.();
   };
 
   return (
@@ -359,6 +384,18 @@ export function Session(props: SessionProps) {
               onBack={handleHelpDetailBack}
               onClose={handleHelpDetailClose}
               isActive={app.mode() === "help_detail"}
+            />
+          </CenteredModal>
+        </Match>
+
+        <Match when={app.mode() === "brain_menu" && !BRAIN_DISABLED}>
+          <CenteredModal>
+            <BrainMenu
+              onSetJwtToken={handleBrainSetJwtToken}
+              onSetApiKey={handleBrainSetApiKey}
+              onLogout={handleBrainLogout}
+              onClose={handleBrainMenuClose}
+              isActive={app.mode() === "brain_menu"}
             />
           </CenteredModal>
         </Match>

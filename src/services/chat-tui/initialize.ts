@@ -19,6 +19,8 @@ import {
   buildCompletePrompt,
 } from "@services/prompt-builder";
 import { initSuggestionService } from "@services/command-suggestion-service";
+import * as brainService from "@services/brain";
+import { BRAIN_DISABLED } from "@constants/brain";
 import { addContextFile } from "@services/chat-tui/files";
 import type { ProviderName, Message } from "@/types/providers";
 import type { ChatSession } from "@/types/index";
@@ -148,6 +150,39 @@ const initializeTheme = async (): Promise<void> => {
 };
 
 /**
+ * Initialize brain service and update store state
+ * Skipped when BRAIN_DISABLED flag is true
+ */
+const initializeBrain = async (): Promise<void> => {
+  // Skip brain initialization when disabled
+  if (BRAIN_DISABLED) {
+    appStore.setBrainStatus("disconnected");
+    appStore.setBrainShowBanner(false);
+    return;
+  }
+
+  try {
+    appStore.setBrainStatus("connecting");
+
+    const connected = await brainService.initialize();
+
+    if (connected) {
+      const state = brainService.getState();
+      appStore.setBrainStatus("connected");
+      appStore.setBrainUser(state.user);
+      appStore.setBrainCounts(state.knowledgeCount, state.memoryCount);
+      appStore.setBrainShowBanner(false);
+    } else {
+      appStore.setBrainStatus("disconnected");
+      appStore.setBrainShowBanner(true);
+    }
+  } catch {
+    appStore.setBrainStatus("disconnected");
+    appStore.setBrainShowBanner(true);
+  }
+};
+
+/**
  * Rebuild system prompt when interaction mode changes
  * Updates both the state and the first message in the conversation
  */
@@ -178,9 +213,13 @@ export const initializeChatService = async (
   const initialMode = appStore.getState().interactionMode;
   const state = await createInitialState(options, initialMode);
 
-  await validateProvider(state);
-  await buildSystemPrompt(state, options);
-  await initializeTheme();
+  // Run provider validation and system prompt building in parallel
+  // These are independent and both involve async operations
+  await Promise.all([
+    validateProvider(state),
+    buildSystemPrompt(state, options),
+    initializeTheme(),
+  ]);
 
   const session = await initializeSession(state, options);
 
@@ -188,9 +227,18 @@ export const initializeChatService = async (
     state.messages.push({ role: "system", content: state.systemPrompt });
   }
 
-  await addInitialContextFiles(state, options.files);
-  await initializePermissions();
+  // Run these in parallel - they're independent
+  await Promise.all([
+    addInitialContextFiles(state, options.files),
+    initializePermissions(),
+  ]);
+
   initSuggestionService(process.cwd());
+
+  // Initialize brain service (non-blocking, errors silently handled)
+  initializeBrain().catch(() => {
+    // Silently fail - brain is optional
+  });
 
   return { state, session };
 };

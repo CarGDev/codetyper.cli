@@ -8,3 +8,4 @@ export * from "@services/github-issue-service";
 export * from "@services/command-suggestion-service";
 export * from "@services/learning-service";
 export * from "@services/rules-service";
+export * as brainService from "@services/brain";

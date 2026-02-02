@@ -12,7 +12,10 @@ export { todoReadTool } from "@tools/todo-read";
 export { globToolDefinition } from "@tools/glob/definition";
 export { grepToolDefinition } from "@tools/grep/definition";
 export { webSearchTool } from "@tools/web-search";
+export { webFetchTool } from "@tools/web-fetch";
+export { multiEditTool } from "@tools/multi-edit";
 export { lspTool } from "@tools/lsp";
+export { applyPatchTool } from "@tools/apply-patch";
 
 import type { ToolDefinition, FunctionDefinition } from "@tools/types";
 import { toolToFunction } from "@tools/types";
@@ -25,7 +28,10 @@ import { todoReadTool } from "@tools/todo-read";
 import { globToolDefinition } from "@tools/glob/definition";
 import { grepToolDefinition } from "@tools/grep/definition";
 import { webSearchTool } from "@tools/web-search";
+import { webFetchTool } from "@tools/web-fetch";
+import { multiEditTool } from "@tools/multi-edit";
 import { lspTool } from "@tools/lsp";
+import { applyPatchTool } from "@tools/apply-patch";
 import {
   isMCPTool,
   executeMCPTool,
@@ -44,12 +50,15 @@ export const tools: ToolDefinition[] = [
   readTool,
   writeTool,
   editTool,
+  multiEditTool,
   globToolDefinition,
   grepToolDefinition,
   todoWriteTool,
   todoReadTool,
   webSearchTool,
+  webFetchTool,
   lspTool,
+  applyPatchTool,
 ];
 
 // Tools that are read-only (allowed in chat mode)
@@ -59,6 +68,7 @@ const READ_ONLY_TOOLS = new Set([
   "grep",
   "todo_read",
   "web_search",
+  "web_fetch",
   "lsp",
 ]);
 

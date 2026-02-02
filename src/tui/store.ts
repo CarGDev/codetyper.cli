@@ -7,6 +7,7 @@ import type {
   AppState,
   AppMode,
   ScreenMode,
+  InteractionMode,
   LogEntry,
   ToolCall,
   PermissionRequest,
@@ -17,6 +18,15 @@ import type {
   SuggestionPrompt,
 } from "@/types/tui";
 import type { ProviderModel } from "@/types/providers";
+import type { BrainConnectionStatus, BrainUser } from "@/types/brain";
+
+const createInitialBrainState = () => ({
+  status: "disconnected" as BrainConnectionStatus,
+  user: null as BrainUser | null,
+  knowledgeCount: 0,
+  memoryCount: 0,
+  showBanner: true,
+});
 
 const createInitialSessionStats = (): SessionStats => ({
   startTime: Date.now(),
@@ -44,10 +54,13 @@ const generateLogId = (): string => {
   return `log-${++logIdCounter}-${Date.now()}`;
 };
 
+const INTERACTION_MODES: InteractionMode[] = ["agent", "ask", "code-review"];
+
 export const useAppStore = create<AppState>((set, get) => ({
   // Initial state
   mode: "idle",
   screenMode: "home",
+  interactionMode: "agent" as InteractionMode,
   inputBuffer: "",
   inputCursorPosition: 0,
   logs: [],
@@ -78,10 +91,17 @@ export const useAppStore = create<AppState>((set, get) => ({
   visibleHeight: 20,
   streamingLog: createInitialStreamingState(),
   suggestions: createInitialSuggestionState(),
+  brain: createInitialBrainState(),
 
   // Mode actions
   setMode: (mode: AppMode) => set({ mode }),
   setScreenMode: (screenMode: ScreenMode) => set({ screenMode }),
+  setInteractionMode: (interactionMode: InteractionMode) => set({ interactionMode }),
+  toggleInteractionMode: () => set((state) => {
+    const currentIndex = INTERACTION_MODES.indexOf(state.interactionMode);
+    const nextIndex = (currentIndex + 1) % INTERACTION_MODES.length;
+    return { interactionMode: INTERACTION_MODES[nextIndex] };
+  }),
 
   // Input actions
   setInputBuffer: (buffer: string) => set({ inputBuffer: buffer }),
@@ -451,6 +471,32 @@ export const useAppStore = create<AppState>((set, get) => ({
       },
     })),
 
+  // Brain actions
+  setBrainStatus: (status: BrainConnectionStatus) =>
+    set((state) => ({
+      brain: { ...state.brain, status },
+    })),
+
+  setBrainUser: (user: BrainUser | null) =>
+    set((state) => ({
+      brain: { ...state.brain, user },
+    })),
+
+  setBrainCounts: (knowledgeCount: number, memoryCount: number) =>
+    set((state) => ({
+      brain: { ...state.brain, knowledgeCount, memoryCount },
+    })),
+
+  setBrainShowBanner: (showBanner: boolean) =>
+    set((state) => ({
+      brain: { ...state.brain, showBanner },
+    })),
+
+  dismissBrainBanner: () =>
+    set((state) => ({
+      brain: { ...state.brain, showBanner: false },
+    })),
+
   // Computed - check if input should be locked
   isInputLocked: () => {
     const { mode } = get();
@@ -544,6 +590,14 @@ export const appStore = {
     useAppStore.getState().toggleTodos();
   },
 
+  toggleInteractionMode: () => {
+    useAppStore.getState().toggleInteractionMode();
+  },
+
+  setInteractionMode: (mode: InteractionMode) => {
+    useAppStore.getState().setInteractionMode(mode);
+  },
+
   setInterruptPending: (pending: boolean) => {
     useAppStore.getState().setInterruptPending(pending);
   },
@@ -605,5 +659,26 @@ export const appStore = {
 
   resumeAutoScroll: () => {
     useAppStore.getState().resumeAutoScroll();
+  },
+
+  // Brain
+  setBrainStatus: (status: BrainConnectionStatus) => {
+    useAppStore.getState().setBrainStatus(status);
+  },
+
+  setBrainUser: (user: BrainUser | null) => {
+    useAppStore.getState().setBrainUser(user);
+  },
+
+  setBrainCounts: (knowledge: number, memory: number) => {
+    useAppStore.getState().setBrainCounts(knowledge, memory);
+  },
+
+  setBrainShowBanner: (show: boolean) => {
+    useAppStore.getState().setBrainShowBanner(show);
+  },
+
+  dismissBrainBanner: () => {
+    useAppStore.getState().dismissBrainBanner();
   },
 };

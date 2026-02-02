@@ -7,6 +7,7 @@
  * - User scroll detection (scrolling up pauses auto-scroll)
  * - Resume auto-scroll when user scrolls back to bottom
  * - Virtual scrolling for performance
+ * - Shows logo and welcome screen when no logs
  */
 
 import React, { useEffect, useRef, useMemo } from "react";
@@ -20,6 +21,7 @@ import {
 import { LogEntryDisplay } from "@tui/components/log-panel/entry-renderers";
 import { ThinkingIndicator } from "@tui/components/log-panel/thinking-indicator";
 import { estimateEntryLines } from "@tui/components/log-panel/utils";
+import { Logo } from "@tui/components/home/Logo";
 
 export function LogPanel(): React.ReactElement {
   const allLogs = useAppStore((state) => state.logs);
@@ -149,7 +151,15 @@ export function LogPanel(): React.ReactElement {
       )}
 
       {logs.length === 0 && !thinkingMessage ? (
-        <Text dimColor>No messages yet. Type your prompt below.</Text>
+        <Box flexDirection="column" flexGrow={1} alignItems="center" justifyContent="center">
+          <Logo />
+          <Box marginTop={1}>
+            <Text dimColor>AI Coding Assistant</Text>
+          </Box>
+          <Box marginTop={1}>
+            <Text dimColor>Type your prompt below • Ctrl+M to switch modes</Text>
+          </Box>
+        </Box>
       ) : (
         <Box flexDirection="column" flexGrow={1}>
           {visibleEntries.map((entry) => (

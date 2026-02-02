@@ -49,6 +49,8 @@ export const MODE_DISPLAY_CONFIG: Record<string, ModeDisplayConfig> = {
   learning_prompt: { text: "Save Learning?", color: "cyan" },
   help_menu: { text: "Help", color: "cyan" },
   help_detail: { text: "Help Detail", color: "cyan" },
+  brain_menu: { text: "Brain Settings", color: "magenta" },
+  brain_login: { text: "Brain Login", color: "magenta" },
 } as const;
 
 export const DEFAULT_MODE_DISPLAY: ModeDisplayConfig = {
@@ -217,6 +219,11 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   {
     name: "logout",
     description: "Sign out from provider",
+    category: "account",
+  },
+  {
+    name: "brain",
+    description: "Configure CodeTyper Brain (memory & knowledge)",
     category: "account",
   },
 ];

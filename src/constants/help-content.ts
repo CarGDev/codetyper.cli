@@ -89,7 +89,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     fullDescription:
       "Switch between Agent (full access), Ask (read-only), and Code Review modes.",
     usage: "/mode",
-    shortcuts: ["Ctrl+Tab"],
+    shortcuts: ["Ctrl+M"],
     category: "commands",
   },
   {
@@ -166,11 +166,11 @@ export const HELP_TOPICS: HelpTopic[] = [
     category: "shortcuts",
   },
   {
-    id: "shortcut-ctrltab",
-    name: "Ctrl+Tab",
+    id: "shortcut-ctrlm",
+    name: "Ctrl+M",
     shortDescription: "Cycle modes",
     fullDescription: "Cycle through interaction modes.",
-    shortcuts: ["Ctrl+Tab"],
+    shortcuts: ["Ctrl+M"],
     category: "shortcuts",
   },
 ];

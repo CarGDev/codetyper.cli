@@ -53,8 +53,7 @@ export function Home(props: HomeProps) {
       >
         <Logo />
 
-        <box marginTop={2} flexDirection="column" alignItems="center">
-          <text fg={theme.colors.textDim}>{HOME_VARS.title}</text>
+        <box marginTop={2}>
           <text fg={theme.colors.textDim}>{HOME_VARS.subTitle}</text>
         </box>
       </box>

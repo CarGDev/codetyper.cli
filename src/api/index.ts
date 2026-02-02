@@ -7,3 +7,4 @@
 
 export * as copilotApi from "@api/copilot";
 export * as ollamaApi from "@api/ollama";
+export * as brainApi from "@api/brain";

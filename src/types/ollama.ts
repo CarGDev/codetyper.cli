@@ -28,6 +28,7 @@ export interface OllamaChatRequest {
 export interface OllamaMessage {
   role: string;
   content: string;
+  tool_calls?: OllamaToolCall[];
 }
 
 export interface OllamaChatOptions {

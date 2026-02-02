@@ -94,7 +94,11 @@ export function InputArea(props: InputAreaProps) {
       mode === "permission_prompt" ||
       mode === "learning_prompt" ||
       mode === "help_menu" ||
-      mode === "help_detail"
+      mode === "help_detail" ||
+      mode === "brain_menu" ||
+      mode === "brain_login" ||
+      mode === "provider_select" ||
+      mode === "mcp_browse"
     );
   });
   const placeholder = () =>
@@ -108,10 +112,10 @@ export function InputArea(props: InputAreaProps) {
 
   // Handle "/" to open command menu when input is empty
   // Handle Enter to submit (backup in case onSubmit doesn't fire)
-  // Handle Ctrl+Tab to toggle interaction mode
+  // Handle Ctrl+M to toggle interaction mode (Ctrl+Tab doesn't work in most terminals)
   useKeyboard((evt) => {
-    // Ctrl+Tab works even when locked or menus are open
-    if (evt.ctrl && evt.name === "tab") {
+    // Ctrl+M works even when locked or menus are open
+    if (evt.ctrl && evt.name === "m") {
       app.toggleInteractionMode();
       evt.preventDefault();
       evt.stopPropagation();

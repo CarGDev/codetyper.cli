@@ -156,11 +156,11 @@ export function DebugLogPanel() {
         paddingRight={1}
         borderColor={theme.colors.border}
         border={["bottom"]}
+        flexDirection="row"
       >
         <text fg={theme.colors.accent} attributes={TextAttributes.BOLD}>
-          Debug Logs
+          Debug Logs ({entries().length})
         </text>
-        <text fg={theme.colors.textDim}> ({entries().length})</text>
       </box>
 
       <scrollbox

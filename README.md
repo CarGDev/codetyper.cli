@@ -1,8 +1,10 @@
 # CodeTyper CLI
 
-An AI-powered terminal coding agent with an interactive TUI. CodeTyper autonomously executes coding tasks using tool calls with granular permission controls and intelligent provider routing.
+<p align="center">
+  <img src="assets/Codetyper_logo.png" alt="CodeTyper Logo" width="400">
+</p>
 
-![CodeTyper Welcome Screen](assets/CodetyperLogin.png)
+An AI-powered terminal coding agent with an interactive TUI. CodeTyper autonomously executes coding tasks using tool calls with granular permission controls and intelligent provider routing.
 
 ## How It Works
 
@@ -85,7 +87,7 @@ Full-screen terminal interface with real-time streaming responses.
 - `Enter` - Send message
 - `Shift+Enter` - New line
 - `/` - Open command menu
-- `Ctrl+Tab` - Toggle interaction mode
+- `Ctrl+M` - Toggle interaction mode
 - `Ctrl+T` - Toggle todo panel
 - `Shift+Up/Down` - Scroll log panel
 - `Ctrl+C` (twice) - Exit

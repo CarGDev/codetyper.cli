@@ -18,15 +18,19 @@ import type { MCPServerInstance, MCPServerConfig } from "@/types/mcp";
 
 interface MCPSelectProps {
   onClose: () => void;
+  onBrowse?: () => void;
   isActive?: boolean;
 }
 
 type MenuMode = "list" | "add_name" | "add_command" | "add_args";
 
+type ActionType = "add" | "browse" | "search" | "popular";
+
 interface MenuItem {
   id: string;
   name: string;
   type: "server" | "action";
+  actionType?: ActionType;
   server?: MCPServerInstance;
   config?: MCPServerConfig;
 }
@@ -42,6 +46,7 @@ const STATE_COLORS: Record<string, string> = {
 
 export function MCPSelect({
   onClose,
+  onBrowse,
   isActive = true,
 }: MCPSelectProps): React.ReactElement {
   const [servers, setServers] = useState<Map<string, MCPServerInstance>>(
@@ -76,11 +81,26 @@ export function MCPSelect({
   const menuItems = useMemo((): MenuItem[] => {
     const items: MenuItem[] = [];
 
-    // Add "Add new server" action
+    // Add action items first
+    items.push({
+      id: "__browse__",
+      name: "🔍 Browse & Search servers",
+      type: "action",
+      actionType: "browse",
+    });
+
+    items.push({
+      id: "__popular__",
+      name: "⭐ Popular servers",
+      type: "action",
+      actionType: "popular",
+    });
+
     items.push({
       id: "__add__",
-      name: "+ Add new MCP server",
+      name: "+ Add server manually",
       type: "action",
+      actionType: "add",
     });
 
     // Add servers
@@ -231,9 +251,36 @@ export function MCPSelect({
         if (filteredItems.length > 0) {
           const selected = filteredItems[selectedIndex];
           if (selected) {
-            if (selected.type === "action" && selected.id === "__add__") {
-              setMode("add_name");
-              setMessage(null);
+            if (selected.type === "action") {
+              const actionHandlers: Record<ActionType, () => void> = {
+                add: () => {
+                  setMode("add_name");
+                  setMessage(null);
+                },
+                browse: () => {
+                  if (onBrowse) {
+                    onBrowse();
+                  } else {
+                    onClose();
+                  }
+                },
+                popular: () => {
+                  if (onBrowse) {
+                    onBrowse();
+                  } else {
+                    onClose();
+                  }
+                },
+                search: () => {
+                  if (onBrowse) {
+                    onBrowse();
+                  } else {
+                    onClose();
+                  }
+                },
+              };
+              const handler = actionHandlers[selected.actionType || "add"];
+              handler();
             } else if (selected.type === "server") {
               toggleServer(selected);
             }

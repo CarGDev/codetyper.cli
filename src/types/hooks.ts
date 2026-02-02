@@ -13,6 +13,7 @@ export type HookEventType =
   | "SessionStart"
   | "SessionEnd"
   | "UserPromptSubmit"
+  | "PreCompact"
   | "Stop";
 
 /**
@@ -130,6 +131,17 @@ export interface StopHookInput {
 }
 
 /**
+ * Input passed to PreCompact hooks via stdin
+ */
+export interface PreCompactHookInput {
+  sessionId: string;
+  workingDir: string;
+  currentTokens: number;
+  maxTokens: number;
+  messageCount: number;
+}
+
+/**
  * Union of all hook input types
  */
 export type HookInput =
@@ -138,6 +150,7 @@ export type HookInput =
   | SessionStartHookInput
   | SessionEndHookInput
   | UserPromptSubmitHookInput
+  | PreCompactHookInput
   | StopHookInput;
 
 /**

@@ -4,6 +4,7 @@ import type { ScrollBoxRenderable } from "@opentui/core";
 import { useTheme } from "@tui-solid/context/theme";
 import { useAppStore } from "@tui-solid/context/app";
 import { LogEntryDisplay } from "@tui-solid/components/log-entry";
+import { ASCII_LOGO, ASCII_LOGO_GRADIENT, HOME_VARS } from "@constants/home";
 
 const SCROLL_LINES = 3;
 const MOUSE_ENABLE = "\x1b[?1000h\x1b[?1006h";
@@ -141,10 +142,22 @@ export function LogPanel() {
       <Show
         when={hasContent()}
         fallback={
-          <box flexGrow={1} alignItems="center" justifyContent="center">
-            <text fg={theme.colors.textDim}>
-              No messages yet. Type your prompt below.
-            </text>
+          <box
+            flexGrow={1}
+            alignItems="center"
+            justifyContent="center"
+            flexDirection="column"
+          >
+            <For each={ASCII_LOGO}>
+              {(line, index) => (
+                <text fg={ASCII_LOGO_GRADIENT[index()] ?? theme.colors.primary}>
+                  {line}
+                </text>
+              )}
+            </For>
+            <box marginTop={2}>
+              <text fg={theme.colors.textDim}>{HOME_VARS.subTitle}</text>
+            </box>
           </box>
         }
       >

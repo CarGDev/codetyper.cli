@@ -24,7 +24,6 @@ import {
   MCPBrowser,
   TodoPanel,
   FilePicker,
-  HomeContent,
   SessionHeader,
 } from "@tui/components/index";
 import { InputLine, calculateLineStartPos } from "@tui/components/input-line";
@@ -88,6 +87,8 @@ export function App({
   const exitPending = useAppStore((state) => state.exitPending);
   const setExitPending = useAppStore((state) => state.setExitPending);
   const toggleTodos = useAppStore((state) => state.toggleTodos);
+  const toggleInteractionMode = useAppStore((state) => state.toggleInteractionMode);
+  const interactionMode = useAppStore((state) => state.interactionMode);
   const startThinking = useAppStore((state) => state.startThinking);
   const stopThinking = useAppStore((state) => state.stopThinking);
   const scrollUp = useAppStore((state) => state.scrollUp);
@@ -98,6 +99,8 @@ export function App({
   const setScreenMode = useAppStore((state) => state.setScreenMode);
   const logs = useAppStore((state) => state.logs);
   const sessionStats = useAppStore((state) => state.sessionStats);
+  const brain = useAppStore((state) => state.brain);
+  const dismissBrainBanner = useAppStore((state) => state.dismissBrainBanner);
 
   // Local input state
   const [inputBuffer, setInputBuffer] = useState("");
@@ -356,9 +359,24 @@ export function App({
 
   // Global input handler for Ctrl+C, Ctrl+D, Ctrl+T, scroll (always active)
   useInput((input, key) => {
-    // Handle Ctrl+T to toggle todos visibility
+    // Handle Ctrl+M to toggle interaction mode (Ctrl+Tab doesn't work in most terminals)
+    if (key.ctrl && input === "m") {
+      toggleInteractionMode();
+      // Note: The log will show the new mode after toggle
+      const newMode = useAppStore.getState().interactionMode;
+      addLog({
+        type: "system",
+        content: `Switched to ${newMode} mode (Ctrl+M)`,
+      });
+      return;
+    }
+
+    // Handle Ctrl+T to toggle todos visibility (only in agent/code-review modes)
     if (key.ctrl && input === "t") {
-      toggleTodos();
+      const currentMode = useAppStore.getState().interactionMode;
+      if (currentMode === "agent" || currentMode === "code-review") {
+        toggleTodos();
+      }
       return;
     }
 
@@ -548,8 +566,8 @@ export function App({
               pastedBlocks: updatedBlocks,
             }));
           }
-        } else if (input === "v") {
-          // Handle Ctrl+V for image paste
+        } else if (input === "v" || input === "\x16") {
+          // Handle Ctrl+V for image paste (v or raw control character)
           readClipboardImage().then((image) => {
             if (image) {
               setPasteState((prev) => ({
@@ -562,12 +580,31 @@ export function App({
               });
             }
           });
+        } else if (input === "i") {
+          // Handle Ctrl+I as alternative for image paste
+          readClipboardImage().then((image) => {
+            if (image) {
+              setPasteState((prev) => ({
+                ...prev,
+                pastedImages: [...prev.pastedImages, image],
+              }));
+              addLog({
+                type: "system",
+                content: `Image attached (${image.mediaType})`,
+              });
+            } else {
+              addLog({
+                type: "system",
+                content: "No image found in clipboard",
+              });
+            }
+          });
         }
         return;
       }
 
       // Handle Cmd+V (macOS) for image paste
-      if (key.meta && input === "v") {
+      if (key.meta && (input === "v" || input === "\x16")) {
         readClipboardImage().then((image) => {
           if (image) {
             setPasteState((prev) => ({
@@ -662,36 +699,31 @@ export function App({
 
   // Calculate token count for session header
   const totalTokens = sessionStats.inputTokens + sessionStats.outputTokens;
-  const isHomeMode = screenMode === "home" && logs.length === 0;
 
   return (
     <Box flexDirection="column" height="100%">
-      {/* Show session header only when in session mode */}
-      {!isHomeMode && (
-        <>
-          <SessionHeader
-            title={sessionId ?? "New session"}
-            tokenCount={totalTokens}
-            contextPercentage={15}
-            cost={0}
-            version={version}
-          />
-          <StatusBar />
-        </>
-      )}
+      {/* Always show session header and status bar */}
+      <SessionHeader
+        title={sessionId ?? "New session"}
+        tokenCount={totalTokens}
+        contextPercentage={15}
+        cost={0}
+        version={version}
+        interactionMode={interactionMode}
+        brain={brain}
+        onDismissBrainBanner={dismissBrainBanner}
+      />
+      <StatusBar />
 
       <Box flexDirection="column" flexGrow={1}>
-        {/* Show home content or session content */}
-        {isHomeMode ? (
-          <HomeContent provider={provider} model={model} version={version} />
-        ) : (
-          <Box flexDirection="row" flexGrow={1}>
-            <Box flexDirection="column" flexGrow={1}>
-              <LogPanel />
-            </Box>
-            <TodoPanel />
+        {/* Main content area with all panes */}
+        <Box flexDirection="row" flexGrow={1}>
+          <Box flexDirection="column" flexGrow={1}>
+            {/* LogPanel shows logo when empty, logs otherwise */}
+            <LogPanel />
           </Box>
-        )}
+          <TodoPanel />
+        </Box>
         <PermissionModal />
         <LearningModal />
 
@@ -736,6 +768,7 @@ export function App({
         {isMCPSelectOpen && (
           <MCPSelect
             onClose={handleMCPSelectClose}
+            onBrowse={() => setMode("mcp_browse")}
             isActive={isMCPSelectOpen}
           />
         )}
@@ -808,7 +841,7 @@ export function App({
 
           <Box marginTop={1}>
             <Text dimColor>
-              Enter to send • Alt+Enter for newline • @ to add files • Ctrl+V to paste image
+              Enter • @ files • Ctrl+M mode • Ctrl+I image
             </Text>
           </Box>
         </Box>

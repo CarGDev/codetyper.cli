@@ -3,6 +3,7 @@ import { useKeyboard } from "@opentui/solid";
 import { TextAttributes } from "@opentui/core";
 import { useTheme } from "@tui-solid/context/theme";
 import { useAppStore } from "@tui-solid/context/app";
+import { BRAIN_DISABLED } from "@constants/brain";
 import type { SlashCommand, CommandCategory } from "@/types/tui";
 import { SLASH_COMMANDS, COMMAND_CATEGORIES } from "@constants/tui-components";
 
@@ -22,9 +23,14 @@ const filterCommands = (
   commands: readonly SlashCommand[],
   filter: string,
 ): SlashCommand[] => {
-  if (!filter) return [...commands];
+  // Filter out brain command when Brain is disabled
+  let availableCommands = BRAIN_DISABLED
+    ? commands.filter((cmd) => cmd.name !== "brain")
+    : [...commands];
+
+  if (!filter) return availableCommands;
   const query = filter.toLowerCase();
-  return commands.filter(
+  return availableCommands.filter(
     (cmd) =>
       cmd.name.toLowerCase().includes(query) ||
       cmd.description.toLowerCase().includes(query),

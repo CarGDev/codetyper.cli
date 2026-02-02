@@ -22,15 +22,36 @@ import type {
   OllamaChatResponse,
   OllamaToolCall,
   OllamaToolDefinition,
+  OllamaMessage,
 } from "@/types/ollama";
 
-const formatMessages = (
-  messages: Message[],
-): Array<{ role: string; content: string }> =>
-  messages.map((msg) => ({
-    role: msg.role,
-    content: msg.content,
-  }));
+/**
+ * Format messages for Ollama API
+ * Handles regular messages, assistant messages with tool_calls, and tool response messages
+ */
+const formatMessages = (messages: Message[]): OllamaMessage[] =>
+  messages.map((msg) => {
+    const formatted: OllamaMessage = {
+      role: msg.role,
+      content: msg.content,
+    };
+
+    // Include tool_calls for assistant messages that made tool calls
+    if (msg.tool_calls && msg.tool_calls.length > 0) {
+      formatted.tool_calls = msg.tool_calls.map((tc) => ({
+        id: tc.id,
+        function: {
+          name: tc.function.name,
+          arguments:
+            typeof tc.function.arguments === "string"
+              ? JSON.parse(tc.function.arguments)
+              : tc.function.arguments,
+        },
+      }));
+    }
+
+    return formatted;
+  });
 
 const formatTools = (
   tools: ChatCompletionOptions["tools"],

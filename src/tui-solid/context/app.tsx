@@ -16,6 +16,7 @@ import type {
   SuggestionState,
 } from "@/types/tui";
 import type { ProviderModel } from "@/types/providers";
+import type { BrainConnectionStatus, BrainUser } from "@/types/brain";
 
 interface AppStore {
   mode: AppMode;
@@ -44,6 +45,13 @@ interface AppStore {
   streamingLog: StreamingLogState;
   suggestions: SuggestionState;
   cascadeEnabled: boolean;
+  brain: {
+    status: BrainConnectionStatus;
+    user: BrainUser | null;
+    knowledgeCount: number;
+    memoryCount: number;
+    showBanner: boolean;
+  };
 }
 
 interface AppContextValue {
@@ -81,6 +89,13 @@ interface AppContextValue {
   streamingLogIsActive: Accessor<boolean>;
   suggestions: Accessor<SuggestionState>;
   cascadeEnabled: Accessor<boolean>;
+  brain: Accessor<{
+    status: BrainConnectionStatus;
+    user: BrainUser | null;
+    knowledgeCount: number;
+    memoryCount: number;
+    showBanner: boolean;
+  }>;
 
   // Mode actions
   setMode: (mode: AppMode) => void;
@@ -138,6 +153,7 @@ interface AppContextValue {
   stopThinking: () => void;
   addTokens: (input: number, output: number) => void;
   resetSessionStats: () => void;
+  setContextMaxTokens: (maxTokens: number) => void;
 
   // UI state actions
   toggleTodos: () => void;
@@ -161,6 +177,13 @@ interface AppContextValue {
   hideSuggestions: () => void;
   showSuggestions: () => void;
 
+  // Brain actions
+  setBrainStatus: (status: BrainConnectionStatus) => void;
+  setBrainUser: (user: BrainUser | null) => void;
+  setBrainCounts: (knowledge: number, memory: number) => void;
+  setBrainShowBanner: (show: boolean) => void;
+  dismissBrainBanner: () => void;
+
   // Computed
   isInputLocked: () => boolean;
 }
@@ -174,6 +197,7 @@ const createInitialSessionStats = (): SessionStats => ({
   outputTokens: 0,
   thinkingStartTime: null,
   lastThinkingDuration: 0,
+  contextMaxTokens: 128000, // Default, updated when model is selected
 });
 
 const createInitialStreamingState = (): StreamingLogState => ({
@@ -225,6 +249,13 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         streamingLog: createInitialStreamingState(),
         suggestions: createInitialSuggestionState(),
         cascadeEnabled: true,
+        brain: {
+          status: "disconnected" as BrainConnectionStatus,
+          user: null,
+          knowledgeCount: 0,
+          memoryCount: 0,
+          showBanner: true,
+        },
       });
 
       // Input insert function (set by InputArea)
@@ -272,6 +303,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
       const streamingLogIsActive = (): boolean => store.streamingLog.isStreaming;
       const suggestions = (): SuggestionState => store.suggestions;
       const cascadeEnabled = (): boolean => store.cascadeEnabled;
+      const brain = () => store.brain;
 
       // Mode actions
       const setMode = (newMode: AppMode): void => {
@@ -469,6 +501,27 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         setStore("cascadeEnabled", !store.cascadeEnabled);
       };
 
+      // Brain actions
+      const setBrainStatus = (status: BrainConnectionStatus): void => {
+        setStore("brain", { ...store.brain, status });
+      };
+
+      const setBrainUser = (user: BrainUser | null): void => {
+        setStore("brain", { ...store.brain, user });
+      };
+
+      const setBrainCounts = (knowledgeCount: number, memoryCount: number): void => {
+        setStore("brain", { ...store.brain, knowledgeCount, memoryCount });
+      };
+
+      const setBrainShowBanner = (showBanner: boolean): void => {
+        setStore("brain", { ...store.brain, showBanner });
+      };
+
+      const dismissBrainBanner = (): void => {
+        setStore("brain", { ...store.brain, showBanner: false });
+      };
+
       // Session stats actions
       const startThinking = (): void => {
         setStore("sessionStats", {
@@ -500,6 +553,13 @@ export const { provider: AppStoreProvider, use: useAppStore } =
 
       const resetSessionStats = (): void => {
         setStore("sessionStats", createInitialSessionStats());
+      };
+
+      const setContextMaxTokens = (maxTokens: number): void => {
+        setStore("sessionStats", {
+          ...store.sessionStats,
+          contextMaxTokens: maxTokens,
+        });
       };
 
       // UI state actions
@@ -698,6 +758,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         streamingLogIsActive,
         suggestions,
         cascadeEnabled,
+        brain,
 
         // Mode actions
         setMode,
@@ -752,11 +813,19 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         setCascadeEnabled,
         toggleCascadeEnabled,
 
+        // Brain actions
+        setBrainStatus,
+        setBrainUser,
+        setBrainCounts,
+        setBrainShowBanner,
+        dismissBrainBanner,
+
         // Session stats actions
         startThinking,
         stopThinking,
         addTokens,
         resetSessionStats,
+        setContextMaxTokens,
 
         // UI state actions
         toggleTodos,
@@ -818,6 +887,13 @@ const defaultAppState = {
   isCompacting: false,
   streamingLog: createInitialStreamingState(),
   suggestions: createInitialSuggestionState(),
+  brain: {
+    status: "disconnected" as BrainConnectionStatus,
+    user: null,
+    knowledgeCount: 0,
+    memoryCount: 0,
+    showBanner: true,
+  },
 };
 
 export const appStore = {
@@ -850,6 +926,7 @@ export const appStore = {
       isCompacting: storeRef.isCompacting(),
       streamingLog: storeRef.streamingLog(),
       suggestions: storeRef.suggestions(),
+      brain: storeRef.brain(),
     };
   },
 
@@ -958,6 +1035,11 @@ export const appStore = {
     storeRef.resetSessionStats();
   },
 
+  setContextMaxTokens: (maxTokens: number): void => {
+    if (!storeRef) return;
+    storeRef.setContextMaxTokens(maxTokens);
+  },
+
   toggleTodos: (): void => {
     if (!storeRef) return;
     storeRef.toggleTodos();
@@ -1026,5 +1108,30 @@ export const appStore = {
   toggleCascadeEnabled: (): void => {
     if (!storeRef) return;
     storeRef.toggleCascadeEnabled();
+  },
+
+  setBrainStatus: (status: BrainConnectionStatus): void => {
+    if (!storeRef) return;
+    storeRef.setBrainStatus(status);
+  },
+
+  setBrainUser: (user: BrainUser | null): void => {
+    if (!storeRef) return;
+    storeRef.setBrainUser(user);
+  },
+
+  setBrainCounts: (knowledge: number, memory: number): void => {
+    if (!storeRef) return;
+    storeRef.setBrainCounts(knowledge, memory);
+  },
+
+  setBrainShowBanner: (show: boolean): void => {
+    if (!storeRef) return;
+    storeRef.setBrainShowBanner(show);
+  },
+
+  dismissBrainBanner: (): void => {
+    if (!storeRef) return;
+    storeRef.dismissBrainBanner();
   },
 };

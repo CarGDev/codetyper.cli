@@ -62,6 +62,9 @@ interface AppProps extends TuiInput {
     scope?: LearningScope,
     editedContent?: string,
   ) => void;
+  onBrainSetJwtToken?: (jwtToken: string) => Promise<void>;
+  onBrainSetApiKey?: (apiKey: string) => Promise<void>;
+  onBrainLogout?: () => Promise<void>;
   plan?: {
     id: string;
     title: string;
@@ -139,9 +142,14 @@ function AppContent(props: AppProps) {
     app.setCascadeEnabled(props.cascadeEnabled);
   }
 
-  // Navigate to session if resuming
-  if (props.sessionId) {
-    route.goToSession(props.sessionId);
+  // Always navigate to session view (skip home page)
+  // Use existing sessionId or create a new one
+  if (!route.isSession()) {
+    const sessionId = props.sessionId ?? `session-${Date.now()}`;
+    batch(() => {
+      app.setSessionInfo(sessionId, app.provider(), app.model());
+      route.goToSession(sessionId);
+    });
   }
 
   if (props.availableModels && props.availableModels.length > 0) {
@@ -375,6 +383,9 @@ function AppContent(props: AppProps) {
             onCascadeToggle={handleCascadeToggle}
             onPermissionResponse={handlePermissionResponse}
             onLearningResponse={handleLearningResponse}
+            onBrainSetJwtToken={props.onBrainSetJwtToken}
+            onBrainSetApiKey={props.onBrainSetApiKey}
+            onBrainLogout={props.onBrainLogout}
             plan={props.plan}
             agents={props.agents}
             currentAgent={props.currentAgent}
@@ -429,6 +440,9 @@ export interface TuiRenderOptions extends TuiInput {
     scope?: LearningScope,
     editedContent?: string,
   ) => void;
+  onBrainSetJwtToken?: (jwtToken: string) => Promise<void>;
+  onBrainSetApiKey?: (apiKey: string) => Promise<void>;
+  onBrainLogout?: () => Promise<void>;
   plan?: {
     id: string;
     title: string;

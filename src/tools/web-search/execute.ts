@@ -1,7 +1,7 @@
 /**
  * Web Search Tool Execution
  *
- * Uses DuckDuckGo HTML search (no API key required)
+ * Uses Bing RSS search (no API key required, no captcha)
  */
 
 import {
@@ -56,69 +56,6 @@ const createSuccessResult = (
 };
 
 /**
- * Parse DuckDuckGo HTML search results
- */
-const parseSearchResults = (html: string, maxResults: number): SearchResult[] => {
-  const results: SearchResult[] = [];
-
-  // DuckDuckGo lite HTML structure parsing
-  // Look for result links and snippets
-  const resultPattern =
-    /<a[^>]+class="result-link"[^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>[\s\S]*?<td[^>]*class="result-snippet"[^>]*>([^<]+)/gi;
-
-  // Alternative pattern for standard DuckDuckGo HTML
-  const altPattern =
-    /<a[^>]+rel="nofollow"[^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>[\s\S]*?<span[^>]*>([^<]{20,})/gi;
-
-  // Try result-link pattern first
-  let match: RegExpExecArray | null;
-  while ((match = resultPattern.exec(html)) !== null && results.length < maxResults) {
-    const [, url, title, snippet] = match;
-    if (url && title && !url.includes("duckduckgo.com")) {
-      results.push({
-        title: decodeHtmlEntities(title.trim()),
-        url: decodeUrl(url),
-        snippet: decodeHtmlEntities(snippet.trim()),
-      });
-    }
-  }
-
-  // If no results, try alternative pattern
-  if (results.length === 0) {
-    while ((match = altPattern.exec(html)) !== null && results.length < maxResults) {
-      const [, url, title, snippet] = match;
-      if (url && title && !url.includes("duckduckgo.com")) {
-        results.push({
-          title: decodeHtmlEntities(title.trim()),
-          url: decodeUrl(url),
-          snippet: decodeHtmlEntities(snippet.trim()),
-        });
-      }
-    }
-  }
-
-  // Fallback: extract any external links with reasonable text
-  if (results.length === 0) {
-    const linkPattern = /<a[^>]+href="(https?:\/\/(?!duckduckgo)[^"]+)"[^>]*>([^<]{10,100})<\/a>/gi;
-    const seenUrls = new Set<string>();
-
-    while ((match = linkPattern.exec(html)) !== null && results.length < maxResults) {
-      const [, url, title] = match;
-      if (!seenUrls.has(url) && !url.includes("duckduckgo")) {
-        seenUrls.add(url);
-        results.push({
-          title: decodeHtmlEntities(title.trim()),
-          url: decodeUrl(url),
-          snippet: "",
-        });
-      }
-    }
-  }
-
-  return results;
-};
-
-/**
  * Decode HTML entities
  */
 const decodeHtmlEntities = (text: string): string => {
@@ -147,21 +84,36 @@ const decodeHtmlEntities = (text: string): string => {
 };
 
 /**
- * Decode DuckDuckGo redirect URLs
+ * Parse Bing RSS search results
  */
-const decodeUrl = (url: string): string => {
-  // DuckDuckGo often wraps URLs in redirects
-  if (url.includes("uddg=")) {
-    const match = url.match(/uddg=([^&]+)/);
-    if (match) {
-      return decodeURIComponent(match[1]);
+const parseRssResults = (rss: string, maxResults: number): SearchResult[] => {
+  const results: SearchResult[] = [];
+
+  // Parse RSS items
+  const itemPattern = /<item>([\s\S]*?)<\/item>/gi;
+  let match: RegExpExecArray | null;
+
+  while ((match = itemPattern.exec(rss)) !== null && results.length < maxResults) {
+    const itemContent = match[1];
+
+    const titleMatch = itemContent.match(/<title>([^<]+)<\/title>/);
+    const linkMatch = itemContent.match(/<link>([^<]+)<\/link>/);
+    const descMatch = itemContent.match(/<description>([^<]*)<\/description>/);
+
+    if (titleMatch && linkMatch) {
+      results.push({
+        title: decodeHtmlEntities(titleMatch[1].trim()),
+        url: linkMatch[1].trim(),
+        snippet: descMatch ? decodeHtmlEntities(descMatch[1].trim()) : "",
+      });
     }
   }
-  return url;
+
+  return results;
 };
 
 /**
- * Perform web search using DuckDuckGo
+ * Perform web search using Bing RSS
  */
 const performSearch = async (
   query: string,
@@ -170,13 +122,13 @@ const performSearch = async (
 ): Promise<SearchResult[]> => {
   const encodedQuery = encodeURIComponent(query);
 
-  // Use DuckDuckGo HTML search (lite version for easier parsing)
-  const searchUrl = `https://lite.duckduckgo.com/lite/?q=${encodedQuery}`;
+  // Use Bing RSS search (no captcha, no API key required)
+  const searchUrl = `https://www.bing.com/search?q=${encodedQuery}&format=rss`;
 
   const response = await fetch(searchUrl, {
     headers: {
       "User-Agent": WEB_SEARCH_DEFAULTS.USER_AGENT,
-      Accept: "text/html",
+      Accept: "application/rss+xml, text/xml",
       "Accept-Language": "en-US,en;q=0.9",
     },
     signal,
@@ -186,8 +138,8 @@ const performSearch = async (
     throw new Error(`Search request failed: ${response.status}`);
   }
 
-  const html = await response.text();
-  return parseSearchResults(html, maxResults);
+  const rss = await response.text();
+  return parseRssResults(rss, maxResults);
 };
 
 /**

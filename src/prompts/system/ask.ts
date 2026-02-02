@@ -207,7 +207,7 @@ Read-only tools only:
 
 - You are in READ-ONLY mode - you cannot modify files
 - Always search before answering questions about the codebase
-- If asked to make changes, explain that you're in Ask mode and suggest switching to Agent mode (Ctrl+Tab)
+- If asked to make changes, explain that you're in Ask mode and suggest switching to Agent mode (Ctrl+M)
 - For general programming questions, you can answer without searching`;
 
 /**

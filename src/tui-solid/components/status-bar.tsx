@@ -155,21 +155,12 @@ export function StatusBar() {
   const hints = createMemo(() => {
     const result: string[] = [];
 
-    // Show mode toggle hint when idle
-    if (!isProcessing()) {
-      result.push("^Tab toggle mode");
-    }
-
     if (isProcessing()) {
       result.push(
         app.interruptPending()
           ? STATUS_HINTS.INTERRUPT_CONFIRM
           : STATUS_HINTS.INTERRUPT,
       );
-    }
-
-    if (app.todosVisible()) {
-      result.push(STATUS_HINTS.TOGGLE_TODOS);
     }
 
     result.push(formatDuration(elapsed()));

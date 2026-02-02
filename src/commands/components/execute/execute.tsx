@@ -1,6 +1,7 @@
 import { tui, appStore } from "@tui/index";
 import { getProviderInfo } from "@services/chat-tui-service";
 import { addServer, connectServer } from "@services/mcp/index";
+import * as brainService from "@services/brain";
 import type { ChatServiceState } from "@services/chat-tui-service";
 import type { AgentConfig } from "@/types/agent-config";
 import type { PermissionScope, LearningScope } from "@/types/tui";
@@ -32,6 +33,9 @@ export interface RenderAppProps {
     scope?: LearningScope,
     editedContent?: string,
   ) => void;
+  handleBrainSetJwtToken?: (jwtToken: string) => Promise<void>;
+  handleBrainSetApiKey?: (apiKey: string) => Promise<void>;
+  handleBrainLogout?: () => Promise<void>;
   handleExit: () => void;
   showBanner: boolean;
   state: ChatServiceState;
@@ -65,6 +69,42 @@ const defaultHandleMCPAdd = async (data: MCPAddFormData): Promise<void> => {
   await connectServer(data.name);
 };
 
+const defaultHandleBrainSetJwtToken = async (jwtToken: string): Promise<void> => {
+  await brainService.setJwtToken(jwtToken);
+  const connected = await brainService.connect();
+  if (connected) {
+    const state = brainService.getState();
+    appStore.setBrainStatus("connected");
+    appStore.setBrainUser(state.user);
+    appStore.setBrainCounts(state.knowledgeCount, state.memoryCount);
+    appStore.setBrainShowBanner(false);
+  } else {
+    throw new Error("Failed to connect with the provided JWT token.");
+  }
+};
+
+const defaultHandleBrainSetApiKey = async (apiKey: string): Promise<void> => {
+  await brainService.setApiKey(apiKey);
+  const connected = await brainService.connect();
+  if (connected) {
+    const state = brainService.getState();
+    appStore.setBrainStatus("connected");
+    appStore.setBrainUser(state.user);
+    appStore.setBrainCounts(state.knowledgeCount, state.memoryCount);
+    appStore.setBrainShowBanner(false);
+  } else {
+    throw new Error("Failed to connect with the provided API key.");
+  }
+};
+
+const defaultHandleBrainLogout = async (): Promise<void> => {
+  await brainService.logout();
+  appStore.setBrainStatus("disconnected");
+  appStore.setBrainUser(null);
+  appStore.setBrainCounts(0, 0);
+  appStore.setBrainShowBanner(true);
+};
+
 export const renderApp = async (props: RenderAppProps): Promise<void> => {
   const { displayName, model: defaultModel } = getProviderInfo(
     props.state.provider,
@@ -95,6 +135,9 @@ export const renderApp = async (props: RenderAppProps): Promise<void> => {
     onMCPAdd: props.handleMCPAdd ?? defaultHandleMCPAdd,
     onPermissionResponse: props.handlePermissionResponse ?? (() => {}),
     onLearningResponse: props.handleLearningResponse ?? (() => {}),
+    onBrainSetJwtToken: props.handleBrainSetJwtToken ?? defaultHandleBrainSetJwtToken,
+    onBrainSetApiKey: props.handleBrainSetApiKey ?? defaultHandleBrainSetApiKey,
+    onBrainLogout: props.handleBrainLogout ?? defaultHandleBrainLogout,
     plan: props.plan,
   });
 

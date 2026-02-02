@@ -2,9 +2,10 @@
  * CommandMenu Component - Slash command selection menu
  *
  * Shows when user types '/' and provides filterable command list
+ * Supports scrolling for small terminal windows
  */
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Box, Text, useInput } from "ink";
 import { useAppStore } from "@tui/store";
 import type {
@@ -16,6 +17,9 @@ import { SLASH_COMMANDS, COMMAND_CATEGORIES } from "@constants/tui-components";
 
 // Re-export for backwards compatibility
 export { SLASH_COMMANDS } from "@constants/tui-components";
+
+// Maximum visible items before scrolling
+const MAX_VISIBLE = 12;
 
 interface CommandWithIndex extends SlashCommand {
   flatIndex: number;
@@ -58,11 +62,28 @@ export function CommandMenu({
     (state) => state.setCommandSelectedIndex,
   );
 
+  // Scroll offset for viewport
+  const [scrollOffset, setScrollOffset] = useState(0);
+
   // Filter commands based on input
   const filteredCommands = useMemo(
     () => filterCommands(SLASH_COMMANDS, commandMenu.filter),
     [commandMenu.filter],
   );
+
+  // Reset scroll when filter changes
+  useEffect(() => {
+    setScrollOffset(0);
+  }, [commandMenu.filter]);
+
+  // Ensure selected index is visible
+  useEffect(() => {
+    if (commandMenu.selectedIndex < scrollOffset) {
+      setScrollOffset(commandMenu.selectedIndex);
+    } else if (commandMenu.selectedIndex >= scrollOffset + MAX_VISIBLE) {
+      setScrollOffset(commandMenu.selectedIndex - MAX_VISIBLE + 1);
+    }
+  }, [commandMenu.selectedIndex, scrollOffset]);
 
   // Handle keyboard input
   useInput(
@@ -81,7 +102,6 @@ export function CommandMenu({
         if (filteredCommands.length > 0) {
           const selected = filteredCommands[commandMenu.selectedIndex];
           if (selected) {
-            // handleCommandSelect will close the menu
             onSelect(selected.name);
           }
         }
@@ -113,7 +133,6 @@ export function CommandMenu({
         if (filteredCommands.length > 0) {
           const selected = filteredCommands[commandMenu.selectedIndex];
           if (selected) {
-            // handleCommandSelect will close the menu
             onSelect(selected.name);
           }
         }
@@ -154,6 +173,32 @@ export function CommandMenu({
       })),
   );
 
+  // Calculate visible items with scroll
+  const totalItems = filteredCommands.length;
+  const hasScrollUp = scrollOffset > 0;
+  const hasScrollDown = scrollOffset + MAX_VISIBLE < totalItems;
+
+  // Get visible commands
+  const visibleCommands = commandsWithIndex.slice(
+    scrollOffset,
+    scrollOffset + MAX_VISIBLE,
+  );
+
+  // Group visible commands by category for display
+  const visibleGrouped: Array<{
+    category: CommandCategory;
+    commands: CommandWithIndex[];
+  }> = [];
+
+  for (const cmd of visibleCommands) {
+    const existingGroup = visibleGrouped.find((g) => g.category === cmd.category);
+    if (existingGroup) {
+      existingGroup.commands.push(cmd);
+    } else {
+      visibleGrouped.push({ category: cmd.category, commands: [cmd] });
+    }
+  }
+
   return (
     <Box
       flexDirection="column"
@@ -168,23 +213,26 @@ export function CommandMenu({
         </Text>
         {commandMenu.filter && <Text dimColor> - filtering: </Text>}
         {commandMenu.filter && <Text color="yellow">{commandMenu.filter}</Text>}
+        <Text dimColor> ({totalItems})</Text>
       </Box>
+
+      {hasScrollUp && (
+        <Box justifyContent="center">
+          <Text color="gray">↑ more ({scrollOffset} above)</Text>
+        </Box>
+      )}
 
       {filteredCommands.length === 0 ? (
         <Text dimColor>No commands match "{commandMenu.filter}"</Text>
       ) : (
         <Box flexDirection="column">
-          {groupedCommands.map((group) => (
+          {visibleGrouped.map((group) => (
             <Box key={group.category} flexDirection="column" marginBottom={1}>
               <Text dimColor bold>
                 {capitalizeCategory(group.category)}
               </Text>
               {group.commands.map((cmd) => {
-                const cmdWithIndex = commandsWithIndex.find(
-                  (c) => c.name === cmd.name,
-                );
-                const isSelected =
-                  cmdWithIndex?.flatIndex === commandMenu.selectedIndex;
+                const isSelected = cmd.flatIndex === commandMenu.selectedIndex;
                 return (
                   <Box key={cmd.name}>
                     <Text
@@ -202,6 +250,12 @@ export function CommandMenu({
               })}
             </Box>
           ))}
+        </Box>
+      )}
+
+      {hasScrollDown && (
+        <Box justifyContent="center">
+          <Text color="gray">↓ more ({totalItems - scrollOffset - MAX_VISIBLE} below)</Text>
         </Box>
       )}
 

@@ -3,6 +3,8 @@
  * Type definitions for the welcome/home screen TUI
  */
 
+import type { BrainConnectionStatus, BrainUser } from "@/types/brain";
+
 /** Screen mode for determining which view to show */
 export type ScreenMode = "home" | "session";
 
@@ -43,4 +45,13 @@ export interface SessionHeaderProps {
   contextPercentage?: number;
   cost: number;
   version: string;
+  interactionMode?: string;
+  brain?: {
+    status: BrainConnectionStatus;
+    user: BrainUser | null;
+    knowledgeCount: number;
+    memoryCount: number;
+    showBanner: boolean;
+  };
+  onDismissBrainBanner?: () => void;
 }

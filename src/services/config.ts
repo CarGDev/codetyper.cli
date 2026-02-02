@@ -44,23 +44,41 @@ const PROVIDER_ENV_VARS: Record<Provider, string> = {
  * Config state (singleton pattern using closure)
  */
 let configState: Config = getDefaults();
+let configLoaded = false;
+let configLoadPromise: Promise<void> | null = null;
 
 /**
- * Load configuration from file
+ * Load configuration from file (with caching)
  */
 export const loadConfig = async (): Promise<void> => {
-  try {
-    const data = await fs.readFile(FILES.config, "utf-8");
-    const loaded = JSON.parse(data);
-
-    // Clean up deprecated keys
-    delete loaded.models;
-
-    configState = { ...getDefaults(), ...loaded };
-  } catch {
-    // Config file doesn't exist or is invalid, use defaults
-    configState = getDefaults();
+  // Return cached config if already loaded
+  if (configLoaded) {
+    return;
   }
+
+  // If loading is in progress, wait for it
+  if (configLoadPromise) {
+    return configLoadPromise;
+  }
+
+  // Start loading
+  configLoadPromise = (async () => {
+    try {
+      const data = await fs.readFile(FILES.config, "utf-8");
+      const loaded = JSON.parse(data);
+
+      // Clean up deprecated keys
+      delete loaded.models;
+
+      configState = { ...getDefaults(), ...loaded };
+    } catch {
+      // Config file doesn't exist or is invalid, use defaults
+      configState = getDefaults();
+    }
+    configLoaded = true;
+  })();
+
+  return configLoadPromise;
 };
 
 /**

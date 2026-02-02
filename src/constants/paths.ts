@@ -58,11 +58,17 @@ export const FILES = {
   /** Provider credentials (stored in data, not config) */
   credentials: join(DIRS.data, "credentials.json"),
 
+  /** Environment variables and tokens (API keys, JWT tokens, etc.) */
+  vars: join(DIRS.config, "vars.json"),
+
   /** Command history */
   history: join(DIRS.data, "history.json"),
 
   /** Models cache */
   modelsCache: join(DIRS.cache, "models.json"),
+
+  /** Copilot token cache */
+  copilotTokenCache: join(DIRS.cache, "copilot-token.json"),
 
   /** Frecency cache for file/command suggestions */
   frecency: join(DIRS.cache, "frecency.json"),

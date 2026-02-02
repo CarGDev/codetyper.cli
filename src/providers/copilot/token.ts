@@ -2,19 +2,50 @@
  * Copilot token management
  */
 
-import { readFile } from "fs/promises";
+import { readFile, writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import { homedir, platform } from "os";
 import { join } from "path";
 import got from "got";
 
 import { COPILOT_AUTH_URL } from "@constants/copilot";
+import { FILES, DIRS } from "@constants/paths";
 import {
   getState,
   setOAuthToken,
   setGitHubToken,
 } from "@providers/copilot/state";
 import type { CopilotToken } from "@/types/copilot";
+
+/**
+ * Load cached Copilot token from disk
+ */
+const loadCachedToken = async (): Promise<CopilotToken | null> => {
+  try {
+    const data = await readFile(FILES.copilotTokenCache, "utf-8");
+    const token = JSON.parse(data) as CopilotToken;
+
+    // Check if token is still valid (with 60 second buffer)
+    if (token.expires_at > Date.now() / 1000 + 60) {
+      return token;
+    }
+  } catch {
+    // Cache doesn't exist or is invalid
+  }
+  return null;
+};
+
+/**
+ * Save Copilot token to disk cache
+ */
+const saveCachedToken = async (token: CopilotToken): Promise<void> => {
+  try {
+    await mkdir(DIRS.cache, { recursive: true });
+    await writeFile(FILES.copilotTokenCache, JSON.stringify(token), "utf-8");
+  } catch {
+    // Silently fail - caching is optional
+  }
+};
 
 const getConfigDir = (): string => {
   const home = homedir();
@@ -88,6 +119,7 @@ export const refreshToken = async (): Promise<CopilotToken> => {
 
   const currentState = getState();
 
+  // Check in-memory cache first
   if (
     currentState.githubToken &&
     currentState.githubToken.expires_at > Date.now() / 1000
@@ -95,6 +127,14 @@ export const refreshToken = async (): Promise<CopilotToken> => {
     return currentState.githubToken;
   }
 
+  // Check disk cache to avoid network request on startup
+  const cachedToken = await loadCachedToken();
+  if (cachedToken) {
+    setGitHubToken(cachedToken);
+    return cachedToken;
+  }
+
+  // Fetch new token from GitHub
   const response = await got
     .get(COPILOT_AUTH_URL, {
       headers: {
@@ -109,6 +149,10 @@ export const refreshToken = async (): Promise<CopilotToken> => {
   }
 
   setGitHubToken(response);
+
+  // Cache to disk for faster startup next time
+  saveCachedToken(response).catch(() => {});
+
   return response;
 };
 
