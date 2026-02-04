@@ -19,7 +19,6 @@ import {
   MCP_REGISTRY_CACHE,
   MCP_REGISTRY_SOURCES,
   MCP_REGISTRY_ERRORS,
-  MCP_REGISTRY_SUCCESS,
   MCP_SEARCH_DEFAULTS,
 } from "@constants/mcp-registry";
 import { addServer, connectServer, getServerInstances } from "./manager";
@@ -42,11 +41,9 @@ const getCacheFilePath = (): string => {
 const loadCache = async (): Promise<MCPRegistryCache | null> => {
   try {
     const cachePath = getCacheFilePath();
-    const file = Bun.file(cachePath);
-    if (await file.exists()) {
-      const data = await file.json();
-      return data as MCPRegistryCache;
-    }
+    const fs = await import("fs/promises");
+    const content = await fs.readFile(cachePath, "utf-8");
+    return JSON.parse(content) as MCPRegistryCache;
   } catch {
     // Cache doesn't exist or is invalid
   }
@@ -59,7 +56,10 @@ const loadCache = async (): Promise<MCPRegistryCache | null> => {
 const saveCache = async (cache: MCPRegistryCache): Promise<void> => {
   try {
     const cachePath = getCacheFilePath();
-    await Bun.write(cachePath, JSON.stringify(cache, null, 2));
+    const fs = await import("fs/promises");
+    const path = await import("path");
+    await fs.mkdir(path.dirname(cachePath), { recursive: true });
+    await fs.writeFile(cachePath, JSON.stringify(cache, null, 2));
   } catch {
     // Ignore cache write errors
   }
@@ -300,7 +300,7 @@ export const getServersByCategory = async (
  */
 export const isServerInstalled = (serverId: string): boolean => {
   const instances = getServerInstances();
-  return instances.some((instance) =>
+  return Array.from(instances.values()).some((instance) =>
     instance.config.name === serverId ||
     instance.config.name.toLowerCase() === serverId.toLowerCase()
   );
@@ -332,8 +332,8 @@ export const installServer = async (
   try {
     // Add server to configuration
     await addServer(
+      server.id,
       {
-        name: server.id,
         command: server.command,
         args: customArgs || server.args,
         transport: server.transport,
@@ -447,10 +447,8 @@ export const clearRegistryCache = async (): Promise<void> => {
   registryCache = null;
   try {
     const cachePath = getCacheFilePath();
-    const file = Bun.file(cachePath);
-    if (await file.exists()) {
-      await Bun.write(cachePath, "");
-    }
+    const fs = await import("fs/promises");
+    await fs.unlink(cachePath);
   } catch {
     // Ignore
   }

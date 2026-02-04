@@ -4,21 +4,20 @@
  */
 
 import { readFile, readdir } from "node:fs/promises";
-import { join, basename, extname } from "node:path";
+import { join, extname } from "node:path";
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 
 import type {
   AgentDefinition,
   AgentFrontmatter,
-  AgentDefinitionFile,
   AgentRegistry,
   AgentLoadResult,
   AgentTier,
   AgentColor,
-} from "@src/types/agent-definition";
-import { DEFAULT_AGENT_DEFINITION, AGENT_DEFINITION_SCHEMA } from "@src/types/agent-definition";
-import { AGENT_DEFINITION, AGENT_DEFINITION_PATHS, AGENT_MESSAGES } from "@src/constants/agent-definition";
+} from "@/types/agent-definition";
+import { DEFAULT_AGENT_DEFINITION, AGENT_DEFINITION_SCHEMA } from "@/types/agent-definition";
+import { AGENT_DEFINITION, AGENT_DEFINITION_PATHS, AGENT_MESSAGES } from "@constants/agent-definition";
 
 const parseFrontmatter = (content: string): { frontmatter: Record<string, unknown>; body: string } | null => {
   const delimiter = AGENT_DEFINITION.FRONTMATTER_DELIMITER;
@@ -207,12 +206,12 @@ export const loadAllAgentDefinitions = async (
           agents.set(agent.name, agent);
 
           // Index by trigger phrases
-          agent.triggerPhrases?.forEach((phrase) => {
+          agent.triggerPhrases?.forEach((phrase: string) => {
             byTrigger.set(phrase.toLowerCase(), agent.name);
           });
 
           // Index by capabilities
-          agent.capabilities?.forEach((capability) => {
+          agent.capabilities?.forEach((capability: string) => {
             const existing = byCapability.get(capability) || [];
             byCapability.set(capability, [...existing, agent.name]);
           });
@@ -245,8 +244,8 @@ export const findAgentsByCapability = (
 ): ReadonlyArray<AgentDefinition> => {
   const agentNames = registry.byCapability.get(capability) || [];
   return agentNames
-    .map((name) => registry.agents.get(name))
-    .filter((a): a is AgentDefinition => a !== undefined);
+    .map((name: string) => registry.agents.get(name))
+    .filter((a: AgentDefinition | undefined): a is AgentDefinition => a !== undefined);
 };
 
 export const getAgentByName = (
@@ -273,12 +272,12 @@ export const createAgentDefinitionContent = (agent: AgentDefinition): string => 
 
   if (agent.triggerPhrases && agent.triggerPhrases.length > 0) {
     frontmatter.push("triggerPhrases:");
-    agent.triggerPhrases.forEach((phrase) => frontmatter.push(`  - ${phrase}`));
+    agent.triggerPhrases.forEach((phrase: string) => frontmatter.push(`  - ${phrase}`));
   }
 
   if (agent.capabilities && agent.capabilities.length > 0) {
     frontmatter.push("capabilities:");
-    agent.capabilities.forEach((cap) => frontmatter.push(`  - ${cap}`));
+    agent.capabilities.forEach((cap: string) => frontmatter.push(`  - ${cap}`));
   }
 
   frontmatter.push("---");

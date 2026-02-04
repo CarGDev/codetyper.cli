@@ -4,7 +4,7 @@
 
 import chalk from "chalk";
 import { DEFAULT_BAR_WIDTH } from "@constants/hooks.js";
-import type { ProgressBarOptions } from "@interfactes/ProgressBar";
+import type { ProgressBarOptions } from "@interfaces/ProgressBar";
 
 const defaultOptions: Required<ProgressBarOptions> = {
   width: DEFAULT_BAR_WIDTH,

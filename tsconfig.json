@@ -44,5 +44,5 @@
     "jsxImportSource": "@opentui/solid"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "src/tui/App.tsx", "src/tui/components", "src/tui/hooks", "src/tui/store.ts"]
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

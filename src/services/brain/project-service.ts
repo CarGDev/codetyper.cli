@@ -18,21 +18,16 @@ import type {
   BrainProjectListResult,
   BrainProjectExport,
   BrainProjectImportResult,
-  ExportedConcept,
-  ExportedMemory,
-  ExportedRelationship,
-} from "@src/types/brain-project";
+} from "@/types/brain-project";
 import {
   DEFAULT_BRAIN_PROJECT_SETTINGS,
   BRAIN_PROJECT_EXPORT_VERSION,
-} from "@src/types/brain-project";
+} from "@/types/brain-project";
 import {
   BRAIN_PROJECT,
   BRAIN_PROJECT_STORAGE,
-  BRAIN_PROJECT_PATHS,
   BRAIN_PROJECT_MESSAGES,
-  BRAIN_PROJECT_API,
-} from "@src/constants/brain-project";
+} from "@constants/brain-project";
 
 interface ProjectServiceState {
   projects: Map<number, BrainProject>;

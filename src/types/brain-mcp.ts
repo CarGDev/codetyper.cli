@@ -143,9 +143,9 @@ export const BRAIN_MCP_TOOLS: ReadonlyArray<BrainMcpTool> = [
       properties: {
         name: { type: "string", description: "The name of the concept" },
         whatItDoes: { type: "string", description: "Description of what the concept does" },
-        keywords: { type: "array", items: { type: "string" }, description: "Keywords for the concept" },
-        patterns: { type: "array", items: { type: "string" }, description: "Code patterns related to the concept" },
-        files: { type: "array", items: { type: "string" }, description: "Files related to the concept" },
+        keywords: { type: "array", items: { type: "string", description: "Keyword item" }, description: "Keywords for the concept" },
+        patterns: { type: "array", items: { type: "string", description: "Pattern item" }, description: "Code patterns related to the concept" },
+        files: { type: "array", items: { type: "string", description: "File path item" }, description: "Files related to the concept" },
       },
       required: ["name", "whatItDoes"],
     },

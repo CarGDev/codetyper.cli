@@ -46,7 +46,7 @@ export interface ParallelAgentConfig {
  * Parallel task definition
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface ParallelTask<TInput = unknown, TOutput = unknown> {
+export interface ParallelTask<TInput = unknown, _TOutput = unknown> {
   id: string;
   type: ParallelTaskType;
   agent: ParallelAgentConfig;

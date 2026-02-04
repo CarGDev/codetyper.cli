@@ -3,7 +3,36 @@
  * Re-exports from @opentui/solid implementation
  */
 
-export * from "@tui/types";
+export type {
+  AppMode,
+  CommandCategory,
+  SlashCommand,
+  CommandMenuState,
+  SelectOption,
+  DiffData,
+  DiffLineType,
+  DiffLineData,
+  DiffViewProps,
+  DiffLineProps,
+  LogEntryType,
+  ToolStatus,
+  LogEntryMetadata,
+  LogEntry,
+  LogEntryProps,
+  ThinkingIndicatorProps,
+  ToolCall,
+  PermissionType,
+  PermissionScope,
+  PermissionRequest,
+  PermissionResponse,
+  LearningScope,
+  LearningPrompt,
+  LearningResponse,
+  SessionStats,
+  HeaderProps,
+  CommandMenuProps,
+  AppState,
+} from "@/types/tui";
 export { tui, appStore } from "@tui-solid/index";
 export type { TuiRenderOptions } from "@tui-solid/app";
 export {

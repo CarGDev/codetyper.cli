@@ -19,16 +19,13 @@ import type {
   TaskError,
   TaskMetadata,
   TaskNotification,
-  TaskStep,
-  TaskArtifact,
-} from "@src/types/background-task";
-import { DEFAULT_BACKGROUND_TASK_CONFIG, BACKGROUND_TASK_PRIORITIES } from "@src/types/background-task";
+} from "@/types/background-task";
+import { DEFAULT_BACKGROUND_TASK_CONFIG, BACKGROUND_TASK_PRIORITIES } from "@/types/background-task";
 import {
-  BACKGROUND_TASK,
   BACKGROUND_TASK_STORAGE,
   BACKGROUND_TASK_MESSAGES,
   BACKGROUND_TASK_STATUS_ICONS,
-} from "@src/constants/background-task";
+} from "@constants/background-task";
 
 type TaskHandler = (task: BackgroundTask, updateProgress: (progress: Partial<TaskProgress>) => void) => Promise<TaskResult>;
 type NotificationHandler = (notification: TaskNotification) => void;

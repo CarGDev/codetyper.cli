@@ -21,7 +21,6 @@ import {
   compactConversation,
   checkCompactionNeeded,
   getModelCompactionConfig,
-  createCompactionSummary,
 } from "@services/auto-compaction";
 import { appStore } from "@tui-solid/context/app";
 

@@ -11,12 +11,12 @@ import type {
   FilteredResult,
   ValidationResult,
   ConfidenceFilterStats,
-} from "@src/types/confidence-filter";
+} from "@/types/confidence-filter";
 import {
   CONFIDENCE_LEVELS,
   DEFAULT_CONFIDENCE_FILTER_CONFIG,
-} from "@src/types/confidence-filter";
-import { CONFIDENCE_FILTER, CONFIDENCE_WEIGHTS } from "@src/constants/confidence-filter";
+} from "@/types/confidence-filter";
+import { CONFIDENCE_FILTER, CONFIDENCE_WEIGHTS } from "@constants/confidence-filter";
 
 export const calculateConfidenceLevel = (score: number): ConfidenceLevel => {
   const levels = Object.entries(CONFIDENCE_LEVELS) as Array<[ConfidenceLevel, { min: number; max: number }]>;
@@ -158,7 +158,7 @@ export const formatConfidenceScore = (confidence: ConfidenceScore, showFactors: 
 
   if (showFactors && confidence.factors.length > 0) {
     const factorLines = confidence.factors
-      .map((f) => `  - ${f.name}: ${f.score}% (weight: ${f.weight})`)
+      .map((f: ConfidenceFactor) => `  - ${f.name}: ${f.score}% (weight: ${f.weight})`)
       .join("\n");
     result += `\n${factorLines}`;
   }

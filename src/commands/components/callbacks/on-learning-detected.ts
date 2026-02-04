@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
-import { appStore } from "@tui/index.ts";
-import type { LearningResponse } from "@tui/types.ts";
+import { appStore } from "@tui/index";
+import type { LearningResponse } from "@/types/tui";
 import type { LearningCandidate } from "@services/learning-service.ts";
 
 export const onLearningDetected = async (

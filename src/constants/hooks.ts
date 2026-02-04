@@ -42,6 +42,7 @@ export const HOOK_EVENT_LABELS: Record<HookEventType, string> = {
   SessionStart: "Session Start",
   SessionEnd: "Session End",
   UserPromptSubmit: "User Prompt Submit",
+  PreCompact: "Pre-Compact",
   Stop: "Stop",
 };
 
@@ -55,6 +56,7 @@ export const HOOK_EVENT_DESCRIPTIONS: Record<HookEventType, string> = {
   SessionStart: "Runs when a new session begins.",
   SessionEnd: "Runs when a session ends.",
   UserPromptSubmit: "Runs when user submits a prompt. Can modify or block.",
+  PreCompact: "Runs before context compaction. For custom compaction logic.",
   Stop: "Runs when execution is stopped (interrupt, complete, or error).",
 };
 
@@ -67,6 +69,7 @@ export const HOOK_EVENT_TYPES: readonly HookEventType[] = [
   "SessionStart",
   "SessionEnd",
   "UserPromptSubmit",
+  "PreCompact",
   "Stop",
 ] as const;
 

@@ -4,7 +4,6 @@
  */
 
 import { createServer, type Server, type IncomingMessage, type ServerResponse } from "node:http";
-import { randomUUID } from "node:crypto";
 
 import type {
   BrainMcpServerConfig,
@@ -14,18 +13,17 @@ import type {
   BrainMcpToolName,
   McpContent,
   McpError,
-} from "@src/types/brain-mcp";
+  BrainMcpTool,
+} from "@/types/brain-mcp";
 import {
   DEFAULT_BRAIN_MCP_SERVER_CONFIG,
   BRAIN_MCP_TOOLS,
   MCP_ERROR_CODES,
-} from "@src/types/brain-mcp";
+} from "@/types/brain-mcp";
 import {
-  BRAIN_MCP_SERVER,
   BRAIN_MCP_MESSAGES,
   BRAIN_MCP_ERRORS,
-  BRAIN_MCP_AUTH,
-} from "@src/constants/brain-mcp";
+} from "@constants/brain-mcp";
 
 type BrainService = {
   recall: (query: string, limit?: number) => Promise<unknown>;
@@ -135,7 +133,7 @@ const handleToolCall = async (
     throw createMcpError(MCP_ERROR_CODES.BRAIN_UNAVAILABLE, "Brain service not connected");
   }
 
-  const tool = BRAIN_MCP_TOOLS.find((t) => t.name === toolName);
+  const tool = BRAIN_MCP_TOOLS.find((t: BrainMcpTool) => t.name === toolName);
   if (!tool) {
     throw createMcpError(MCP_ERROR_CODES.TOOL_NOT_FOUND, `Tool not found: ${toolName}`);
   }
@@ -167,7 +165,7 @@ const handleToolCall = async (
     brain_stats: () => state.brainService!.getStats(),
     brain_projects: async () => {
       // Import dynamically to avoid circular dependency
-      const { listProjects } = await import("@src/services/brain/project-service");
+      const { listProjects } = await import("@services/brain/project-service");
       return listProjects();
     },
   };
@@ -254,7 +252,7 @@ const handleRequest = async (
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify(createMcpResponse(mcpRequest.id, content)));
       } else if (mcpRequest.method === "tools/list") {
-        const tools = BRAIN_MCP_TOOLS.map((tool) => ({
+        const tools = BRAIN_MCP_TOOLS.map((tool: BrainMcpTool) => ({
           name: tool.name,
           description: tool.description,
           inputSchema: tool.inputSchema,
@@ -351,4 +349,4 @@ export const updateConfig = (config: Partial<BrainMcpServerConfig>): void => {
 };
 
 export const getAvailableTools = (): ReadonlyArray<{ name: string; description: string }> =>
-  BRAIN_MCP_TOOLS.map((t) => ({ name: t.name, description: t.description }));
+  BRAIN_MCP_TOOLS.map((t: BrainMcpTool) => ({ name: t.name, description: t.description }));
