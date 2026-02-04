@@ -14,7 +14,8 @@ import {
   MULTI_EDIT_DESCRIPTION,
 } from "@constants/multi-edit";
 import { isFileOpAllowed, promptFilePermission } from "@services/permissions";
-import { formatDiff, generateDiff } from "@utils/diff";
+import { formatDiff } from "@utils/diff/format";
+import { generateDiff } from "@utils/diff/generate";
 import { multiEditParams } from "@tools/multi-edit/params";
 import type { ToolDefinition, ToolContext, ToolResult } from "@/types/tools";
 import type { EditItem, MultiEditParams } from "@tools/multi-edit/params";
@@ -57,8 +58,14 @@ const createSuccessResult = (
     .map((r) => `## ${path.basename(r.path)}\n\n${r.diff}`)
     .join("\n\n---\n\n");
 
-  const totalAdditions = successful.reduce((sum, r) => sum + (r.additions ?? 0), 0);
-  const totalDeletions = successful.reduce((sum, r) => sum + (r.deletions ?? 0), 0);
+  const totalAdditions = successful.reduce(
+    (sum, r) => sum + (r.additions ?? 0),
+    0,
+  );
+  const totalDeletions = successful.reduce(
+    (sum, r) => sum + (r.deletions ?? 0),
+    0,
+  );
 
   const title =
     failed.length > 0
@@ -104,7 +111,10 @@ const validateEdit = async (
     }
 
     if (stat.size > MULTI_EDIT_DEFAULTS.MAX_FILE_SIZE) {
-      return { valid: false, error: MULTI_EDIT_MESSAGES.FILE_TOO_LARGE(edit.file_path) };
+      return {
+        valid: false,
+        error: MULTI_EDIT_MESSAGES.FILE_TOO_LARGE(edit.file_path),
+      };
     }
 
     const content = await fs.readFile(fullPath, "utf-8");
@@ -114,7 +124,10 @@ const validateEdit = async (
       const preview = edit.old_string.slice(0, 50);
       return {
         valid: false,
-        error: MULTI_EDIT_MESSAGES.OLD_STRING_NOT_FOUND(edit.file_path, preview),
+        error: MULTI_EDIT_MESSAGES.OLD_STRING_NOT_FOUND(
+          edit.file_path,
+          preview,
+        ),
       };
     }
 
@@ -123,14 +136,20 @@ const validateEdit = async (
     if (occurrences > 1) {
       return {
         valid: false,
-        error: MULTI_EDIT_MESSAGES.OLD_STRING_NOT_UNIQUE(edit.file_path, occurrences),
+        error: MULTI_EDIT_MESSAGES.OLD_STRING_NOT_UNIQUE(
+          edit.file_path,
+          occurrences,
+        ),
       };
     }
 
     return { valid: true, fileContent: content };
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return { valid: false, error: MULTI_EDIT_MESSAGES.FILE_NOT_FOUND(edit.file_path) };
+      return {
+        valid: false,
+        error: MULTI_EDIT_MESSAGES.FILE_NOT_FOUND(edit.file_path),
+      };
     }
     const message = error instanceof Error ? error.message : String(error);
     return { valid: false, error: message };
@@ -243,7 +262,10 @@ export const executeMultiEdit = async (
   });
 
   // Phase 1: Validate all edits
-  const validations = new Map<string, { validation: EditValidation; edit: EditItem }>();
+  const validations = new Map<
+    string,
+    { validation: EditValidation; edit: EditItem }
+  >();
   const errors: string[] = [];
 
   for (const edit of edits) {
@@ -300,7 +322,11 @@ export const executeMultiEdit = async (
     });
 
     // Apply edit
-    const result = await applyEdit(edit, ctx.workingDir, data.validation.fileContent);
+    const result = await applyEdit(
+      edit,
+      ctx.workingDir,
+      data.validation.fileContent,
+    );
     results.push(result);
 
     if (!result.success) {

@@ -7,7 +7,7 @@
 import React from "react";
 import { Box, Text, Transform } from "ink";
 import type { DiffLineData, DiffLineProps, DiffLineType } from "@/types/tui";
-import { highlightLine } from "@utils/syntax-highlight";
+import { highlightLine } from "@utils/syntax-highlight/highlight";
 
 // ============================================================================
 // Utility Components

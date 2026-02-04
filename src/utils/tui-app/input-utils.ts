@@ -1,11 +1,3 @@
-/**
- * TUI App Input Utilities
- *
- * Helper functions for input handling in the TUI App
- */
-
-// Mouse escape sequence patterns for filtering
-// Note: Patterns for replacement use 'g' flag, patterns for testing don't
 const MOUSE_PATTERNS = {
   // Full escape sequences (for replacement)
   SGR_FULL: /\x1b\[<\d+;\d+;\d+[Mm]/g,
@@ -23,16 +15,11 @@ const MOUSE_PATTERNS = {
   BRACKET_SGR_PREFIX: "[<",
 } as const;
 
-// Control character patterns for cleaning input
 const CONTROL_PATTERNS = {
   CONTROL_CHARS: /[\x00-\x1f\x7f]/g,
   ESCAPE_SEQUENCES: /\x1b\[.*?[a-zA-Z]/g,
 } as const;
 
-/**
- * Check if input is a mouse escape sequence
- * Handles both full sequences and partial sequences where ESC was stripped
- */
 export const isMouseEscapeSequence = (input: string): boolean => {
   if (!input) return false;
 

@@ -1,17 +1,6 @@
-/**
- * Code highlighting utilities
- */
-
 import { highlight } from "cli-highlight";
 import { detectLanguage } from "@utils/syntax-highlight/detect";
 
-/**
- * Highlight a single line of code
- *
- * @param line - The code line to highlight
- * @param language - The programming language
- * @returns Highlighted line with ANSI codes
- */
 export const highlightLine = (line: string, language?: string): string => {
   if (!language || !line.trim()) {
     return line;
@@ -30,14 +19,6 @@ export const highlightLine = (line: string, language?: string): string => {
   }
 };
 
-/**
- * Highlight a block of code
- *
- * @param code - The code to highlight
- * @param language - The programming language (auto-detected if not provided)
- * @param filePath - Optional file path for language detection
- * @returns Highlighted code with ANSI codes
- */
 export const highlightCode = (
   code: string,
   language?: string,
@@ -59,14 +40,6 @@ export const highlightCode = (
   }
 };
 
-/**
- * Highlight multiple lines while preserving line structure
- * Useful for diff views where each line needs individual highlighting
- *
- * @param lines - Array of code lines
- * @param language - The programming language
- * @returns Array of highlighted lines
- */
 export const highlightLines = (
   lines: string[],
   language?: string,

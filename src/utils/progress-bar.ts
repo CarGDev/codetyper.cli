@@ -3,15 +3,8 @@
  */
 
 import chalk from "chalk";
-
-const DEFAULT_BAR_WIDTH = 40;
-
-interface ProgressBarOptions {
-  width?: number;
-  filledChar?: string;
-  emptyChar?: string;
-  showPercentage?: boolean;
-}
+import { DEFAULT_BAR_WIDTH } from "@constants/hooks.js";
+import type { ProgressBarOptions } from "@interfactes/ProgressBar";
 
 const defaultOptions: Required<ProgressBarOptions> = {
   width: DEFAULT_BAR_WIDTH,

@@ -1,12 +1,5 @@
-/**
- * Diff line generation utilities
- */
-
 import type { DiffLine, DiffOperation } from "@/types/diff";
 
-/**
- * Generate diff lines from LCS matrix
- */
 export const generateDiffLines = (
   oldLines: string[],
   newLines: string[],

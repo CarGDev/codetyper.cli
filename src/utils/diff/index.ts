@@ -1,19 +1,9 @@
-/**
- * Diff View Utility Functions
- */
-
 import type { DiffLineData } from "@/types/tui";
 
-/**
- * Strip ANSI escape codes from a string
- */
 export const stripAnsi = (str: string): string => {
   return str.replace(/\x1b\[[0-9;]*m/g, "");
 };
 
-/**
- * Check if content looks like a diff output
- */
 export const isDiffContent = (content: string): boolean => {
   // Strip ANSI codes for pattern matching
   const cleanContent = stripAnsi(content);
@@ -28,9 +18,6 @@ export const isDiffContent = (content: string): boolean => {
   return diffPatterns.some((pattern) => pattern.test(cleanContent));
 };
 
-/**
- * Parse raw diff output into structured DiffLineData
- */
 export const parseDiffOutput = (
   diffOutput: string,
 ): {

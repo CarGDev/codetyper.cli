@@ -38,17 +38,24 @@ import {
   insertAtCursor,
   deleteBeforeCursor,
   calculateCursorPosition,
+} from "@utils/tui-app/input-utils";
+
+import {
   isInputLocked,
   isModalCommand,
   isMainInputActive as checkMainInputActive,
   isProcessing,
+} from "@utils/tui-app/mode-utils";
+
+import {
   shouldSummarizePaste,
   addPastedBlock,
   updatePastedBlocksAfterDelete,
   expandPastedContent,
   normalizeLineEndings,
   clearPastedBlocks,
-} from "@utils/tui-app/index";
+} from "@utils/tui-app/paste-utils";
+
 import { PAGE_SCROLL_LINES, MOUSE_SCROLL_LINES } from "@constants/auto-scroll";
 import { useMouseScroll } from "@tui/hooks";
 import type { PasteState } from "@interfaces/PastedContent";
@@ -71,7 +78,6 @@ export function App({
   onModelSelect,
   onAgentSelect,
   onThemeSelect,
-  showBanner = true,
 }: AppProps): React.ReactElement {
   const { exit } = useApp();
   const setSessionInfo = useAppStore((state) => state.setSessionInfo);
@@ -87,7 +93,9 @@ export function App({
   const exitPending = useAppStore((state) => state.exitPending);
   const setExitPending = useAppStore((state) => state.setExitPending);
   const toggleTodos = useAppStore((state) => state.toggleTodos);
-  const toggleInteractionMode = useAppStore((state) => state.toggleInteractionMode);
+  const toggleInteractionMode = useAppStore(
+    (state) => state.toggleInteractionMode,
+  );
   const interactionMode = useAppStore((state) => state.interactionMode);
   const startThinking = useAppStore((state) => state.startThinking);
   const stopThinking = useAppStore((state) => state.stopThinking);
@@ -97,7 +105,6 @@ export function App({
   const scrollToBottom = useAppStore((state) => state.scrollToBottom);
   const screenMode = useAppStore((state) => state.screenMode);
   const setScreenMode = useAppStore((state) => state.setScreenMode);
-  const logs = useAppStore((state) => state.logs);
   const sessionStats = useAppStore((state) => state.sessionStats);
   const brain = useAppStore((state) => state.brain);
   const dismissBrainBanner = useAppStore((state) => state.dismissBrainBanner);
@@ -179,9 +186,10 @@ export function App({
       );
 
       // Capture images before clearing
-      const images = pasteState.pastedImages.length > 0
-        ? [...pasteState.pastedImages]
-        : undefined;
+      const images =
+        pasteState.pastedImages.length > 0
+          ? [...pasteState.pastedImages]
+          : undefined;
 
       // Clear paste state after expanding
       setPasteState(clearPastedBlocks());
@@ -840,9 +848,7 @@ export function App({
           )}
 
           <Box marginTop={1}>
-            <Text dimColor>
-              Enter • @ files • Ctrl+M mode • Ctrl+I image
-            </Text>
+            <Text dimColor>Enter • @ files • Ctrl+M mode • Ctrl+I image</Text>
           </Box>
         </Box>
       </Box>

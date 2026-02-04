@@ -1,10 +1,3 @@
-/**
- * Longest Common Subsequence computation
- */
-
-/**
- * Simple line-based diff using Longest Common Subsequence
- */
 export const computeLCS = (
   oldLines: string[],
   newLines: string[],

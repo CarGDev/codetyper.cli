@@ -17,6 +17,11 @@ export const HOOKS_CONFIG_FILE = "hooks.json";
 export const DEFAULT_HOOK_TIMEOUT = 30000;
 
 /**
+ * Default progress bar width
+ * */
+export const DEFAULT_BAR_WIDTH = 40;
+
+/**
  * Hook exit codes and their meanings
  */
 export const HOOK_EXIT_CODES = {
@@ -44,7 +49,8 @@ export const HOOK_EVENT_LABELS: Record<HookEventType, string> = {
  * Hook event type descriptions
  */
 export const HOOK_EVENT_DESCRIPTIONS: Record<HookEventType, string> = {
-  PreToolUse: "Runs before a tool is executed. Can modify args or block execution.",
+  PreToolUse:
+    "Runs before a tool is executed. Can modify args or block execution.",
   PostToolUse: "Runs after a tool completes. For notifications or logging.",
   SessionStart: "Runs when a new session begins.",
   SessionEnd: "Runs when a session ends.",

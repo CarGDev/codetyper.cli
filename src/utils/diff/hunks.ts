@@ -1,13 +1,6 @@
-/**
- * Diff hunk grouping utilities
- */
-
 import { DIFF_CONTEXT_LINES } from "@constants/diff";
 import type { DiffLine, DiffHunk } from "@/types/diff";
 
-/**
- * Group diff lines into hunks with context
- */
 export const groupIntoHunks = (
   lines: DiffLine[],
   contextLines = DIFF_CONTEXT_LINES,

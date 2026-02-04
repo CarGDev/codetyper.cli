@@ -7,7 +7,8 @@ import path from "path";
 
 import { EDIT_MESSAGES, EDIT_TITLES, EDIT_DESCRIPTION } from "@constants/edit";
 import { isFileOpAllowed, promptFilePermission } from "@services/permissions";
-import { formatDiff, generateDiff } from "@utils/diff";
+import { formatDiff } from "@utils/diff/format";
+import { generateDiff } from "@utils/diff/generate";
 import { editParams } from "@tools/edit/params";
 import {
   validateTextExists,

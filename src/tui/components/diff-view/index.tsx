@@ -16,7 +16,7 @@ import type { DiffViewProps } from "@/types/tui";
 import {
   detectLanguage,
   getLanguageDisplayName,
-} from "@utils/syntax-highlight";
+} from "@utils/syntax-highlight/detect";
 import { DiffLine } from "@tui/components/diff-view/line-renderers";
 
 export function DiffView({

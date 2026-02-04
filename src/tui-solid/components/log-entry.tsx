@@ -8,7 +8,7 @@ import {
 } from "@constants/tui-components";
 import { DiffView } from "@tui-solid/components/diff-view";
 import { StreamingMessage } from "@tui-solid/components/streaming-message";
-import { parseDiffOutput, isDiffContent } from "@/utils/diff";
+import { parseDiffOutput, isDiffContent } from "@utils/diff/index";
 
 interface LogEntryDisplayProps {
   entry: LogEntry;

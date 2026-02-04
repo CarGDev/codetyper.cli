@@ -1,12 +1,5 @@
-/**
- * TUI App Mode Utilities
- *
- * Helper functions for mode checking in the TUI App
- */
-
 import type { AppMode } from "@/types/tui";
 
-// Modes that lock the input
 const LOCKED_MODES: ReadonlySet<AppMode> = new Set([
   "thinking",
   "tool_execution",
@@ -14,7 +7,6 @@ const LOCKED_MODES: ReadonlySet<AppMode> = new Set([
   "learning_prompt",
 ]);
 
-// Commands that open their own modal
 const MODAL_COMMANDS: ReadonlySet<string> = new Set([
   "model",
   "models",

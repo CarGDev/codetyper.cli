@@ -1,7 +1,3 @@
-/**
- * Language detection utilities
- */
-
 import { supportsLanguage } from "cli-highlight";
 import {
   EXTENSION_TO_LANGUAGE,

@@ -11,7 +11,8 @@ import {
   WRITE_DESCRIPTION,
 } from "@constants/write";
 import { isFileOpAllowed, promptFilePermission } from "@services/permissions";
-import { formatDiff, generateDiff } from "@utils/diff";
+import { formatDiff } from "@utils/diff/format";
+import { generateDiff } from "@utils/diff/generate";
 import { writeParams } from "@tools/write/params";
 import type {
   ToolDefinition,
