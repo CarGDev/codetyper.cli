@@ -14,4 +14,4 @@ export {
   createInputEditor,
   InputEditor,
   type InputEditorInstance,
-} from "@ui/input-editor/editor";
+} from "@ui/input-editor/core/editor";

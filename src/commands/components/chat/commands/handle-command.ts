@@ -1,4 +1,4 @@
-import { warningMessage, infoMessage } from "@utils/terminal";
+import { warningMessage, infoMessage } from "@utils/core/terminal";
 import type { ChatState } from "@commands/components/chat/state";
 import COMMAND_REGISTRY from "@commands/components/chat/commands/commandsRegistry";
 

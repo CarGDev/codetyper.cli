@@ -21,7 +21,7 @@ import type {
   PatchRollback,
   ParsedFilePatch,
 } from "@/types/apply-patch";
-import type { ToolContext, ToolResult } from "@tools/types";
+import type { ToolContext, ToolResult } from "@tools/core/types";
 
 // Rollback storage (in-memory for session)
 const rollbackStore: Map<string, PatchRollback> = new Map();

@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { basename, extname } from "path";
-import { initializePermissions } from "@services/permissions";
-import { createAgent } from "@services/agent";
+import { initializePermissions } from "@services/core/permissions";
+import { createAgent } from "@services/core/agent";
 import type { ChatState } from "@commands/components/chat/state";
 import { processFileReferences } from "@commands/components/chat/context/process-file-references";
 

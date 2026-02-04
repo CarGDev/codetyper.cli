@@ -2,7 +2,7 @@
  * Serve command handler
  */
 
-import { boxMessage, warningMessage, infoMessage } from "@utils/terminal";
+import { boxMessage, warningMessage, infoMessage } from "@utils/core/terminal";
 import type { CommandOptions } from "@/types/index";
 import { SERVER_INFO } from "@constants/serve";
 

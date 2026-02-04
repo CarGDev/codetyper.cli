@@ -13,14 +13,14 @@ import {
 import type { ChatServiceState } from "@services/chat-tui-service";
 import type { ChatTUIOptions } from "@interfaces/ChatTUIOptions";
 import type { AgentConfig } from "@/types/agent-config";
-import { getConfig } from "@services/config";
+import { getConfig } from "@services/core/config";
 import { getThinkingMessage } from "@constants/status-messages";
 import {
   enterFullscreen,
   registerExitHandlers,
   exitFullscreen,
   clearScreen,
-} from "@utils/terminal";
+} from "@utils/core/terminal";
 import { createCallbacks } from "@commands/chat-tui";
 import { agentLoader } from "@services/agent-loader";
 import { projectSetupService } from "@services/project-setup-service";

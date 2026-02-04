@@ -4,7 +4,7 @@
 
 import got from "got";
 
-import { getOAuthToken } from "@providers/copilot/token";
+import { getOAuthToken } from "@providers/copilot/auth/token";
 import type { CopilotUsageResponse } from "@/types/copilot-usage";
 
 const COPILOT_USER_URL = "https://api.github.com/copilot_internal/user";

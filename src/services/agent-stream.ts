@@ -20,9 +20,9 @@ import type {
   PartialToolCall,
   StreamCallbacks,
 } from "@/types/streaming";
-import { chatStream } from "@providers/chat";
+import { chatStream } from "@providers/core/chat";
 import { getTool, getToolsForApi, refreshMCPTools } from "@tools/index";
-import { initializePermissions } from "@services/permissions";
+import { initializePermissions } from "@services/core/permissions";
 import { MAX_ITERATIONS, MAX_CONSECUTIVE_ERRORS } from "@constants/agent";
 import { createStreamAccumulator } from "@/types/streaming";
 

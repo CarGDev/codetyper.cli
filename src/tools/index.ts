@@ -2,7 +2,7 @@
  * Tool registry - exports all available tools
  */
 
-export * from "@tools/types";
+export * from "@tools/core/types";
 export { bashTool } from "@tools/bash";
 export { readTool } from "@tools/read";
 export { writeTool } from "@tools/write";
@@ -17,8 +17,8 @@ export { multiEditTool } from "@tools/multi-edit";
 export { lspTool } from "@tools/lsp";
 export { applyPatchTool } from "@tools/apply-patch";
 
-import type { ToolDefinition, FunctionDefinition } from "@tools/types";
-import { toolToFunction } from "@tools/types";
+import type { ToolDefinition, FunctionDefinition } from "@tools/core/types";
+import { toolToFunction } from "@tools/core/types";
 import { bashTool } from "@tools/bash";
 import { readTool } from "@tools/read";
 import { writeTool } from "@tools/write";

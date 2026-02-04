@@ -3,7 +3,7 @@
  */
 
 import chalk from "chalk";
-import { headerMessage, filePath } from "@utils/terminal";
+import { headerMessage, filePath } from "@utils/core/terminal";
 import type { RunnerOptions } from "@/types/runner";
 
 export const displayHeader = (options: RunnerOptions): void => {

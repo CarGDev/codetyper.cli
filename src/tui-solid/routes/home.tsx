@@ -1,13 +1,13 @@
 import { Match, Switch } from "solid-js";
 import { useTheme } from "@tui-solid/context/theme";
 import { useAppStore } from "@tui-solid/context/app";
-import { Logo } from "@tui-solid/components/logo";
-import { InputArea } from "@tui-solid/components/input-area";
-import { CommandMenu } from "@tui-solid/components/command-menu";
-import { ModelSelect } from "@tui-solid/components/model-select";
-import { ThemeSelect } from "@tui-solid/components/theme-select";
-import { FilePicker } from "@tui-solid/components/file-picker";
-import { CenteredModal } from "@tui-solid/components/centered-modal";
+import { Logo } from "@tui-solid/components/layout/logo";
+import { InputArea } from "@tui-solid/components/inputs/input-area";
+import { CommandMenu } from "@tui-solid/components/menu/command-menu";
+import { ModelSelect } from "@tui-solid/components/submenu/model-select";
+import { ThemeSelect } from "@tui-solid/components/submenu/theme-select";
+import { FilePicker } from "@tui-solid/components/inputs/file-picker";
+import { CenteredModal } from "@tui-solid/components/modals/centered-modal";
 import { HOME_VARS } from "@constants/home";
 
 interface HomeProps {

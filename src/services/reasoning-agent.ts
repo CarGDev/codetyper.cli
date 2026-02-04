@@ -24,9 +24,9 @@ import type {
 import { chat as providerChat } from "@providers/index";
 import { getTool, getToolsForApi, refreshMCPTools } from "@tools/index";
 import type { ToolContext, ToolCall, ToolResult } from "@/types/tools";
-import { initializePermissions } from "@services/permissions";
+import { initializePermissions } from "@services/core/permissions";
 import { MAX_ITERATIONS } from "@constants/agent";
-import { usageStore } from "@stores/usage-store";
+import { usageStore } from "@stores/core/usage-store";
 import type {
   TaskConstraints,
   CompressibleMessage,

@@ -2,8 +2,8 @@
  * Usage statistics display for TUI
  */
 
-import { usageStore } from "@stores/usage-store";
-import { getUserInfo } from "@providers/copilot/credentials";
+import { usageStore } from "@stores/core/usage-store";
+import { getUserInfo } from "@providers/copilot/auth/credentials";
 import { getCopilotUsage } from "@providers/copilot/usage";
 import { PROGRESS_BAR } from "@constants/ui";
 import type {

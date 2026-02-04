@@ -3,7 +3,7 @@
  */
 
 import os from "os";
-import { getConfig } from "@services/config";
+import { getConfig } from "@services/core/config";
 import { DASHBOARD_TITLE } from "@constants/dashboard";
 import type { DashboardConfig } from "@/types/dashboard";
 

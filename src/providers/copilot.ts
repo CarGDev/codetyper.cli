@@ -4,8 +4,8 @@
  * Falls back to copilot.lua/copilot.vim config if available
  */
 
-import { chat, chatStream } from "@providers/copilot/chat";
-import { getModels, getDefaultModel } from "@providers/copilot/models";
+import { chat, chatStream } from "@providers/copilot/core/chat";
+import { getModels, getDefaultModel } from "@providers/copilot/core/models";
 import {
   getCredentials,
   setCredentials,
@@ -13,11 +13,11 @@ import {
   logout,
   isConfigured,
   validate,
-} from "@providers/copilot/credentials";
+} from "@providers/copilot/auth/credentials";
 import {
   initiateDeviceFlow,
   pollForAccessToken,
-} from "@providers/copilot/auth";
+} from "@providers/copilot/auth/auth";
 import {
   COPILOT_PROVIDER_NAME,
   COPILOT_DISPLAY_NAME,

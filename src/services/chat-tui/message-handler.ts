@@ -2,7 +2,7 @@
  * Chat TUI message handling
  */
 
-import { addMessage, saveSession } from "@services/session";
+import { addMessage, saveSession } from "@services/core/session";
 import { createStreamingAgent } from "@services/agent-stream";
 import { CHAT_MESSAGES } from "@constants/chat-service";
 import { enrichMessageWithIssues } from "@services/github-issue-service";
@@ -44,7 +44,7 @@ import {
   checkOllamaAvailability,
   checkCopilotAvailability,
 } from "@services/cascading-provider";
-import { chat, getDefaultModel } from "@providers/chat";
+import { chat, getDefaultModel } from "@providers/core/chat";
 import { AUDIT_SYSTEM_PROMPT, createAuditPrompt, parseAuditResponse } from "@prompts/audit-prompt";
 import { PROVIDER_IDS } from "@constants/provider-quality";
 import { appStore } from "@tui/index";
@@ -55,7 +55,7 @@ import type {
   ChatServiceCallbacks,
   ToolCallInfo,
 } from "@/types/chat-service";
-import { addDebugLog } from "@tui-solid/components/debug-log-panel";
+import { addDebugLog } from "@tui-solid/components/logs/debug-log-panel";
 import { FILE_MODIFYING_TOOLS } from "@constants/tools";
 import type { StreamCallbacksWithState } from "@interfaces/StreamCallbacksWithState";
 import {

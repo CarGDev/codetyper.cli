@@ -11,7 +11,7 @@ import {
   READ_TITLES,
   READ_DESCRIPTION,
 } from "@constants/read";
-import { isFileOpAllowed, promptFilePermission } from "@services/permissions";
+import { isFileOpAllowed, promptFilePermission } from "@services/core/permissions";
 import { readParams } from "@tools/read/params";
 import { processLines } from "@tools/read/format";
 import type {

@@ -12,7 +12,7 @@
  */
 
 import chalk from "chalk";
-import { errorMessage, infoMessage, successMessage } from "@utils/terminal";
+import { errorMessage, infoMessage, successMessage } from "@utils/core/terminal";
 import {
   initializeMCP,
   getMCPConfig,

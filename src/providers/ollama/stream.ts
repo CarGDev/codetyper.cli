@@ -6,14 +6,14 @@ import got from "got";
 
 import { OLLAMA_ENDPOINTS, OLLAMA_TIMEOUTS } from "@constants/ollama";
 import { getOllamaBaseUrl } from "@providers/ollama/state";
-import { buildChatRequest, mapToolCall } from "@providers/ollama/chat";
+import { buildChatRequest, mapToolCall } from "@providers/ollama/core/chat";
 import type {
   Message,
   ChatCompletionOptions,
   StreamChunk,
 } from "@/types/providers";
 import type { OllamaChatResponse } from "@/types/ollama";
-import { addDebugLog } from "@tui-solid/components/debug-log-panel";
+import { addDebugLog } from "@tui-solid/components/logs/debug-log-panel";
 
 const parseStreamLine = (
   line: string,

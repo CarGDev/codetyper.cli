@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { handleCommand } from "@commands/handlers";
+import { handleCommand } from "@commands/core/handlers";
 import { execute } from "@commands/chat-tui";
 import versionData from "@/version.json";
 import {
@@ -10,14 +10,14 @@ import {
   getProviderNames,
   displayProvidersStatus,
 } from "@providers/index";
-import { getConfig } from "@services/config";
-import { deleteSession, getSessionSummaries } from "@services/session";
+import { getConfig } from "@services/core/config";
+import { deleteSession, getSessionSummaries } from "@services/core/session";
 import {
   initializePermissions,
   listPatterns,
   addGlobalPattern,
   addLocalPattern,
-} from "@services/permissions";
+} from "@services/core/permissions";
 import {
   projectConfig,
   initProject,
@@ -32,7 +32,7 @@ import {
   buildLearningsContext,
 } from "@services/project-config";
 import { createPlan, displayPlan, approvePlan } from "@services/planner";
-import { ensureXdgDirectories } from "@utils/ensure-directories";
+import { ensureXdgDirectories } from "@utils/core/ensure-directories";
 import chalk from "chalk";
 
 // Read version from version.json

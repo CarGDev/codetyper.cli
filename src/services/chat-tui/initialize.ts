@@ -2,18 +2,18 @@
  * Chat TUI initialization
  */
 
-import { errorMessage, infoMessage } from "@utils/terminal";
+import { errorMessage, infoMessage } from "@utils/core/terminal";
 import {
   findSession,
   loadSession,
   createSession,
   getMostRecentSession,
-} from "@services/session";
-import { getConfig } from "@services/config";
-import { initializePermissions } from "@services/permissions";
+} from "@services/core/session";
+import { getConfig } from "@services/core/config";
+import { initializePermissions } from "@services/core/permissions";
 import { getProviderStatus } from "@providers/index";
 import { appStore } from "@tui/index";
-import { themeActions } from "@stores/theme-store";
+import { themeActions } from "@stores/core/theme-store";
 import {
   buildBaseContext,
   buildCompletePrompt,

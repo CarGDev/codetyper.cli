@@ -3,8 +3,8 @@ import {
   warningMessage,
   successMessage,
   errorMessage,
-} from "@utils/terminal";
-import { getConfig } from "@services/config";
+} from "@utils/core/terminal";
+import { getConfig } from "@services/core/config";
 import { getProvider } from "@providers/index.ts";
 import { showModels } from "./show-models.ts";
 import type { ChatState } from "../state.ts";

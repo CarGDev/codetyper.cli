@@ -1,5 +1,5 @@
 import { basename } from "path";
-import { warningMessage, successMessage } from "@utils/terminal";
+import { warningMessage, successMessage } from "@utils/core/terminal";
 
 export const removeFile = (
   filename: string,

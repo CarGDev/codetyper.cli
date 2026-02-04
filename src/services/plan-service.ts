@@ -4,7 +4,7 @@
  * Provides functions for agents to create and update plans
  */
 
-import { todoStore } from "@stores/todo-store";
+import { todoStore } from "@stores/core/todo-store";
 import type { TodoStatus } from "@/types/todo";
 
 /**

@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { basename } from "path";
-import { getCurrentSession } from "@services/session";
-import { infoMessage, filePath } from "@utils/terminal";
+import { getCurrentSession } from "@services/core/session";
+import { infoMessage, filePath } from "@utils/core/terminal";
 
 export const showContextFiles = (contextFiles: Map<string, string>): void => {
   const session = getCurrentSession();

@@ -3,7 +3,7 @@
  */
 
 import { MODEL_MESSAGES } from "@constants/chat-service";
-import { getConfig } from "@services/config";
+import { getConfig } from "@services/core/config";
 import {
   getProvider,
   getDefaultModel,

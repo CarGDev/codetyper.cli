@@ -12,7 +12,7 @@ import {
   startSpinner,
   succeedSpinner,
   successMessage,
-} from "@utils/terminal";
+} from "@utils/core/terminal";
 import type { CommandOptions } from "@/types/index";
 
 export const handlePlan = async (options: CommandOptions): Promise<void> => {

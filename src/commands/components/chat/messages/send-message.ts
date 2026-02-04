@@ -1,9 +1,9 @@
 import chalk from "chalk";
 import { basename, extname } from "path";
-import { addMessage } from "@services/session";
-import { initializePermissions } from "@services/permissions";
-import { createAgent } from "@services/agent";
-import { infoMessage, errorMessage, warningMessage } from "@utils/terminal";
+import { addMessage } from "@services/core/session";
+import { initializePermissions } from "@services/core/permissions";
+import { createAgent } from "@services/core/agent";
+import { infoMessage, errorMessage, warningMessage } from "@utils/core/terminal";
 import { getThinkingMessage } from "@constants/status-messages";
 import {
   detectDebuggingRequest,

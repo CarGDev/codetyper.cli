@@ -5,9 +5,9 @@
 export {
   executeChatRequest,
   executeStreamRequest,
-} from "@api/ollama/chat";
+} from "@api/ollama/core/chat";
 
 export {
   fetchModels,
   checkHealth,
-} from "@api/ollama/models";
+} from "@api/ollama/core/models";

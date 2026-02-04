@@ -17,7 +17,7 @@ import {
   type DocumentSymbol,
   type Hover,
 } from "@services/lsp/index";
-import type { ToolDefinition } from "@tools/types";
+import type { ToolDefinition } from "@tools/core/types";
 import fs from "fs/promises";
 
 const PositionSchema = z.object({

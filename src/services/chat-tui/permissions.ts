@@ -4,7 +4,7 @@
 
 import { v4 as uuidv4 } from "uuid";
 
-import { setPermissionHandler } from "@services/permissions";
+import { setPermissionHandler } from "@services/core/permissions";
 import type {
   PermissionPromptRequest,
   PermissionPromptResponse,

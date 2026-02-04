@@ -1,7 +1,7 @@
 import { resolve } from "path";
 import { existsSync } from "fs";
 import fg from "fast-glob";
-import { errorMessage, warningMessage } from "@utils/terminal";
+import { errorMessage, warningMessage } from "@utils/core/terminal";
 import { loadFile } from "@commands/components/chat/context/load-file";
 import { IGNORE_FOLDERS } from "@constants/paths";
 

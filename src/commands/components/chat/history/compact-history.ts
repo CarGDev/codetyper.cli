@@ -1,4 +1,4 @@
-import { successMessage, infoMessage } from "@utils/terminal";
+import { successMessage, infoMessage } from "@utils/core/terminal";
 import type { ChatState } from "@commands/components/chat/state";
 
 export const compactHistory = (state: ChatState): void => {

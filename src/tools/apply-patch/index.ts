@@ -4,7 +4,7 @@
  * Applies unified diff patches to files with fuzzy matching support.
  */
 
-import type { ToolDefinition } from "@tools/types";
+import type { ToolDefinition } from "@tools/core/types";
 import { applyPatchParams } from "@tools/apply-patch/params";
 import { executeApplyPatch } from "@tools/apply-patch/execute";
 

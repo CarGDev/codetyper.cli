@@ -3,7 +3,7 @@
  */
 
 import chalk from "chalk";
-import { filePath } from "@utils/terminal";
+import { filePath } from "@utils/core/terminal";
 import { STEP_ICONS, DEFAULT_STEP_ICON } from "@constants/runner";
 import type { ExecutionPlan, PlanStep } from "@/types/index";
 

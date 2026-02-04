@@ -10,7 +10,7 @@ import type {
   PluginCommandDefinition,
   PluginLoadResult,
 } from "@/types/plugin";
-import type { FunctionDefinition, ToolDefinition } from "@tools/types";
+import type { FunctionDefinition, ToolDefinition } from "@tools/core/types";
 import type { HookDefinition } from "@/types/hooks";
 import {
   discoverPlugins,

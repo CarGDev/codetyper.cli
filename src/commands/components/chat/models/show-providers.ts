@@ -1,4 +1,4 @@
-import { getConfig } from "@services/config";
+import { getConfig } from "@services/core/config";
 import { displayProvidersStatus } from "@providers/index.ts";
 
 export const showProviders = async (): Promise<void> => {

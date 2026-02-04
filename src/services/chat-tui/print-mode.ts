@@ -2,8 +2,8 @@
  * Chat TUI print mode (non-interactive)
  */
 
-import { createAgent } from "@services/agent";
-import { initializePermissions } from "@services/permissions";
+import { createAgent } from "@services/core/agent";
+import { initializePermissions } from "@services/core/permissions";
 import {
   processFileReferences,
   buildContextMessage,

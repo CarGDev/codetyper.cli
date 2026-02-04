@@ -1,6 +1,6 @@
 import chalk from "chalk";
-import { getCurrentSession } from "@services/session";
-import { warningMessage } from "@utils/terminal";
+import { getCurrentSession } from "@services/core/session";
+import { warningMessage } from "@utils/core/terminal";
 
 export const showSessionInfo = async (): Promise<void> => {
   const session = getCurrentSession();

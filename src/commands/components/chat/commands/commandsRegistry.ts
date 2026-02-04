@@ -1,4 +1,4 @@
-import { saveSession } from "@services/session";
+import { saveSession } from "@services/core/session";
 import { clearConversation } from "@commands/components/chat/history/clear-conversation";
 import { appStore } from "@tui/index";
 import { showContextFiles } from "@commands/components/chat/context/show-context-files";
@@ -18,7 +18,7 @@ import { switchAgent } from "@commands/components/chat/agents/switch-agent";
 import { handleMCP } from "@commands/components/chat/mcp/handle-mcp";
 import { CommandContext } from "@interfaces/commandContext";
 import type { CommandHandler } from "@/types/commandHandler";
-import { successMessage } from "@utils/terminal";
+import { successMessage } from "@utils/core/terminal";
 
 const COMMAND_REGISTRY: Map<string, CommandHandler> = new Map<
   string,

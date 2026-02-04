@@ -10,8 +10,8 @@ import {
 import {
   getOllamaModels,
   getDefaultOllamaModel,
-} from "@providers/ollama/models";
-import { ollamaChat } from "@providers/ollama/chat";
+} from "@providers/ollama/core/models";
+import { ollamaChat } from "@providers/ollama/core/chat";
 import { ollamaChatStream } from "@providers/ollama/stream";
 import {
   getOllamaCredentials,

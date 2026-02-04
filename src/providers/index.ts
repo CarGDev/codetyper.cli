@@ -12,10 +12,10 @@ export {
   getAllProviders,
   getProviderNames,
   isValidProvider,
-} from "@providers/registry";
+} from "@providers/core/registry";
 
 // Re-export status functions
-export { getProviderStatus, displayProvidersStatus } from "@providers/status";
+export { getProviderStatus, displayProvidersStatus } from "@providers/core/status";
 
 // Re-export login functions
 export {
@@ -26,7 +26,7 @@ export {
 } from "@providers/login";
 
 // Re-export chat functions
-export { chat, chatStream, getDefaultModel, getModels } from "@providers/chat";
+export { chat, chatStream, getDefaultModel, getModels } from "@providers/core/chat";
 
 // Re-export copilot-specific functions
 export {

@@ -9,8 +9,8 @@ import {
   hightLigthedJson,
   headerMessage,
   infoMessage,
-} from "@utils/terminal";
-import { getConfig } from "@services/config";
+} from "@utils/core/terminal";
+import { getConfig } from "@services/core/config";
 import {
   VALID_CONFIG_KEYS,
   VALID_PROVIDERS,

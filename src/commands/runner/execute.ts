@@ -12,7 +12,7 @@ import {
   infoMessage,
   errorMessage,
   warningMessage,
-} from "@utils/terminal";
+} from "@utils/core/terminal";
 import { RUNNER_DELAYS, RUNNER_MESSAGES } from "@constants/runner";
 import { displayHeader } from "@commands/runner/display-header";
 import { displayPlan } from "@commands/runner/display-plan";

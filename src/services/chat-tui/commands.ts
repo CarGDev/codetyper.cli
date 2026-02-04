@@ -2,7 +2,7 @@
  * Chat TUI command handling
  */
 
-import { saveSession as saveSessionSession } from "@services/session";
+import { saveSession as saveSessionSession } from "@services/core/session";
 import { appStore } from "@tui/index";
 import { CHAT_MESSAGES, type CommandName } from "@constants/chat-service";
 import { handleLogin, handleLogout, showWhoami } from "@services/chat-tui/auth";

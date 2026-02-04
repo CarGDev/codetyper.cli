@@ -1,13 +1,13 @@
 import chalk from "chalk";
-import { infoMessage, errorMessage, warningMessage } from "@utils/terminal";
+import { infoMessage, errorMessage, warningMessage } from "@utils/core/terminal";
 import {
   createSession,
   loadSession,
   getMostRecentSession,
   findSession,
   setWorkingDirectory,
-} from "@services/session";
-import { getConfig } from "@services/config";
+} from "@services/core/session";
+import { getConfig } from "@services/core/config";
 import type { Provider as ProviderName, ChatSession } from "@/types/index";
 import { getProvider, getProviderStatus } from "@providers/index.ts";
 import {

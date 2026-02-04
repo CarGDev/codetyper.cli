@@ -11,7 +11,7 @@ export {
   createSpinner,
   Spinner,
   type SpinnerInstance,
-} from "@ui/spinner/spinner";
+} from "@ui/spinner/core/spinner";
 
 export {
   createScannerInstance,

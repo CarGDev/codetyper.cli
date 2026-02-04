@@ -3,11 +3,11 @@
  */
 
 import chalk from "chalk";
-import { usageStore } from "@stores/usage-store";
-import { getUserInfo } from "@providers/copilot/credentials";
+import { usageStore } from "@stores/core/usage-store";
+import { getUserInfo } from "@providers/copilot/auth/credentials";
 import { getCopilotUsage } from "@providers/copilot/usage";
 import { getProvider } from "@providers/index";
-import { renderUsageBar, renderUnlimitedBar } from "@utils/progress-bar";
+import { renderUsageBar, renderUnlimitedBar } from "@utils/menu/progress-bar";
 import type { ChatState } from "@commands/components/chat/state";
 import type { CopilotQuotaDetail } from "@/types/copilot-usage";
 

@@ -9,7 +9,7 @@ import {
   BASH_MESSAGES,
   BASH_DESCRIPTION,
 } from "@constants/bash";
-import { promptPermission } from "@services/permissions";
+import { promptPermission } from "@services/core/permissions";
 import { bashParams } from "@tools/bash/params";
 import {
   truncateOutput,

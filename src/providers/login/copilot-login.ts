@@ -10,9 +10,9 @@ import {
   LOGIN_PROMPTS,
   AUTH_STEP_PREFIXES,
 } from "@constants/login";
-import { getProvider } from "@providers/registry";
-import { getProviderStatus } from "@providers/status";
-import { loadCredentials, saveCredentials } from "@providers/credentials";
+import { getProvider } from "@providers/core/registry";
+import { getProviderStatus } from "@providers/core/status";
+import { loadCredentials, saveCredentials } from "@providers/core/credentials";
 import { initiateDeviceFlow, pollForAccessToken } from "@providers/copilot";
 import { displayModels } from "@providers/login/utils";
 import type { ProviderName, LoginHandler } from "@/types/providers";

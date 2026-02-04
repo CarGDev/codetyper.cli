@@ -9,7 +9,7 @@ import {
   errorMessage,
   failSpinner,
   headerMessage,
-} from "@utils/terminal";
+} from "@utils/core/terminal";
 import {
   INTENT_KEYWORDS,
   CLASSIFICATION_CONFIDENCE,

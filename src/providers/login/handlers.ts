@@ -6,8 +6,8 @@ import chalk from "chalk";
 
 import { PROVIDER_INFO } from "@constants/providers";
 import { LOGIN_MESSAGES } from "@constants/login";
-import { getProvider } from "@providers/registry";
-import { loadCredentials, saveCredentials } from "@providers/credentials";
+import { getProvider } from "@providers/core/registry";
+import { loadCredentials, saveCredentials } from "@providers/core/credentials";
 import { logoutCopilot } from "@providers/copilot";
 import { loginCopilot } from "@providers/login/copilot-login";
 import { loginOllama } from "@providers/login/ollama-login";

@@ -1,6 +1,6 @@
 import chalk from "chalk";
-import { getSessionSummaries } from "@services/session";
-import { infoMessage } from "@utils/terminal";
+import { getSessionSummaries } from "@services/core/session";
+import { infoMessage } from "@utils/core/terminal";
 
 export const listSessions = async (): Promise<void> => {
   const summaries = await getSessionSummaries();

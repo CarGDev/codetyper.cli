@@ -4,8 +4,8 @@ import {
   warningMessage,
   infoMessage,
   successMessage,
-} from "@utils/terminal";
-import { getConfig } from "@services/config";
+} from "@utils/core/terminal";
+import { getConfig } from "@services/core/config";
 import {
   getProvider,
   getProviderStatus,

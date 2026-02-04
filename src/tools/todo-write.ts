@@ -5,8 +5,8 @@
  */
 
 import { z } from "zod";
-import { todoStore } from "@stores/todo-store";
-import type { ToolDefinition } from "@tools/types";
+import { todoStore } from "@stores/core/todo-store";
+import type { ToolDefinition } from "@tools/core/types";
 import type { TodoStatus } from "@/types/todo";
 
 const TodoItemSchema = z.object({

@@ -1,5 +1,5 @@
-import { clearMessages } from "@services/session";
-import { successMessage } from "@utils/terminal";
+import { clearMessages } from "@services/core/session";
+import { successMessage } from "@utils/core/terminal";
 import type { ChatState } from "@commands/components/chat/state";
 
 export const clearConversation = (state: ChatState): void => {

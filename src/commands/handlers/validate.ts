@@ -12,8 +12,8 @@ import {
   errorMessage,
   headerMessage,
   filePath,
-} from "@utils/terminal";
-import { getConfig } from "@services/config";
+} from "@utils/core/terminal";
+import { getConfig } from "@services/core/config";
 import type { CommandOptions } from "@/types/index";
 
 export const handleValidate = async (

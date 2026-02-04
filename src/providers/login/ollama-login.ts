@@ -7,8 +7,8 @@ import chalk from "chalk";
 
 import { DEFAULT_OLLAMA_HOST } from "@constants/providers";
 import { LOGIN_MESSAGES, LOGIN_PROMPTS } from "@constants/login";
-import { getProvider } from "@providers/registry";
-import { loadCredentials, saveCredentials } from "@providers/credentials";
+import { getProvider } from "@providers/core/registry";
+import { loadCredentials, saveCredentials } from "@providers/core/credentials";
 import { displayModels } from "@providers/login/utils";
 import type { ProviderName, LoginHandler } from "@/types/providers";
 
