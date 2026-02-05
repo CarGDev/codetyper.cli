@@ -27,6 +27,12 @@ export { initializeChatService } from "@services/chat-tui/initialize";
 export {
   handleMessage,
   abortCurrentOperation,
+  pauseCurrentOperation,
+  resumeCurrentOperation,
+  togglePauseResume,
+  setStepMode,
+  advanceStep,
+  getExecutionState,
 } from "@services/chat-tui/message-handler";
 
 // Re-export command handling

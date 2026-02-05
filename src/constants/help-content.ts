@@ -173,6 +173,33 @@ export const HELP_TOPICS: HelpTopic[] = [
     shortcuts: ["Ctrl+M"],
     category: "shortcuts",
   },
+  {
+    id: "shortcut-ctrlp",
+    name: "Ctrl+P",
+    shortDescription: "Pause/Resume",
+    fullDescription:
+      "Toggle pause/resume during agent execution. When paused, tool calls are suspended until resumed.",
+    shortcuts: ["Ctrl+P"],
+    category: "shortcuts",
+  },
+  {
+    id: "shortcut-ctrlz",
+    name: "Ctrl+Z",
+    shortDescription: "Abort with rollback",
+    fullDescription:
+      "Abort current operation and rollback file changes made during this execution. Use to undo unwanted modifications.",
+    shortcuts: ["Ctrl+Z"],
+    category: "shortcuts",
+  },
+  {
+    id: "shortcut-ctrlshifts",
+    name: "Ctrl+Shift+S",
+    shortDescription: "Toggle step mode",
+    fullDescription:
+      "Enable step-by-step mode where you can advance one tool call at a time. Press Enter to execute each tool.",
+    shortcuts: ["Ctrl+Shift+S"],
+    category: "shortcuts",
+  },
 ];
 
 export const getTopicsByCategory = (category: HelpCategory): HelpTopic[] =>

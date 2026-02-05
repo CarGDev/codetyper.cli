@@ -9,7 +9,13 @@ import {
 } from "solid-js";
 import { batch } from "solid-js";
 import { getFiles } from "@services/file-picker/files";
-import { abortCurrentOperation } from "@services/chat-tui-service";
+import {
+  abortCurrentOperation,
+  togglePauseResume,
+  setStepMode,
+  advanceStep,
+  getExecutionState,
+} from "@services/chat-tui-service";
 import versionData from "@/version.json";
 import { ExitProvider, useExit } from "@tui-solid/context/exit";
 import { RouteProvider, useRoute } from "@tui-solid/context/route";
@@ -159,16 +165,74 @@ function AppContent(props: AppProps) {
   useKeyboard((evt) => {
     // ESC aborts current operation
     if (evt.name === "escape") {
-      const aborted = abortCurrentOperation();
-      if (aborted) {
-        toast.info("Operation cancelled");
+      abortCurrentOperation(false).then((aborted) => {
+        if (aborted) {
+          toast.info("Operation cancelled");
+        }
+      });
+      evt.preventDefault();
+      return;
+    }
+
+    // Ctrl+P toggles pause/resume during execution
+    if (evt.ctrl && evt.name === "p") {
+      const toggled = togglePauseResume();
+      if (toggled) {
+        const state = getExecutionState();
+        toast.info(state.state === "paused" ? "⏸ Execution paused" : "▶ Execution resumed");
         evt.preventDefault();
         return;
       }
     }
 
-    // Ctrl+C exits the application
+    // Ctrl+Z aborts with rollback
+    if (evt.ctrl && evt.name === "z") {
+      const state = getExecutionState();
+      if (state.state !== "idle") {
+        abortCurrentOperation(true).then((aborted) => {
+          if (aborted) {
+            toast.info(`Aborted with rollback of ${state.rollbackCount} action(s)`);
+          }
+        });
+        evt.preventDefault();
+        return;
+      }
+    }
+
+    // Ctrl+Shift+S toggles step mode
+    if (evt.ctrl && evt.shift && evt.name === "s") {
+      const state = getExecutionState();
+      if (state.state !== "idle") {
+        const isStepMode = state.state === "stepping";
+        setStepMode(!isStepMode);
+        toast.info(isStepMode ? "🏃 Step mode disabled" : "🚶 Step mode enabled");
+        evt.preventDefault();
+        return;
+      }
+    }
+
+    // Enter advances step when waiting for step confirmation
+    if (evt.name === "return" && !evt.ctrl && !evt.shift) {
+      const state = getExecutionState();
+      if (state.waitingForStep) {
+        advanceStep();
+        evt.preventDefault();
+        return;
+      }
+    }
+
+    // Ctrl+C exits the application (with confirmation)
     if (evt.ctrl && evt.name === "c") {
+      // First try to abort current operation
+      const state = getExecutionState();
+      if (state.state !== "idle") {
+        abortCurrentOperation(false).then(() => {
+          toast.info("Operation cancelled. Press Ctrl+C again to exit.");
+        });
+        evt.preventDefault();
+        return;
+      }
+
       if (app.interruptPending()) {
         exit.exit(0);
         evt.preventDefault();

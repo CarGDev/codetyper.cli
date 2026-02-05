@@ -3,7 +3,10 @@
  */
 
 import { addMessage, saveSession } from "@services/core/session";
-import { createStreamingAgent } from "@services/agent-stream";
+import {
+  createStreamingAgent,
+  type StreamingAgentInstance,
+} from "@services/agent-stream";
 import { CHAT_MESSAGES } from "@constants/chat-service";
 import { enrichMessageWithIssues } from "@services/github-issue-service";
 import { checkGitHubCLI } from "@services/github-pr/cli";
@@ -74,24 +77,131 @@ let lastResponseContext: {
   response: string;
 } | null = null;
 
-// Track current running agent for abort capability
-let currentAgent: { stop: () => void } | null = null;
+// Track current running agent for execution control
+let currentAgent: StreamingAgentInstance | null = null;
 
 /**
  * Abort the currently running agent operation
+ * @param rollback - If true, attempt to rollback file changes
  * @returns true if an operation was aborted, false if nothing was running
  */
-export const abortCurrentOperation = (): boolean => {
+export const abortCurrentOperation = async (
+  rollback = false,
+): Promise<boolean> => {
   if (currentAgent) {
-    currentAgent.stop();
+    await currentAgent.abort(rollback);
     currentAgent = null;
     appStore.cancelStreaming();
     appStore.stopThinking();
     appStore.setMode("idle");
-    addDebugLog("state", "Operation aborted by user");
+    addDebugLog(
+      "state",
+      rollback ? "Operation aborted with rollback" : "Operation aborted by user",
+    );
     return true;
   }
   return false;
+};
+
+/**
+ * Pause the currently running agent operation
+ * @returns true if operation was paused, false if nothing was running
+ */
+export const pauseCurrentOperation = (): boolean => {
+  if (currentAgent && currentAgent.getExecutionState() === "running") {
+    currentAgent.pause();
+    appStore.addLog({
+      type: "system",
+      content: "⏸ Execution paused. Press Ctrl+P to resume.",
+    });
+    addDebugLog("state", "Operation paused by user");
+    return true;
+  }
+  return false;
+};
+
+/**
+ * Resume the currently paused agent operation
+ * @returns true if operation was resumed, false if nothing was paused
+ */
+export const resumeCurrentOperation = (): boolean => {
+  if (currentAgent && currentAgent.getExecutionState() === "paused") {
+    currentAgent.resume();
+    appStore.addLog({
+      type: "system",
+      content: "▶ Execution resumed.",
+    });
+    addDebugLog("state", "Operation resumed by user");
+    return true;
+  }
+  return false;
+};
+
+/**
+ * Toggle pause/resume for current operation
+ * @returns true if state changed, false if nothing running
+ */
+export const togglePauseResume = (): boolean => {
+  if (!currentAgent) return false;
+
+  const state = currentAgent.getExecutionState();
+  if (state === "running" || state === "stepping") {
+    return pauseCurrentOperation();
+  }
+  if (state === "paused") {
+    return resumeCurrentOperation();
+  }
+  return false;
+};
+
+/**
+ * Enable/disable step-by-step mode for current operation
+ * @param enabled - Whether step mode should be enabled
+ * @returns true if mode was changed
+ */
+export const setStepMode = (enabled: boolean): boolean => {
+  if (!currentAgent) return false;
+
+  currentAgent.stepMode(enabled);
+  appStore.addLog({
+    type: "system",
+    content: enabled
+      ? "🚶 Step mode enabled. Press Enter to advance each tool call."
+      : "🏃 Step mode disabled. Execution will continue automatically.",
+  });
+  addDebugLog("state", `Step mode ${enabled ? "enabled" : "disabled"}`);
+  return true;
+};
+
+/**
+ * Advance one step in step-by-step mode
+ * @returns true if step was advanced
+ */
+export const advanceStep = (): boolean => {
+  if (currentAgent && currentAgent.isWaitingForStep()) {
+    currentAgent.step();
+    addDebugLog("state", "Step advanced by user");
+    return true;
+  }
+  return false;
+};
+
+/**
+ * Get current execution state
+ */
+export const getExecutionState = (): {
+  state: "idle" | "running" | "paused" | "stepping" | "aborted" | "completed";
+  rollbackCount: number;
+  waitingForStep: boolean;
+} => {
+  if (!currentAgent) {
+    return { state: "idle", rollbackCount: 0, waitingForStep: false };
+  }
+  return {
+    state: currentAgent.getExecutionState(),
+    rollbackCount: currentAgent.getRollbackCount(),
+    waitingForStep: currentAgent.isWaitingForStep(),
+  };
 };
 
 const createToolCallHandler =
@@ -574,7 +684,46 @@ export const handleMessage = async (
         callbacks.onLog("system", warning);
       },
     },
-    streamState.callbacks,
+    {
+      ...streamState.callbacks,
+      // Execution control callbacks
+      onPause: () => {
+        addDebugLog("state", "Execution paused");
+      },
+      onResume: () => {
+        addDebugLog("state", "Execution resumed");
+      },
+      onStepModeEnabled: () => {
+        addDebugLog("state", "Step mode enabled");
+      },
+      onStepModeDisabled: () => {
+        addDebugLog("state", "Step mode disabled");
+      },
+      onWaitingForStep: (toolName: string, _toolArgs: Record<string, unknown>) => {
+        appStore.addLog({
+          type: "system",
+          content: `⏳ Step mode: Ready to execute ${toolName}. Press Enter to continue.`,
+        });
+        addDebugLog("state", `Waiting for step: ${toolName}`);
+      },
+      onAbort: (rollbackCount: number) => {
+        addDebugLog("state", `Abort initiated, ${rollbackCount} actions to rollback`);
+      },
+      onRollback: (action: { type: string; description: string }) => {
+        appStore.addLog({
+          type: "system",
+          content: `↩ Rolling back: ${action.description}`,
+        });
+        addDebugLog("state", `Rollback: ${action.type} - ${action.description}`);
+      },
+      onRollbackComplete: (actionsRolledBack: number) => {
+        appStore.addLog({
+          type: "system",
+          content: `✓ Rollback complete. ${actionsRolledBack} action(s) undone.`,
+        });
+        addDebugLog("state", `Rollback complete: ${actionsRolledBack} actions`);
+      },
+    },
   );
 
   // Store agent reference for abort capability
