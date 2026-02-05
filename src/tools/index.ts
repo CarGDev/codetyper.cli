@@ -13,6 +13,7 @@ import { webFetchTool } from "@tools/web-fetch/execute";
 import { multiEditTool } from "@tools/multi-edit/execute";
 import { lspTool } from "@tools/lsp";
 import { applyPatchTool } from "@tools/apply-patch";
+import { taskAgentTool } from "@tools/task-agent/execute";
 import {
   isMCPTool,
   executeMCPTool,
@@ -40,6 +41,7 @@ export const tools: ToolDefinition[] = [
   webFetchTool,
   lspTool,
   applyPatchTool,
+  taskAgentTool,
 ];
 
 // Tools that are read-only (allowed in chat mode)

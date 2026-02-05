@@ -63,6 +63,11 @@ interface ChatRequestBody {
   tool_choice?: string;
 }
 
+// Default max tokens for requests without tools
+const DEFAULT_MAX_TOKENS = 4096;
+// Higher max tokens when tools are enabled (tool calls often write large content)
+const DEFAULT_MAX_TOKENS_WITH_TOOLS = 16384;
+
 const buildRequestBody = (
   messages: Message[],
   options: ChatCompletionOptions | undefined,
@@ -76,15 +81,21 @@ const buildRequestBody = (
       ? options.model
       : getDefaultModel());
 
+  // Use higher max_tokens when tools are enabled to prevent truncation
+  const hasTools = options?.tools && options.tools.length > 0;
+  const defaultTokens = hasTools
+    ? DEFAULT_MAX_TOKENS_WITH_TOOLS
+    : DEFAULT_MAX_TOKENS;
+
   const body: ChatRequestBody = {
     model,
     messages: formatMessages(messages),
-    max_tokens: options?.maxTokens ?? 4096,
+    max_tokens: options?.maxTokens ?? defaultTokens,
     temperature: options?.temperature ?? 0.3,
     stream,
   };
 
-  if (options?.tools && options.tools.length > 0) {
+  if (hasTools) {
     body.tools = options.tools;
     body.tool_choice = "auto";
   }
@@ -211,6 +222,54 @@ export const chat = async (
   throw lastError;
 };
 
+/**
+ * Process a single SSE line and emit appropriate chunks
+ */
+const processStreamLine = (
+  line: string,
+  onChunk: (chunk: StreamChunk) => void,
+): boolean => {
+  if (!line.startsWith("data: ")) {
+    return false;
+  }
+
+  const jsonStr = line.slice(6).trim();
+  if (jsonStr === "[DONE]") {
+    onChunk({ type: "done" });
+    return true;
+  }
+
+  try {
+    const parsed = JSON.parse(jsonStr);
+    const delta = parsed.choices?.[0]?.delta;
+    const finishReason = parsed.choices?.[0]?.finish_reason;
+
+    if (delta?.content) {
+      onChunk({ type: "content", content: delta.content });
+    }
+
+    if (delta?.tool_calls) {
+      for (const tc of delta.tool_calls) {
+        addDebugLog("api", `Tool call chunk: ${JSON.stringify(tc)}`);
+        onChunk({ type: "tool_call", toolCall: tc });
+      }
+    }
+
+    // Handle truncation: if finish_reason is "length", content was cut off
+    if (finishReason === "length") {
+      addDebugLog("api", "Stream truncated due to max_tokens limit");
+      onChunk({
+        type: "error",
+        error: "Response truncated: max_tokens limit reached",
+      });
+    }
+  } catch {
+    // Ignore parse errors in stream
+  }
+
+  return false;
+};
+
 const executeStream = (
   endpoint: string,
   token: CopilotToken,
@@ -224,6 +283,7 @@ const executeStream = (
     });
 
     let buffer = "";
+    let doneReceived = false;
 
     stream.on("data", (data: Buffer) => {
       buffer += data.toString();
@@ -231,34 +291,9 @@ const executeStream = (
       buffer = lines.pop() ?? "";
 
       for (const line of lines) {
-        if (line.startsWith("data: ")) {
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") {
-            onChunk({ type: "done" });
-            return;
-          }
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const delta = parsed.choices?.[0]?.delta;
-
-            if (delta?.content) {
-              onChunk({ type: "content", content: delta.content });
-            }
-
-            if (delta?.tool_calls) {
-              for (const tc of delta.tool_calls) {
-                addDebugLog("api", `Tool call chunk: ${JSON.stringify(tc)}`);
-                console.log(
-                  "Debug: Tool call chunk received:",
-                  JSON.stringify(tc),
-                );
-                onChunk({ type: "tool_call", toolCall: tc });
-              }
-            }
-          } catch {
-            // Ignore parse errors in stream
-          }
+        if (processStreamLine(line, onChunk)) {
+          doneReceived = true;
+          return;
         }
       }
     });
@@ -268,7 +303,23 @@ const executeStream = (
       reject(error);
     });
 
-    stream.on("end", resolve);
+    stream.on("end", () => {
+      // Process any remaining data in buffer that didn't have trailing newline
+      if (buffer.trim()) {
+        processStreamLine(buffer, onChunk);
+      }
+
+      // Ensure done is sent even if stream ended without [DONE] message
+      if (!doneReceived) {
+        addDebugLog(
+          "api",
+          "Stream ended without [DONE] message, sending done chunk",
+        );
+        onChunk({ type: "done" });
+      }
+
+      resolve();
+    });
   });
 
 export const chatStream = async (

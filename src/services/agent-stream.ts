@@ -176,6 +176,44 @@ const getToolCallIndex = (
 };
 
 /**
+ * Check if JSON appears to be truncated (incomplete)
+ */
+const isLikelyTruncatedJson = (jsonStr: string): boolean => {
+  const trimmed = jsonStr.trim();
+  if (!trimmed) return false;
+
+  // Count braces and brackets
+  let braceCount = 0;
+  let bracketCount = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (const char of trimmed) {
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (char === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (char === '"') {
+      inString = !inString;
+      continue;
+    }
+    if (!inString) {
+      if (char === "{") braceCount++;
+      if (char === "}") braceCount--;
+      if (char === "[") bracketCount++;
+      if (char === "]") bracketCount--;
+    }
+  }
+
+  // If counts are unbalanced, JSON is truncated
+  return braceCount !== 0 || bracketCount !== 0 || inString;
+};
+
+/**
  * Convert partial tool call to complete tool call
  */
 const finalizeToolCall = (partial: PartialToolCall): ToolCall => {
@@ -188,10 +226,16 @@ const finalizeToolCall = (partial: PartialToolCall): ToolCall => {
     try {
       args = JSON.parse(rawBuffer);
     } catch (e) {
+      const isTruncated = isLikelyTruncatedJson(rawBuffer);
+      const errorType = isTruncated
+        ? "JSON truncated (likely max_tokens exceeded)"
+        : "JSON parse failed";
+
       args = {
-        __debug_error: "JSON parse failed",
+        __debug_error: errorType,
         __debug_buffer: rawBuffer.substring(0, 200),
         __debug_parseError: e instanceof Error ? e.message : String(e),
+        __debug_truncated: isTruncated,
       };
     }
   }
@@ -211,6 +255,23 @@ const executeTool = async (
   state: StreamAgentState,
   toolCall: ToolCall,
 ): Promise<ToolResult> => {
+  // Check for debug error markers from truncated/malformed JSON
+  const debugError = toolCall.arguments.__debug_error as string | undefined;
+  if (debugError) {
+    const isTruncated = toolCall.arguments.__debug_truncated === true;
+    const title = isTruncated ? "Tool call truncated" : "Tool validation error";
+    const hint = isTruncated
+      ? "\nHint: The model's response was cut off. Try a simpler request or increase max_tokens."
+      : "";
+
+    return {
+      success: false,
+      title,
+      output: "",
+      error: `Tool validation error: ${toolCall.name}: ${debugError}${hint}\nReceived: ${JSON.stringify(toolCall.arguments)}`,
+    };
+  }
+
   const tool = getTool(toolCall.name);
 
   if (!tool) {
@@ -244,6 +305,103 @@ const executeTool = async (
       error: `${toolCall.name}: ${errorMessage}\nReceived: ${receivedArgs}`,
     };
   }
+};
+
+// =============================================================================
+// Parallel Tool Execution
+// =============================================================================
+
+/**
+ * Tools that are safe to execute in parallel (read-only or isolated)
+ */
+const PARALLEL_SAFE_TOOLS = new Set([
+  "task_agent",  // Subagent spawning - designed for parallel execution
+  "read",        // Read-only
+  "glob",        // Read-only
+  "grep",        // Read-only
+  "web_search",  // External API, no local state
+  "web_fetch",   // External API, no local state
+  "todo_read",   // Read-only
+  "lsp",         // Read-only queries
+]);
+
+/**
+ * Maximum number of parallel tool executions
+ */
+const MAX_PARALLEL_TOOLS = 3;
+
+/**
+ * Execute tool calls with intelligent parallelism
+ * - Parallel-safe tools (task_agent, read, glob, grep) run concurrently
+ * - File-modifying tools (write, edit, bash) run sequentially
+ */
+const executeToolCallsWithParallelism = async (
+  state: StreamAgentState,
+  toolCalls: ToolCall[],
+): Promise<Array<{ toolCall: ToolCall; result: ToolResult }>> => {
+  // Separate into parallel-safe and sequential groups
+  const parallelCalls: ToolCall[] = [];
+  const sequentialCalls: ToolCall[] = [];
+
+  for (const tc of toolCalls) {
+    if (PARALLEL_SAFE_TOOLS.has(tc.name)) {
+      parallelCalls.push(tc);
+    } else {
+      sequentialCalls.push(tc);
+    }
+  }
+
+  const results: Array<{ toolCall: ToolCall; result: ToolResult }> = [];
+
+  // Execute parallel-safe tools in parallel (up to MAX_PARALLEL_TOOLS at a time)
+  if (parallelCalls.length > 0) {
+    const parallelResults = await executeInParallelChunks(
+      state,
+      parallelCalls,
+      MAX_PARALLEL_TOOLS,
+    );
+    results.push(...parallelResults);
+  }
+
+  // Execute sequential tools one at a time
+  for (const toolCall of sequentialCalls) {
+    const result = await executeTool(state, toolCall);
+    results.push({ toolCall, result });
+  }
+
+  // Return results in original order
+  return toolCalls.map((tc) => {
+    const found = results.find((r) => r.toolCall.id === tc.id);
+    return found ?? { toolCall: tc, result: { success: false, title: "Error", output: "", error: "Tool result not found" } };
+  });
+};
+
+/**
+ * Execute tools in parallel chunks
+ */
+const executeInParallelChunks = async (
+  state: StreamAgentState,
+  toolCalls: ToolCall[],
+  chunkSize: number,
+): Promise<Array<{ toolCall: ToolCall; result: ToolResult }>> => {
+  const results: Array<{ toolCall: ToolCall; result: ToolResult }> = [];
+
+  // Process in chunks of chunkSize
+  for (let i = 0; i < toolCalls.length; i += chunkSize) {
+    const chunk = toolCalls.slice(i, i + chunkSize);
+
+    // Execute chunk in parallel
+    const chunkResults = await Promise.all(
+      chunk.map(async (toolCall) => {
+        const result = await executeTool(state, toolCall);
+        return { toolCall, result };
+      }),
+    );
+
+    results.push(...chunkResults);
+  }
+
+  return results;
 };
 
 // =============================================================================
@@ -368,13 +526,16 @@ export const runAgentLoopStream = async (
         // Track if all tool calls in this iteration failed
         let allFailed = true;
 
-        // Execute each tool call
-        for (const toolCall of response.toolCalls) {
+        // Execute tool calls with parallel execution for safe tools
+        const toolResults = await executeToolCallsWithParallelism(
+          state,
+          response.toolCalls,
+        );
+
+        // Process results in order
+        for (const { toolCall, result } of toolResults) {
           state.options.onToolCall?.(toolCall);
-
-          const result = await executeTool(state, toolCall);
           allToolCalls.push({ call: toolCall, result });
-
           state.options.onToolResult?.(toolCall.id, result);
 
           // Track success/failure

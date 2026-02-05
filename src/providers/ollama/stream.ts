@@ -79,9 +79,15 @@ export const ollamaChatStream = async (
   });
 
   let buffer = "";
+  let doneReceived = false;
 
   stream.on("data", (data: Buffer) => {
-    buffer = processStreamData(data, buffer, onChunk);
+    buffer = processStreamData(data, buffer, (chunk) => {
+      if (chunk.type === "done") {
+        doneReceived = true;
+      }
+      onChunk(chunk);
+    });
   });
 
   stream.on("error", (error: Error) => {
@@ -89,7 +95,28 @@ export const ollamaChatStream = async (
   });
 
   return new Promise((resolve, reject) => {
-    stream.on("end", resolve);
+    stream.on("end", () => {
+      // Process any remaining data in buffer that didn't have trailing newline
+      if (buffer.trim()) {
+        parseStreamLine(buffer, (chunk) => {
+          if (chunk.type === "done") {
+            doneReceived = true;
+          }
+          onChunk(chunk);
+        });
+      }
+
+      // Ensure done is sent even if stream ended without done message
+      if (!doneReceived) {
+        addDebugLog(
+          "api",
+          "Ollama stream ended without done, sending done chunk",
+        );
+        onChunk({ type: "done" });
+      }
+
+      resolve();
+    });
     stream.on("error", reject);
   });
 };

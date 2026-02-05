@@ -2,12 +2,14 @@
  * Task Agent Tool
  *
  * Allows spawning specialized sub-agents for complex tasks.
- * Implements the agent delegation pattern from claude-code.
+ * Implements the agent delegation pattern from claude-code and opencode.
+ * Supports parallel execution of up to 3 agents simultaneously.
  */
 
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import type { ToolDefinition, ToolContext, ToolResult } from "@/types/tools";
+import { MULTI_AGENT_DEFAULTS } from "@/constants/multi-agent";
 
 /**
  * Agent types available for delegation
@@ -85,14 +87,58 @@ const taskAgentSchema = z.object({
 type TaskAgentParams = z.infer<typeof taskAgentSchema>;
 
 /**
- * Active background agents
+ * Active background agents with their results
  */
-const backgroundAgents = new Map<string, {
+interface BackgroundAgent {
+  id: string;
   type: AgentType;
   task: string;
   startTime: number;
   promise: Promise<ToolResult>;
-}>();
+  result?: ToolResult;
+}
+
+const backgroundAgents = new Map<string, BackgroundAgent>();
+
+/**
+ * Currently running foreground agents (for parallel execution limit)
+ */
+let runningForegroundAgents = 0;
+const MAX_CONCURRENT_AGENTS = MULTI_AGENT_DEFAULTS.maxConcurrent; // 3
+
+/**
+ * Queue for agents waiting to run
+ */
+interface QueuedAgent {
+  params: TaskAgentParams;
+  systemPrompt: string;
+  taskPrompt: string;
+  ctx: ToolContext;
+  resolve: (result: ToolResult) => void;
+  reject: (error: Error) => void;
+}
+
+const agentQueue: QueuedAgent[] = [];
+
+/**
+ * Process the agent queue
+ */
+const processQueue = async (): Promise<void> => {
+  while (agentQueue.length > 0 && runningForegroundAgents < MAX_CONCURRENT_AGENTS) {
+    const queued = agentQueue.shift();
+    if (!queued) break;
+
+    runningForegroundAgents++;
+
+    executeAgentInternal(queued.params, queued.systemPrompt, queued.taskPrompt, queued.ctx)
+      .then(queued.resolve)
+      .catch(queued.reject)
+      .finally(() => {
+        runningForegroundAgents--;
+        processQueue();
+      });
+  }
+};
 
 /**
  * Execute the task agent tool
@@ -228,9 +274,43 @@ const buildTaskPrompt = (params: TaskAgentParams): string => {
 };
 
 /**
- * Run agent in foreground (blocking)
+ * Run agent in foreground with concurrency control
  */
 const runAgentInForeground = async (
+  params: TaskAgentParams,
+  systemPrompt: string,
+  taskPrompt: string,
+  ctx: ToolContext,
+): Promise<ToolResult> => {
+  // Check if we can run immediately
+  if (runningForegroundAgents < MAX_CONCURRENT_AGENTS) {
+    runningForegroundAgents++;
+
+    try {
+      return await executeAgentInternal(params, systemPrompt, taskPrompt, ctx);
+    } finally {
+      runningForegroundAgents--;
+      processQueue();
+    }
+  }
+
+  // Queue the agent if at capacity
+  return new Promise((resolve, reject) => {
+    agentQueue.push({
+      params,
+      systemPrompt,
+      taskPrompt,
+      ctx,
+      resolve,
+      reject,
+    });
+  });
+};
+
+/**
+ * Execute agent internal logic
+ */
+const executeAgentInternal = async (
   params: TaskAgentParams,
   systemPrompt: string,
   taskPrompt: string,
@@ -296,15 +376,19 @@ const runAgentInBackground = async (
 
   const promise = runAgentInForeground(params, systemPrompt, taskPrompt, ctx);
 
-  backgroundAgents.set(agentId, {
+  const agent: BackgroundAgent = {
+    id: agentId,
     type: params.agent_type,
     task: params.task,
     startTime: Date.now(),
     promise,
-  });
+  };
 
-  // Cleanup after completion
-  promise.then(() => {
+  backgroundAgents.set(agentId, agent);
+
+  // Store result and cleanup after completion
+  promise.then((result) => {
+    agent.result = result;
     // Keep result for 5 minutes
     setTimeout(() => backgroundAgents.delete(agentId), 5 * 60 * 1000);
   });
@@ -312,7 +396,7 @@ const runAgentInBackground = async (
   return {
     success: true,
     title: `${params.agent_type} agent started in background`,
-    output: `Agent ID: ${agentId}\n\nThe ${params.agent_type} agent is now running in the background.\nUse the agent ID to check status or retrieve results.`,
+    output: `Agent ID: ${agentId}\n\nThe ${params.agent_type} agent is now running in the background.\nUse the agent ID to check status or retrieve results.\n\nCurrent running agents: ${runningForegroundAgents}/${MAX_CONCURRENT_AGENTS}`,
     metadata: {
       agentId,
       agentType: params.agent_type,
@@ -338,10 +422,15 @@ export const getBackgroundAgentStatus = async (
     };
   }
 
-  // Check if completed
+  // Return cached result if available
+  if (agent.result) {
+    return agent.result;
+  }
+
+  // Check if completed (with short timeout)
   const result = await Promise.race([
-    agent.promise.then(r => ({ completed: true, result: r })),
-    new Promise<{ completed: false }>(resolve =>
+    agent.promise.then(r => ({ completed: true as const, result: r })),
+    new Promise<{ completed: false }>((resolve) =>
       setTimeout(() => resolve({ completed: false }), 100),
     ),
   ]);
@@ -366,6 +455,21 @@ export const getBackgroundAgentStatus = async (
 };
 
 /**
+ * Get current agent execution status
+ */
+export const getAgentExecutionStatus = (): {
+  running: number;
+  queued: number;
+  background: number;
+  maxConcurrent: number;
+} => ({
+  running: runningForegroundAgents,
+  queued: agentQueue.length,
+  background: backgroundAgents.size,
+  maxConcurrent: MAX_CONCURRENT_AGENTS,
+});
+
+/**
  * Tool definition for task agent
  */
 export const taskAgentTool: ToolDefinition<typeof taskAgentSchema> = {
@@ -380,12 +484,17 @@ Available agent types:
 - refactor: Code refactoring and improvement
 - plan: Planning and architecture design
 
+PARALLEL EXECUTION:
+- Up to ${MAX_CONCURRENT_AGENTS} agents can run simultaneously
+- Launch multiple agents in a single message for parallel execution
+- Agents exceeding the limit will queue automatically
+
 Use agents when:
 - Task requires specialized focus
 - Multiple parallel investigations needed
 - Complex implementation that benefits from isolation
 
-Agents run with their own context and tools, returning results when complete.`,
+Example: To explore 3 areas of the codebase in parallel, call task_agent 3 times in the same message.`,
   parameters: taskAgentSchema,
   execute: executeTaskAgent,
 };

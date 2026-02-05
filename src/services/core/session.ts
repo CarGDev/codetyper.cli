@@ -1,8 +1,18 @@
 import fs from "fs/promises";
 import path from "path";
 import type { AgentType, ChatSession, ChatMessage } from "@/types/common";
-import type { SessionInfo } from "@/types/session";
+import type { SessionInfo, SubagentSessionConfig } from "@/types/session";
 import { DIRS } from "@constants/paths";
+
+/**
+ * Extended ChatSession with subagent support
+ */
+interface SubagentChatSession extends ChatSession {
+  parentSessionId?: string;
+  isSubagent?: boolean;
+  subagentType?: string;
+  task?: string;
+}
 
 /**
  * Current session state
@@ -252,5 +262,87 @@ export const setWorkingDirectory = async (dir: string): Promise<void> => {
   await saveSession();
 };
 
+/**
+ * Create a subagent session (child of a parent session)
+ * Used by task_agent for proper session-based isolation like opencode
+ */
+export const createSubagentSession = async (
+  config: SubagentSessionConfig,
+): Promise<SubagentChatSession> => {
+  const session: SubagentChatSession = {
+    id: generateId(),
+    agent: "subagent" as AgentType,
+    messages: [],
+    contextFiles: config.contextFiles ?? [],
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    parentSessionId: config.parentSessionId,
+    isSubagent: true,
+    subagentType: config.subagentType,
+    task: config.task,
+  };
+
+  // Set working directory
+  (session as SubagentChatSession & { workingDirectory?: string }).workingDirectory =
+    config.workingDirectory;
+
+  // Save but don't set as current (subagents run independently)
+  await saveSession(session);
+  return session;
+};
+
+/**
+ * Get all subagent sessions for a parent session
+ */
+export const getSubagentSessions = async (
+  parentSessionId: string,
+): Promise<SubagentChatSession[]> => {
+  const sessions = await listSessions();
+  return sessions.filter(
+    (s) => (s as SubagentChatSession).parentSessionId === parentSessionId,
+  ) as SubagentChatSession[];
+};
+
+/**
+ * Add message to a specific session (for subagents)
+ */
+export const addMessageToSession = async (
+  sessionId: string,
+  role: "user" | "assistant" | "system" | "tool",
+  content: string,
+): Promise<void> => {
+  const session = await loadSession(sessionId);
+  if (!session) {
+    throw new Error(`Session not found: ${sessionId}`);
+  }
+
+  const message: ChatMessage = {
+    role: role as "user" | "assistant" | "system",
+    content,
+    timestamp: Date.now(),
+  };
+
+  session.messages.push(message);
+  await saveSession(session);
+};
+
+/**
+ * Update subagent session with result
+ */
+export const completeSubagentSession = async (
+  sessionId: string,
+  result: { success: boolean; output: string; error?: string },
+): Promise<void> => {
+  const session = await loadSession(sessionId);
+  if (!session) return;
+
+  // Add final result as assistant message
+  const resultContent = result.success
+    ? `## Subagent Result\n\n${result.output}`
+    : `## Subagent Error\n\n${result.error}\n\n${result.output}`;
+
+  await addMessageToSession(sessionId, "assistant", resultContent);
+};
+
 // Re-export types
-export type { SessionInfo } from "@/types/session";
+export type { SessionInfo, SubagentSessionConfig } from "@/types/session";
