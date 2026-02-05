@@ -297,33 +297,157 @@ const executeSingleAgent = async (
 
 /**
  * Execute the actual agent task
- * This is a placeholder - actual implementation would integrate with
- * the chat/provider system
+ * Integrates with the core agent system for LLM interaction
  */
 const executeAgentTask = async (
   instance: AgentInstance,
   config: AgentSpawnConfig,
-  _options: MultiAgentExecutorOptions,
+  options: MultiAgentExecutorOptions,
 ): Promise<AgentExecutionResult> => {
   const startTime = Date.now();
 
-  // This is where the actual agent execution would happen
-  // For now, return a placeholder result
-  // In real implementation, this would:
-  // 1. Build system prompt from agent definition
-  // 2. Send task to LLM provider
-  // 3. Handle tool calls
-  // 4. Track file modifications
-  // 5. Return result
+  // Dynamic imports to avoid circular dependencies
+  const { runAgent } = await import("@services/core/agent");
+  const { buildSystemPromptWithInfo } = await import("@prompts/system/builder");
 
-  // Placeholder implementation
-  return {
-    success: true,
-    output: `Agent ${instance.definition.name} completed task: ${config.task}`,
-    filesModified: [],
-    toolCallCount: 0,
-    duration: Date.now() - startTime,
+  // Get model based on tier
+  const modelId = getModelForTier(instance.definition.tier);
+
+  // Build system prompt based on agent definition
+  const context = {
+    workingDir: process.cwd(),
+    isGitRepo: true,
+    platform: process.platform,
+    today: new Date().toISOString().split("T")[0],
+    modelId,
+    customInstructions: instance.definition.systemPrompt,
   };
+
+  // Get prompt with tier/provider info and model params
+  const { prompt: systemPrompt, params } = buildSystemPromptWithInfo(context);
+
+  // Log tier detection for debugging (only in verbose mode)
+  if (options.onEvent) {
+    options.onEvent({
+      type: "agent_started",
+      agentId: instance.id,
+      timestamp: Date.now(),
+    });
+  }
+
+  // Build enhanced task prompt with agent context
+  const enhancedTask = buildAgentTaskPrompt(instance, config);
+
+  const filesModified: string[] = [];
+  let toolCallCount = 0;
+
+  try {
+    const result = await runAgent(enhancedTask, systemPrompt, {
+      provider: "copilot",
+      model: modelId,
+      autoApprove: true,
+      maxIterations: instance.definition.maxTurns ?? 10,
+      verbose: false,
+      modelParams: {
+        temperature: params.temperature,
+        topP: params.topP,
+        maxTokens: params.maxTokens,
+      },
+      onToolCall: (toolCall) => {
+        toolCallCount++;
+        const agentToolCall = {
+          id: toolCall.id,
+          toolName: toolCall.name,
+          args: toolCall.arguments,
+          timestamp: Date.now(),
+        };
+        multiAgentStore.addToolCall(instance.id, agentToolCall);
+        options.onToolCall?.(instance.id, agentToolCall);
+      },
+      onToolResult: (_toolCallId, toolResult) => {
+        // Track file modifications
+        if (toolResult.success && toolResult.output?.includes("File written:")) {
+          const match = toolResult.output.match(/File written: (.+)/);
+          if (match) {
+            filesModified.push(match[1]);
+            multiAgentStore.addModifiedFile(instance.id, match[1]);
+          }
+        }
+      },
+      onText: (text) => {
+        const message = {
+          role: "assistant" as const,
+          content: text,
+          timestamp: Date.now(),
+        };
+        multiAgentStore.addAgentMessage(instance.id, message);
+        options.onAgentMessage?.(instance.id, message);
+      },
+    });
+
+    return {
+      success: result.success,
+      output: result.finalResponse,
+      filesModified,
+      toolCallCount,
+      duration: Date.now() - startTime,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return {
+      success: false,
+      error: errorMessage,
+      filesModified,
+      toolCallCount,
+      duration: Date.now() - startTime,
+    };
+  }
+};
+
+/**
+ * Build enhanced task prompt with agent context
+ */
+const buildAgentTaskPrompt = (
+  instance: AgentInstance,
+  config: AgentSpawnConfig,
+): string => {
+  const parts: string[] = [];
+
+  // Agent identity
+  parts.push(`## Agent: ${instance.definition.name}`);
+  parts.push(`Description: ${instance.definition.description}`);
+
+  // Available tools
+  if (instance.definition.tools.length > 0) {
+    parts.push(`\nAvailable tools: ${instance.definition.tools.join(", ")}`);
+  }
+
+  // Task
+  parts.push(`\n## Task\n${config.task}`);
+
+  // Context files
+  if (config.contextFiles?.length) {
+    parts.push(`\n## Context Files\n${config.contextFiles.map(f => `- ${f}`).join("\n")}`);
+  }
+
+  // System prompt override as additional instructions
+  if (config.systemPromptOverride) {
+    parts.push(`\n## Additional Instructions\n${config.systemPromptOverride}`);
+  }
+
+  return parts.join("\n");
+};
+
+/**
+ * Get model ID for agent tier
+ */
+const getModelForTier = (tier: string): string => {
+  const tierModels: Record<string, string> = {
+    fast: "gpt-4o-mini",
+    balanced: "gpt-4o",
+    thorough: "o1",
+  };
+  return tierModels[tier] ?? "gpt-4o";
 };
 
 /**

@@ -3,15 +3,29 @@
  *
  * Builds and manages system prompts based on interaction mode.
  * Handles mode switching and context injection.
+ * Uses tier-aware mode composer for model-specific prompts.
  */
 
-import { buildAgenticPrompt } from "@prompts/system/agent";
-import { buildAskPrompt } from "@prompts/system/ask";
-import { buildCodeReviewPrompt } from "@prompts/system/code-review";
+import {
+  composePrompt,
+  type ModePromptContext,
+  type ComposedPrompt,
+} from "@prompts/system/modes/composer";
+import type { PromptMode } from "@prompts/system/modes/mode-types";
+import type { ModelTier, ModelProvider, ModelParams } from "@prompts/system/builder";
 import { buildSystemPromptWithRules } from "@services/rules-service";
 import { projectConfig } from "@services/project-config";
 import { getProjectContextForAskMode } from "@services/context-gathering";
 import type { InteractionMode } from "@/types/tui";
+
+/**
+ * Map interaction mode to prompt mode
+ */
+const INTERACTION_TO_PROMPT_MODE: Record<InteractionMode, PromptMode> = {
+  agent: "agent",
+  ask: "ask",
+  "code-review": "code-review",
+};
 
 export interface PromptContext {
   workingDir: string;
@@ -24,6 +38,8 @@ export interface PromptContext {
   recentCommits?: string[];
   projectContext?: string;
   prContext?: string;
+  debugContext?: string;
+  planContext?: string;
 }
 
 export interface PromptBuilderState {
@@ -31,46 +47,45 @@ export interface PromptBuilderState {
   basePrompt: string;
   fullPrompt: string;
   context: PromptContext;
+  tier: ModelTier;
+  provider: ModelProvider;
+  params: ModelParams;
 }
 
-const MODE_PROMPT_BUILDERS: Record<
-  InteractionMode,
-  (context: PromptContext) => string
-> = {
-  agent: (ctx) =>
-    buildAgenticPrompt({
-      workingDir: ctx.workingDir,
-      isGitRepo: ctx.isGitRepo,
-      platform: ctx.platform,
-      today: ctx.today,
-      model: ctx.model,
-      gitBranch: ctx.gitBranch,
-      gitStatus: ctx.gitStatus,
-      recentCommits: ctx.recentCommits,
-    }),
+/**
+ * Build mode prompt using tier-aware composer
+ */
+const buildModePromptWithTier = (
+  mode: InteractionMode,
+  context: PromptContext,
+): ComposedPrompt => {
+  const promptMode = INTERACTION_TO_PROMPT_MODE[mode];
 
-  ask: (ctx) => {
-    const projectContext =
-      ctx.projectContext ?? getProjectContextForAskMode(ctx.workingDir);
-    return buildAskPrompt({
-      workingDir: ctx.workingDir,
-      isGitRepo: ctx.isGitRepo,
-      platform: ctx.platform,
-      today: ctx.today,
-      model: ctx.model,
-      projectContext,
-    });
-  },
+  // Build context for ask mode
+  const projectContext =
+    mode === "ask"
+      ? context.projectContext ?? getProjectContextForAskMode(context.workingDir)
+      : undefined;
 
-  "code-review": (ctx) =>
-    buildCodeReviewPrompt({
-      workingDir: ctx.workingDir,
-      isGitRepo: ctx.isGitRepo,
-      platform: ctx.platform,
-      today: ctx.today,
-      model: ctx.model,
-      prContext: ctx.prContext,
-    }),
+  // Create mode-aware prompt context
+  const modeContext: ModePromptContext = {
+    workingDir: context.workingDir,
+    isGitRepo: context.isGitRepo,
+    platform: context.platform,
+    today: context.today,
+    modelId: context.model || "gpt-4o", // Default to balanced model
+    gitBranch: context.gitBranch,
+    gitStatus: context.gitStatus,
+    recentCommits: context.recentCommits,
+    projectRules: undefined, // Will be added by rules-service
+    customInstructions: projectContext,
+    mode: promptMode,
+    prContext: context.prContext,
+    debugContext: context.debugContext,
+    planContext: context.planContext,
+  };
+
+  return composePrompt(modeContext);
 };
 
 /**
@@ -155,8 +170,18 @@ export const buildModePrompt = (
   mode: InteractionMode,
   context: PromptContext,
 ): string => {
-  const builder = MODE_PROMPT_BUILDERS[mode];
-  return builder(context);
+  const composed = buildModePromptWithTier(mode, context);
+  return composed.prompt;
+};
+
+/**
+ * Build the base prompt with full tier/provider info
+ */
+export const buildModePromptWithInfo = (
+  mode: InteractionMode,
+  context: PromptContext,
+): ComposedPrompt => {
+  return buildModePromptWithTier(mode, context);
 };
 
 /**
@@ -198,12 +223,16 @@ export const createPromptBuilder = (initialModel?: string) => {
   ): Promise<string> => {
     const context = await buildBaseContext(initialModel);
     const { prompt } = await buildCompletePrompt(mode, context, appendPrompt);
+    const composed = buildModePromptWithTier(mode, context);
 
     state = {
       currentMode: mode,
-      basePrompt: buildModePrompt(mode, context),
+      basePrompt: composed.prompt,
       fullPrompt: prompt,
       context,
+      tier: composed.tier,
+      provider: composed.provider,
+      params: composed.params,
     };
 
     return prompt;
@@ -226,12 +255,16 @@ export const createPromptBuilder = (initialModel?: string) => {
       state.context,
       appendPrompt,
     );
+    const composed = buildModePromptWithTier(newMode, state.context);
 
     state = {
       currentMode: newMode,
-      basePrompt: buildModePrompt(newMode, state.context),
+      basePrompt: composed.prompt,
       fullPrompt: prompt,
       context: state.context,
+      tier: composed.tier,
+      provider: composed.provider,
+      params: composed.params,
     };
 
     return prompt;
@@ -241,6 +274,15 @@ export const createPromptBuilder = (initialModel?: string) => {
 
   const getCurrentMode = (): InteractionMode | null =>
     state?.currentMode ?? null;
+
+  const getModelInfo = (): { tier: ModelTier; provider: ModelProvider; params: ModelParams } | null => {
+    if (!state) return null;
+    return {
+      tier: state.tier,
+      provider: state.provider,
+      params: state.params,
+    };
+  };
 
   const updateContext = async (
     updates: Partial<PromptContext>,
@@ -256,11 +298,15 @@ export const createPromptBuilder = (initialModel?: string) => {
       newContext,
       appendPrompt,
     );
+    const composed = buildModePromptWithTier(state.currentMode, newContext);
 
     state = {
       ...state,
       context: newContext,
       fullPrompt: prompt,
+      tier: composed.tier,
+      provider: composed.provider,
+      params: composed.params,
     };
 
     return prompt;
@@ -271,6 +317,7 @@ export const createPromptBuilder = (initialModel?: string) => {
     switchMode,
     getCurrentPrompt,
     getCurrentMode,
+    getModelInfo,
     updateContext,
   };
 };

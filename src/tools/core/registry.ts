@@ -20,6 +20,8 @@ import { webFetchTool } from "@tools/web-fetch/execute";
 import { multiEditTool } from "@tools/multi-edit/execute";
 import { lspTool } from "@/tools/lsp";
 import { applyPatchTool } from "@/tools/apply-patch";
+import { planApprovalTool } from "@/tools/plan-approval/execute";
+import { taskAgentTool } from "@/tools/task-agent/execute";
 import {
   isMCPTool,
   executeMCPTool,
@@ -49,6 +51,8 @@ export const tools: ToolDefinition[] = [
   webFetchTool,
   lspTool,
   applyPatchTool,
+  planApprovalTool,
+  taskAgentTool,
 ];
 
 /**

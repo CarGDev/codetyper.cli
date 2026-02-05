@@ -85,13 +85,15 @@ const callLLM = async (
     return msg;
   });
 
-  // Call provider with tools
+  // Call provider with tools and model-specific params
   const response = await providerChat(
     state.options.provider,
     providerMessages as Message[],
     {
       model: state.options.model,
       tools: toolDefs,
+      temperature: state.options.modelParams?.temperature,
+      maxTokens: state.options.modelParams?.maxTokens,
     },
   );
 

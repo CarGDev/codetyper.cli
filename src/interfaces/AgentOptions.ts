@@ -19,4 +19,11 @@ export interface AgentOptions {
   autoApprove?: boolean;
   /** Chat mode - only read-only tools, no file modifications */
   chatMode?: boolean;
+  /** Model-specific parameters from tier detection */
+  modelParams?: {
+    temperature?: number;
+    topP?: number;
+    topK?: number;
+    maxTokens?: number;
+  };
 }
