@@ -7,6 +7,102 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned
+
+- **Plan Approval Gate**: Require user confirmation before agent executes plans ([#111](https://github.com/CarGDev/codetyper.cli/issues/111))
+- **Diff Preview**: Show file changes before writing ([#112](https://github.com/CarGDev/codetyper.cli/issues/112))
+- **Execution Control**: Pause, resume, and abort agent execution ([#113](https://github.com/CarGDev/codetyper.cli/issues/113))
+- **Model Consistency**: Ensure consistent behavior across LLM providers ([#114](https://github.com/CarGDev/codetyper.cli/issues/114))
+- **Quality Gates**: Run TypeScript, lint, and tests before task completion ([#115](https://github.com/CarGDev/codetyper.cli/issues/115))
+
+### Known Issues
+
+- Agent mode executes without waiting for user plan approval
+- Different LLM models behave inconsistently during agent execution
+- No diff preview before file modifications
+
+---
+
+## [0.3.0] - 2025-02-04
+
+### Added
+
+- **System Prompt Builder**: New modular prompt system with modes, tiers, and providers
+  - Separate prompt templates for different agent modes
+  - Provider-specific prompt optimizations
+  - Tier-based prompt complexity (basic, standard, advanced)
+
+### Changed
+
+- **Restructured `src/` Modules**: Consistent internal organization across all modules
+  - Deleted legacy `index.ts` barrel exports
+  - Improved import paths with path aliases
+  - Better separation of concerns
+
+### Removed
+
+- **Legacy React/Ink TUI**: Removed old TUI implementation
+  - Migrated fully to Solid.js + OpenTUI
+  - Fixed TypeScript errors from removal
+
+### Fixed
+
+- Import paths in utils folder
+- MCP initialization issues
+
+---
+
+## [0.2.4] - 2025-02-01
+
+### Fixed
+
+- MCP server connection stability improvements
+- Various MCP-related bug fixes
+
+---
+
+## [0.2.3] - 2025-01-31
+
+### Fixed
+
+- MCP form input handling for server configuration
+- Reactive MCP server state updates
+- MCP server issues and stability
+
+### Added
+
+- `BRAIN_DISABLED` flag for disabling Brain API integration
+- Ollama tool call formatting improvements
+
+---
+
+## [0.2.2] - 2025-01-30
+
+### Fixed
+
+- App store initialization issue
+- General stability improvements
+
+---
+
+## [0.2.1] - 2025-01-29
+
+### Added
+
+- **MCP Server Searcher**: Browse and discover MCP servers
+  - Interactive browser with `/mcp browse`
+  - Search servers with `/mcp search <query>`
+  - Filter by category (database, web, AI, dev-tools, etc.)
+  - View server details and required environment variables
+  - One-click install with `/mcp install <id>`
+  - 15+ curated verified servers from Anthropic
+  - Popular servers list with `/mcp popular`
+  - Category listing with `/mcp categories`
+
+---
+
+## [0.2.0] - 2025-01-28
+
 ### Added
 
 - **Hooks System**: Lifecycle hooks for extensibility
@@ -41,81 +137,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Mode indicator in status line
   - Configurable via settings.json
 
-- **Home Screen**: New welcome screen with centered gradient logo
-  - Displays version, provider, and model info
-  - Transitions to session view on first message
-  - Clean, centered layout
+---
 
-- **MCP Integration**: Model Context Protocol server support
-  - Connect to external MCP servers
-  - Use tools from connected servers
-  - `/mcp` command for server management
-  - Status display in UI
-  - **MCP Server Browser**: Search and discover MCP servers
-    - Interactive browser with `/mcp browse`
-    - Search servers with `/mcp search <query>`
-    - Filter by category (database, web, AI, dev-tools, etc.)
-    - View server details and required environment variables
-    - One-click install with `/mcp install <id>`
-    - 15+ curated verified servers from Anthropic
-    - Registry integration with Smithery
+## [0.1.80] - 2025-01-27
 
-- **Reasoning System**: Advanced agent orchestration
-  - Memory selection for context optimization
-  - Quality evaluation of responses
-  - Termination detection for agent loops
-  - Context compression for long conversations
-  - Retry policies with exponential backoff
+### Fixed
 
-- **Todo Panel**: Task tracking during sessions
-  - Toggle visibility with `Ctrl+T`
-  - `todo-read` and `todo-write` tools
-  - Zustand-based state management
+- Prompt template issues
+- Agent response formatting
 
-- **Theme System**: Customizable color themes
-  - `/theme` command to switch themes
-  - Dark, Light, Tokyo Night, Dracula themes
-  - Persistent theme preference
+---
 
-- **Agent Selection**: Switch between agent modes
-  - `/agent` command for selection
-  - Coder, Architect, Reviewer agents
-
-- **Learning System**: Knowledge persistence
-  - Vector store for embeddings
-  - Semantic search capabilities
-  - Project learnings storage
-
-- **Streaming Responses**: Real-time message display
-  - Faster feedback from LLM
-  - Progress indicators
-
-- **Enhanced Navigation**:
-  - `PageUp/PageDown` for fast scrolling
-  - `Shift+Up/Down` for line-by-line scroll
-  - `Ctrl+Home/End` to jump to top/bottom
-
-- **Optimized Permissions**: Performance improvements
-  - Pattern caching
-  - Indexed pattern matching
-  - Faster permission checks
-
-- **Auto-Compaction**: Context management
-  - Automatic conversation compression
-  - Maintains context within limits
+## [0.1.79] - 2025-01-26
 
 ### Changed
 
-- Improved session header with token count and context percentage
-- Enhanced status bar with MCP connection info
-- Better command menu with more commands
+- Version bump with minor fixes
+
+---
+
+## [0.1.78] - 2025-01-25
+
+### Changed
+
+- **Improved Agent Autonomy**: Better task execution flow
+- **Enhanced Diff View**: Improved readability for file changes
+  - Better color contrast
+  - Clearer line indicators
+
+---
+
+## [0.1.77] - 2025-01-24
+
+### Added
+
+- **Debug Log Panel**: View internal logs for troubleshooting
+- **Centered Modals**: Improved modal positioning and appearance
+
+### Fixed
+
+- Multiple UX issues
+- Modal positioning on different terminal sizes
+- Input focus handling
+
+---
+
+## [0.1.76] - 2025-01-23
+
+### Fixed
+
+- Installation issues with npm link
+- Package distribution problems
+
+---
+
+## [0.1.75] - 2025-01-22
+
+### Fixed
+
+- Repository URL in package.json
+- Package metadata corrections
+
+---
 
 ## [0.1.0] - 2025-01-16
 
 ### Added
 
-- **Interactive TUI**: Full terminal UI using Ink (React for CLIs)
-  - Message-based input (Enter to send, Alt+Enter for newlines)
+- **Interactive TUI**: Full terminal UI using Solid.js + OpenTUI
+  - Message-based input (Enter to send, Shift+Enter for newlines)
   - Log panel showing conversation history
   - Status bar with session info
   - ASCII banner header
@@ -136,10 +226,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `read` - Read file contents
   - `write` - Create or overwrite files
   - `edit` - Find and replace in files
+  - `glob` - Find files by pattern
+  - `grep` - Search file contents
 
 - **Provider Support**:
-  - GitHub Copilot (default) - OAuth device flow authentication, access to GPT-4o, GPT-5, Claude, Gemini via Copilot API
-  - Ollama - Local server (no auth), run any local model
+  - GitHub Copilot (default) - OAuth device flow authentication
+  - Ollama - Local server (no auth)
+
+- **Cascading Provider System**: Intelligent routing between providers
+  - Quality scoring per task type
+  - Automatic provider selection based on performance
 
 - **Session Management**:
   - Persistent session storage
@@ -151,22 +247,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `codetyper <prompt>` - Start with initial prompt
   - `codetyper login <provider>` - Authenticate with provider
   - `codetyper status` - Show provider status
-  - `codetyper config` - Manage configuration
 
-### Changed
-
-- Migrated from readline-based input to Ink TUI
-- Removed classic mode in favor of TUI-only interface
-- Tool output now captured and displayed in log panel (not streamed to stdout)
-
-### Fixed
-
-- Permission modal not showing in TUI mode
-- Input area blocking during command execution
-- Rate limit handling for Copilot provider (429 errors)
+- **Theme System**: 14+ built-in color themes
+- **Todo Panel**: Task tracking with `Ctrl+T`
+- **Home Screen**: Welcome screen with version info
 
 ---
 
-## Version History
+## Version History Summary
 
-- **0.1.0** - Initial release with TUI, agent system, and multi-provider support
+| Version | Date | Highlights |
+|---------|------|------------|
+| 0.3.0 | 2025-02-04 | System prompt builder, module restructure, legacy TUI removal |
+| 0.2.x | 2025-01-28 - 02-01 | Hooks, plugins, session forks, vim motions, MCP browser |
+| 0.1.x | 2025-01-16 - 01-27 | Initial release, TUI, agent system, providers, permissions |
+
+---
+
+[Unreleased]: https://github.com/CarGDev/codetyper.cli/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/CarGDev/codetyper.cli/compare/v0.2.4...v0.3.0
+[0.2.4]: https://github.com/CarGDev/codetyper.cli/compare/v0.2.3...v0.2.4
+[0.2.3]: https://github.com/CarGDev/codetyper.cli/compare/v0.2.2...v0.2.3
+[0.2.2]: https://github.com/CarGDev/codetyper.cli/compare/v0.2.1...v0.2.2
+[0.2.1]: https://github.com/CarGDev/codetyper.cli/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/CarGDev/codetyper.cli/compare/v0.1.80...v0.2.0
+[0.1.80]: https://github.com/CarGDev/codetyper.cli/compare/v0.1.79...v0.1.80
+[0.1.79]: https://github.com/CarGDev/codetyper.cli/compare/v0.1.78...v0.1.79
+[0.1.78]: https://github.com/CarGDev/codetyper.cli/compare/v0.1.77...v0.1.78
+[0.1.77]: https://github.com/CarGDev/codetyper.cli/compare/v0.1.76...v0.1.77
+[0.1.76]: https://github.com/CarGDev/codetyper.cli/compare/v0.1.75...v0.1.76
+[0.1.75]: https://github.com/CarGDev/codetyper.cli/compare/v0.1.0...v0.1.75
+[0.1.0]: https://github.com/CarGDev/codetyper.cli/releases/tag/v0.1.0

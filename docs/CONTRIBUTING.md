@@ -10,8 +10,7 @@ Please be respectful and constructive in all interactions. We welcome contributo
 
 ### Prerequisites
 
-- Node.js >= 18.0.0
-- npm or yarn
+- [Bun](https://bun.sh) >= 1.0.0
 - Git
 
 ### Setup
@@ -19,36 +18,42 @@ Please be respectful and constructive in all interactions. We welcome contributo
 1. Fork the repository
 2. Clone your fork:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/codetyper-cli.git
-   cd codetyper-cli
+   git clone https://github.com/YOUR_USERNAME/codetyper.cli.git
+   cd codetyper.cli
    ```
 3. Install dependencies:
    ```bash
-   npm install
+   bun install
    ```
 4. Build the project:
    ```bash
-   npm run build
+   bun run build
    ```
 5. Link for local testing:
    ```bash
-   npm link
+   bun link
    ```
 
 ### Development Workflow
 
 ```bash
-# Start TypeScript watch mode
-npm run dev
+# Start development mode
+bun run dev
+
+# Watch mode with auto-rebuild
+bun run dev:watch
 
 # Run tests
-npm test
+bun test
+
+# Type check
+bun run typecheck
 
 # Lint code
-npm run lint
+bun run lint
 
 # Format code
-npm run format
+bun run prettier
 ```
 
 ## How to Contribute
@@ -84,7 +89,7 @@ npm run format
 
 4. Ensure all tests pass:
    ```bash
-   npm test
+   bun test
    ```
 
 5. Commit with clear messages:
@@ -134,30 +139,37 @@ docs: update README with new CLI options
 ```
 src/
 ├── index.ts          # Entry point only
+├── api/              # API clients (Copilot, Ollama, Brain)
 ├── commands/         # CLI command implementations
 ├── constants/        # Centralized constants
 ├── interfaces/       # Interface definitions
+├── prompts/          # System prompts and prompt templates
 ├── providers/        # LLM provider integrations
 ├── services/         # Business logic services
-│   ├── hooks-service.ts    # Lifecycle hooks
-│   ├── plugin-service.ts   # Plugin management
-│   ├── plugin-loader.ts    # Plugin discovery
-│   └── session-fork-service.ts  # Session forking
+│   ├── core/         # Core agent and orchestration
+│   ├── hooks/        # Lifecycle hooks
+│   ├── plugin/       # Plugin management
+│   └── session/      # Session management and forking
+├── skills/           # Agent skill definitions
 ├── stores/           # Zustand state stores
-│   └── vim-store.ts  # Vim mode state
-├── tools/            # Agent tools (bash, read, write, edit)
-├── tui/              # Terminal UI components
+├── tools/            # Agent tools (bash, read, write, edit, etc.)
+├── tui-solid/        # Terminal UI (Solid.js + OpenTUI)
 │   ├── components/   # Reusable UI components
-│   └── hooks/        # React hooks (useVimMode, etc.)
-└── types/            # Type definitions
+│   ├── context/      # Solid.js context providers
+│   ├── routes/       # TUI route components
+│   └── ui/           # Base UI primitives
+├── types/            # Type definitions
+├── ui/               # Print-mode UI components
+└── utils/            # Utility functions
 ```
 
 ### Testing
 
 - Write tests for non-UI logic
-- Place tests in `tests/` directory
+- Place tests in `tests/` directory or colocate with source files
 - Name test files `*.test.ts`
 - Use descriptive test names
+- Tests run with Vitest via `bun test`
 
 ```typescript
 describe('PermissionManager', () => {
@@ -180,16 +192,16 @@ describe('PermissionManager', () => {
 | File | Purpose |
 |------|---------|
 | `src/index.ts` | CLI entry point, command registration |
-| `src/services/agent.ts` | Agent loop, tool orchestration |
-| `src/services/permissions.ts` | Permission system |
-| `src/services/hooks-service.ts` | Lifecycle hooks |
-| `src/services/plugin-service.ts` | Plugin management |
-| `src/services/session-fork-service.ts` | Session forking |
-| `src/commands/chat-tui.tsx` | Main TUI command |
-| `src/tui/App.tsx` | Root TUI component |
-| `src/tui/store.ts` | Zustand state management |
-| `src/stores/vim-store.ts` | Vim mode state |
-| `src/tui/hooks/useVimMode.ts` | Vim keyboard handling |
+| `src/services/core/agent.ts` | Agent loop, tool orchestration |
+| `src/services/permissions/` | Permission system |
+| `src/services/hooks/` | Lifecycle hooks |
+| `src/services/plugin/` | Plugin management |
+| `src/services/session/` | Session forking |
+| `src/tui-solid/app.tsx` | Root TUI component (Solid.js) |
+| `src/tui-solid/components/` | UI components |
+| `src/stores/` | Zustand state management |
+| `src/prompts/` | System prompt templates |
+| `src/tools/` | Tool implementations |
 
 ### Adding a New Provider
 
@@ -225,8 +237,8 @@ describe('PermissionManager', () => {
 
 ### Adding Vim Bindings
 
-1. Add binding to `VIM_DEFAULT_BINDINGS` in `src/constants/vim.ts`
-2. Add action handler in `src/tui/hooks/useVimMode.ts`
+1. Add binding to vim constants in `src/constants/`
+2. Add action handler in the vim store (`src/stores/`)
 3. Update documentation
 
 ## Questions?

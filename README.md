@@ -4,6 +4,12 @@
   <img src="assets/Codetyper_logo.png" alt="CodeTyper Logo" width="400">
 </p>
 
+<p align="center">
+  <a href="https://github.com/CarGDev/codetyper.cli/releases"><img src="https://img.shields.io/badge/version-0.3.0-blue" alt="Version"></a>
+  <a href="https://github.com/CarGDev/codetyper.cli/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
+  <a href="https://bun.sh"><img src="https://img.shields.io/badge/runtime-Bun-orange" alt="Bun"></a>
+</p>
+
 An AI-powered terminal coding agent with an interactive TUI. CodeTyper autonomously executes coding tasks using tool calls with granular permission controls and intelligent provider routing.
 
 ## How It Works
@@ -392,6 +398,28 @@ Branch and rewind session history for experimentation.
 
 Sessions are stored in `.codetyper/sessions/` with automatic commit message suggestions.
 
+## Roadmap
+
+### v0.4.0 - Agent Completion
+
+The next major release focuses on production-ready autonomous agent execution:
+
+| Feature | Issue | Status |
+|---------|-------|--------|
+| Plan Approval Gate | [#111](https://github.com/CarGDev/codetyper.cli/issues/111) | Planned |
+| Diff Preview Before Write | [#112](https://github.com/CarGDev/codetyper.cli/issues/112) | Planned |
+| Execution Control (Pause/Resume/Abort) | [#113](https://github.com/CarGDev/codetyper.cli/issues/113) | Planned |
+| Consistent Model Behavior | [#114](https://github.com/CarGDev/codetyper.cli/issues/114) | Planned |
+| Quality Gates (TypeScript, Lint, Tests) | [#115](https://github.com/CarGDev/codetyper.cli/issues/115) | Planned |
+
+### Known Issues
+
+- Agent mode executes without waiting for user plan approval
+- Different LLM models may behave inconsistently during agent execution
+- No diff preview before file modifications
+
+See [CHANGELOG](docs/CHANGELOG.md) for full version history.
+
 ## Development
 
 ```bash
@@ -410,6 +438,14 @@ bun test
 # Lint
 bun run lint
 ```
+
+## Recent Changes (v0.3.0)
+
+- **System Prompt Builder**: New modular prompt system with modes, tiers, and providers
+- **Module Restructure**: Consistent internal organization with improved imports
+- **Solid.js TUI**: Fully migrated to Solid.js + OpenTUI (removed legacy React/Ink)
+
+See [CHANGELOG](docs/CHANGELOG.md) for complete version history.
 
 ## Documentation
 
