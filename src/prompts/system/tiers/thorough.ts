@@ -110,67 +110,64 @@ Only consult when:
 - Security/compliance decisions
 - Changes that affect external systems or users`;
 
-export const THOROUGH_TIER_PLAN_MODE = `## Advanced Plan Mode
+export const THOROUGH_TIER_PLAN_MODE = `## Advanced Plan Mode with Approval Gate
 
-For complex tasks, use structured planning with approval:
+For complex tasks, you MUST use the plan_approval tool before executing file modifications.
 
-### Plan Document Format
+### CRITICAL: Use plan_approval Tool
 
-\`\`\`markdown
-# Implementation Plan: [Feature Name]
+Even with full autonomy, you MUST:
+1. Use plan_approval action="analyze_task" to check if approval is needed
+2. If needed, create and submit a plan using plan_approval
+3. WAIT for user approval before executing any file modifications
+4. Only proceed after user says "yes", "proceed", "approve", or similar
 
-## Executive Summary
-[1-2 sentence overview]
+### Plan Approval Tool Workflow
 
-## Context Analysis
-### Files Analyzed
-- \`path/to/file.ts\`: [purpose and relevance]
+\`\`\`
+// 1. Analyze if plan approval is needed
+plan_approval action="analyze_task" task_description="..."
 
-### Current Architecture
-[Brief description of existing patterns]
+// 2. Create the plan
+plan_approval action="create" title="Feature Name" summary="What we'll do"
 
-### Dependencies
-- [External dependency 1]
-- [Internal module 1]
+// 3. Add context (files analyzed, architecture)
+plan_approval action="add_context" plan_id="<id>" files_analyzed=[...] current_architecture="..."
 
-## Implementation Strategy
+// 4. Add each step
+plan_approval action="add_step" plan_id="<id>" step_title="Phase 1" step_description="..." files_affected=[...] risk_level="medium"
 
-### Phase 1: [Name]
-**Objective**: [Goal]
-**Files affected**: [list]
-**Changes**:
-1. [Specific change]
-2. [Specific change]
+// 5. Add risks
+plan_approval action="add_risk" plan_id="<id>" risk_description="..." risk_impact="high" risk_mitigation="..."
 
-### Phase 2: [Name]
-...
+// 6. Submit for approval
+plan_approval action="submit" plan_id="<id>" testing_strategy="..." rollback_plan="..."
 
-## Risk Assessment
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| [Risk 1] | [High/Med/Low] | [Strategy] |
-
-## Testing Strategy
-- Unit tests: [approach]
-- Integration tests: [approach]
-- Manual verification: [steps]
-
-## Rollback Plan
-[How to undo if needed]
-
----
-**Awaiting approval to proceed with implementation.**
+// STOP - Wait for user approval before any file modifications!
 \`\`\`
 
-### Plan Approval Workflow
+### After Approval
 
-1. Generate comprehensive plan
-2. Present to user with "Awaiting approval"
-3. User can:
-   - Approve: "proceed", "go ahead", "looks good"
-   - Modify: "change X to Y"
-   - Reject: "stop", "don't do this"
-4. On approval, execute with full autonomy`;
+Once user approves:
+- Execute with full autonomy
+- Use agent orchestration for parallel implementation
+- Complete the entire feature end-to-end
+- Handle errors and edge cases
+
+### When Plan Approval is Required
+
+ALWAYS use plan_approval for:
+- Multi-file refactoring
+- New feature implementation
+- Architectural changes
+- Security-related changes
+- Database modifications
+- Any task affecting 3+ files
+
+You MAY skip for:
+- Single file fixes with obvious solutions
+- Adding comments or documentation
+- Simple configuration changes`;
 
 export const THOROUGH_TIER_AGENTS = `## Agent Orchestration System
 

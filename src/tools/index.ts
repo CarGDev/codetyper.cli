@@ -14,6 +14,7 @@ import { multiEditTool } from "@tools/multi-edit/execute";
 import { lspTool } from "@tools/lsp";
 import { applyPatchTool } from "@tools/apply-patch";
 import { taskAgentTool } from "@tools/task-agent/execute";
+import { planApprovalTool } from "@tools/plan-approval/execute";
 import {
   isMCPTool,
   executeMCPTool,
@@ -42,6 +43,7 @@ export const tools: ToolDefinition[] = [
   lspTool,
   applyPatchTool,
   taskAgentTool,
+  planApprovalTool,
 ];
 
 // Tools that are read-only (allowed in chat mode)

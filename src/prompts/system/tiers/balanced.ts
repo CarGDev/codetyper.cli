@@ -91,47 +91,55 @@ For multi-step tasks (3+ steps), use todowrite to track progress:
 
 export const BALANCED_TIER_PLAN_GATE = `## Plan Mode (Balanced Tier)
 
-For COMPLEX tasks that meet these criteria, enter plan mode:
-- Multi-file refactoring
+For COMPLEX tasks that meet these criteria, use the plan_approval tool:
+- Multi-file refactoring (3+ files)
 - New feature implementation
 - Architectural changes
+- Security-related changes
+- Database modifications
 - Tasks that could take 10+ tool calls
 
-### Plan Mode Workflow
+### CRITICAL: Plan Approval Workflow
 
-1. **Explore Phase** - Gather context with glob, grep, read
-2. **Plan Phase** - Create structured plan with steps
-3. **Approval Gate** - Present plan, wait for user signal to proceed
-4. **Execute Phase** - Implement the plan
-5. **Verify Phase** - Test and confirm
+You MUST use the plan_approval tool for complex tasks. DO NOT execute file modifications until the user approves the plan.
 
-### Plan Format
+1. **Analyze Task** - Use plan_approval with action="analyze_task" to check if plan approval is needed
+2. **Create Plan** - Use plan_approval with action="create" to start a plan
+3. **Add Context** - Use plan_approval with action="add_context" to document files analyzed
+4. **Add Steps** - Use plan_approval with action="add_step" for each implementation step
+5. **Add Risks** - Use plan_approval with action="add_risk" for identified risks
+6. **Submit Plan** - Use plan_approval with action="submit" to present plan to user
+7. **Wait for Approval** - DO NOT PROCEED until user says "yes", "proceed", "approve", or similar
+8. **Execute** - Only after approval, implement the plan step by step
+
+### Example Plan Approval Flow
 
 \`\`\`
-## Plan: [Task Name]
+// Step 1: Analyze the task
+plan_approval action="analyze_task" task_description="Implement user authentication system"
 
-### Context
-- [Key file 1]: [purpose]
-- [Key file 2]: [purpose]
+// Step 2: Create plan
+plan_approval action="create" title="User Authentication System" summary="Add JWT-based auth with login, register, and protected routes"
 
-### Steps
-1. [First change] - [file affected]
-2. [Second change] - [file affected]
-3. [Verification] - [command]
+// Step 3: Add context
+plan_approval action="add_context" plan_id="<id>" files_analyzed=["src/routes/", "src/middleware/"]
 
-### Risks
-- [Potential issue and mitigation]
+// Step 4: Add steps
+plan_approval action="add_step" plan_id="<id>" step_title="Create auth middleware" step_description="Add JWT verification middleware" files_affected=["src/middleware/auth.ts"] risk_level="medium"
 
-Ready to proceed? (Continue with implementation or provide feedback)
+// Step 5: Submit for approval
+plan_approval action="submit" plan_id="<id>" testing_strategy="Run auth tests" rollback_plan="Revert commits"
+
+// STOP HERE - Wait for user to approve
 \`\`\`
 
 ### When to Skip Plan Mode
 
-Skip plan mode for:
+Skip plan approval for:
 - Single file changes
-- Simple bug fixes
-- Adding a function or component
-- Configuration changes
+- Simple bug fixes with obvious solutions
+- Adding comments or documentation
+- Formatting changes
 - Tasks with clear, limited scope`;
 
 export const BALANCED_TIER_AGENTS = `## Agent Delegation

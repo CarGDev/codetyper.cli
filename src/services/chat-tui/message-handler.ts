@@ -69,6 +69,15 @@ import {
   executeDetectedCommand,
 } from "@services/command-detection";
 import { detectSkillCommand, executeSkill } from "@services/skill-service";
+import {
+  getActivePlans,
+  isApprovalMessage,
+  isRejectionMessage,
+  approvePlan,
+  rejectPlan,
+  startPlanExecution,
+  formatPlanForDisplay,
+} from "@services/plan-mode/plan-service";
 
 // Track last response for feedback learning
 let lastResponseContext: {
@@ -407,6 +416,56 @@ export const handleMessage = async (
 ): Promise<void> => {
   // Check for feedback on previous response
   await checkUserFeedback(message, callbacks);
+
+  // Check for pending plan approvals
+  const pendingPlans = getActivePlans().filter((p) => p.status === "pending");
+  if (pendingPlans.length > 0) {
+    const plan = pendingPlans[0];
+
+    // Check if this is an approval message
+    if (isApprovalMessage(message)) {
+      approvePlan(plan.id, message);
+      startPlanExecution(plan.id);
+      callbacks.onLog("system", `Plan "${plan.title}" approved. Proceeding with implementation.`);
+      addDebugLog("state", `Plan ${plan.id} approved by user`);
+
+      // Continue with agent execution - the agent will see the approved status
+      // and proceed with implementation
+      state.messages.push({
+        role: "user",
+        content: `The user approved the plan. Proceed with the implementation of plan "${plan.title}".`,
+      });
+      // Fall through to normal agent processing
+    } else if (isRejectionMessage(message)) {
+      rejectPlan(plan.id, message);
+      callbacks.onLog("system", `Plan "${plan.title}" rejected. Please provide feedback or a new approach.`);
+      addDebugLog("state", `Plan ${plan.id} rejected by user`);
+
+      // Add rejection to messages so agent can respond
+      state.messages.push({
+        role: "user",
+        content: `The user rejected the plan with feedback: "${message}". Please revise the approach.`,
+      });
+      // Fall through to normal agent processing to get revised plan
+    } else {
+      // Neither approval nor rejection - treat as feedback/modification request
+      callbacks.onLog("system", `Plan "${plan.title}" awaiting approval. Reply 'yes' to approve or 'no' to reject.`);
+
+      // Show the plan again with the feedback
+      const planDisplay = formatPlanForDisplay(plan);
+      appStore.addLog({
+        type: "system",
+        content: planDisplay,
+      });
+
+      // Add user's feedback to messages
+      state.messages.push({
+        role: "user",
+        content: `The user provided feedback on the pending plan: "${message}". Please address this feedback and update the plan.`,
+      });
+      // Fall through to normal agent processing
+    }
+  }
 
   // Check for skill commands (e.g., /review, /commit)
   const skillMatch = await detectSkillCommand(message);
