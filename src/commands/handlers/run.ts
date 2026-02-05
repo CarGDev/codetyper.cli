@@ -3,7 +3,7 @@
  */
 
 import { execute } from "@commands/core/runner";
-import type { CommandOptions } from "@/types/index";
+import type { CommandOptions } from "@/types/common";
 
 export const handleRun = async (options: CommandOptions): Promise<void> => {
   await execute(options);

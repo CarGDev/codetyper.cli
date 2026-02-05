@@ -6,10 +6,7 @@
 
 import got from "got";
 import { OLLAMA_ENDPOINTS, OLLAMA_TIMEOUTS } from "@constants/ollama";
-import type {
-  OllamaChatRequest,
-  OllamaChatResponse,
-} from "@/types/ollama";
+import type { OllamaChatRequest, OllamaChatResponse } from "@/types/ollama";
 import type { StreamChunk } from "@/types/providers";
 
 /**

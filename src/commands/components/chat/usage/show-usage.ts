@@ -6,7 +6,7 @@ import chalk from "chalk";
 import { usageStore } from "@stores/core/usage-store";
 import { getUserInfo } from "@providers/copilot/auth/credentials";
 import { getCopilotUsage } from "@providers/copilot/usage";
-import { getProvider } from "@providers/index";
+import { getProvider } from "@providers/core/registry";
 import { renderUsageBar, renderUnlimitedBar } from "@utils/menu/progress-bar";
 import type { ChatState } from "@commands/components/chat/state";
 import type { CopilotQuotaDetail } from "@/types/copilot-usage";

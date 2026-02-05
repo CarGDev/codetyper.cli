@@ -4,7 +4,7 @@
 
 import fs from "fs/promises";
 import path from "path";
-import type { Config, Provider } from "@/types/index";
+import type { Config, Provider } from "@/types/common";
 import { DIRS, FILES } from "@constants/paths";
 
 /**

@@ -3,15 +3,15 @@
  */
 
 import { AUTH_MESSAGES } from "@constants/chat-service";
+import { getProviderStatus } from "@providers/core/status";
+import { getCopilotUserInfo } from "@providers/copilot/user-info";
+import { logoutProvider } from "@providers/login/handlers";
 import {
-  getProviderStatus,
-  getCopilotUserInfo,
-  logoutProvider,
   initiateDeviceFlow,
   pollForAccessToken,
-  completeCopilotLogin,
-} from "@providers/index";
-import { appStore } from "@tui/index";
+} from "@providers/copilot/auth/auth";
+import { completeCopilotLogin } from "@providers/login/core/initialize";
+import { appStore } from "@tui-solid/context/app";
 import { loadModels } from "@services/chat-tui/models";
 import type {
   ChatServiceState,

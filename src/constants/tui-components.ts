@@ -190,7 +190,11 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   // Settings commands
   { name: "model", description: "Select AI model", category: "settings" },
   { name: "agent", description: "Select agent", category: "settings" },
-  { name: "mode", description: "Switch interaction mode", category: "settings" },
+  {
+    name: "mode",
+    description: "Switch interaction mode",
+    category: "settings",
+  },
   {
     name: "provider",
     description: "Switch LLM provider",

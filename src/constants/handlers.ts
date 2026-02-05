@@ -3,7 +3,7 @@
  */
 
 import type { ConfigKey, ConfigAction } from "@/types/handlers";
-import type { Provider } from "@/types/index";
+import type { Provider } from "@/types/common";
 
 export const VALID_CONFIG_KEYS: readonly ConfigKey[] = [
   "provider",

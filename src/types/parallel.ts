@@ -9,10 +9,10 @@
  * Task type for parallel execution
  */
 export type ParallelTaskType =
-  | "explore"    // Read-only exploration
-  | "analyze"    // Analysis without modification
-  | "execute"    // May modify files
-  | "search";    // Search operations
+  | "explore" // Read-only exploration
+  | "analyze" // Analysis without modification
+  | "execute" // May modify files
+  | "search"; // Search operations
 
 /**
  * Task priority levels
@@ -86,10 +86,10 @@ export interface ConflictCheckResult {
  * Conflict resolution strategy
  */
 export type ConflictResolution =
-  | "wait"       // Wait for conflicting task to complete
-  | "cancel"     // Cancel conflicting task
-  | "merge"      // Attempt to merge results
-  | "abort";     // Abort this task
+  | "wait" // Wait for conflicting task to complete
+  | "cancel" // Cancel conflicting task
+  | "merge" // Attempt to merge results
+  | "abort"; // Abort this task
 
 /**
  * Resource limits for parallel execution
@@ -132,7 +132,10 @@ export interface ParallelExecutorOptions {
   onTaskStart?: (task: ParallelTask) => void;
   onTaskComplete?: (result: ParallelExecutionResult) => void;
   onTaskError?: (task: ParallelTask, error: Error) => void;
-  onConflict?: (task: ParallelTask, conflict: ConflictCheckResult) => ConflictResolution;
+  onConflict?: (
+    task: ParallelTask,
+    conflict: ConflictCheckResult,
+  ) => ConflictResolution;
   abortSignal?: AbortSignal;
 }
 

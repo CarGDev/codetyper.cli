@@ -146,13 +146,17 @@ export function BrainMenu(props: BrainMenuProps) {
     // Main menu navigation
     if (view() === "main") {
       if (evt.name === "up") {
-        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : menuItems().length - 1));
+        setSelectedIndex((prev) =>
+          prev > 0 ? prev - 1 : menuItems().length - 1,
+        );
         evt.preventDefault();
         return;
       }
 
       if (evt.name === "down") {
-        setSelectedIndex((prev) => (prev < menuItems().length - 1 ? prev + 1 : 0));
+        setSelectedIndex((prev) =>
+          prev < menuItems().length - 1 ? prev + 1 : 0,
+        );
         evt.preventDefault();
         return;
       }
@@ -267,7 +271,8 @@ export function BrainMenu(props: BrainMenuProps) {
         <text fg={getStatusColor()}>{getStatusText()}</text>
         <Show when={isConnected()}>
           <text fg={theme.colors.textDim}>
-            {" "}({app.brain().knowledgeCount}K / {app.brain().memoryCount}M)
+            {" "}
+            ({app.brain().knowledgeCount}K / {app.brain().memoryCount}M)
           </text>
         </Show>
       </box>
@@ -299,13 +304,17 @@ export function BrainMenu(props: BrainMenuProps) {
                   <box flexDirection="row">
                     <text
                       fg={isSelected() ? theme.colors.accent : undefined}
-                      attributes={isSelected() ? TextAttributes.BOLD : TextAttributes.NONE}
+                      attributes={
+                        isSelected() ? TextAttributes.BOLD : TextAttributes.NONE
+                      }
                     >
                       {isSelected() ? "> " : "  "}
                     </text>
                     <text
                       fg={isSelected() ? theme.colors.accent : undefined}
-                      attributes={isSelected() ? TextAttributes.BOLD : TextAttributes.NONE}
+                      attributes={
+                        isSelected() ? TextAttributes.BOLD : TextAttributes.NONE
+                      }
                     >
                       {item.label}
                     </text>
@@ -320,7 +329,9 @@ export function BrainMenu(props: BrainMenuProps) {
         </box>
 
         <box marginTop={1} flexDirection="column">
-          <text fg={theme.colors.info}>{BRAIN_BANNER.CTA}: {BRAIN_BANNER.URL}</text>
+          <text fg={theme.colors.info}>
+            {BRAIN_BANNER.CTA}: {BRAIN_BANNER.URL}
+          </text>
           <text fg={theme.colors.textDim}>
             Arrow keys navigate | Enter select | Esc close
           </text>
@@ -339,17 +350,19 @@ export function BrainMenu(props: BrainMenuProps) {
             </text>
           </box>
           <box marginBottom={1}>
-            <text fg={theme.colors.text}>2. After logging in, copy your JWT token</text>
+            <text fg={theme.colors.text}>
+              2. After logging in, copy your JWT token
+            </text>
           </box>
           <box marginBottom={1}>
-            <text fg={theme.colors.text}>3. Press Enter to input your token</text>
+            <text fg={theme.colors.text}>
+              3. Press Enter to input your token
+            </text>
           </box>
         </box>
 
         <box marginTop={1}>
-          <text fg={theme.colors.textDim}>
-            Enter continue | Esc back
-          </text>
+          <text fg={theme.colors.textDim}>Enter continue | Esc back</text>
         </box>
       </Show>
 

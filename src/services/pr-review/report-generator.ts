@@ -235,7 +235,8 @@ const calculateRecommendation = (
 
   if (
     bySeverity.critical === 0 &&
-    bySeverity.warning <= RECOMMENDATION_THRESHOLDS.approve_with_suggestions.maxWarning
+    bySeverity.warning <=
+      RECOMMENDATION_THRESHOLDS.approve_with_suggestions.maxWarning
   ) {
     return "approve_with_suggestions";
   }
@@ -264,7 +265,9 @@ const generateSummary = (
   // Count by severity
   const critical = findings.filter((f) => f.severity === "critical").length;
   const warnings = findings.filter((f) => f.severity === "warning").length;
-  const suggestions = findings.filter((f) => f.severity === "suggestion").length;
+  const suggestions = findings.filter(
+    (f) => f.severity === "suggestion",
+  ).length;
 
   if (critical > 0) {
     parts.push(`${critical} critical issue(s) must be addressed`);
@@ -318,7 +321,12 @@ export const formatReportMarkdown = (report: PRReviewReport): string => {
   // Findings by severity
   lines.push("| Severity | Count |");
   lines.push("|----------|-------|");
-  for (const severity of ["critical", "warning", "suggestion", "nitpick"] as const) {
+  for (const severity of [
+    "critical",
+    "warning",
+    "suggestion",
+    "nitpick",
+  ] as const) {
     const count = report.findingsBySeverity[severity];
     if (count > 0) {
       lines.push(

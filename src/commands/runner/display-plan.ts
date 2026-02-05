@@ -5,7 +5,7 @@
 import chalk from "chalk";
 import { filePath } from "@utils/core/terminal";
 import { STEP_ICONS, DEFAULT_STEP_ICON } from "@constants/runner";
-import type { ExecutionPlan, PlanStep } from "@/types/index";
+import type { ExecutionPlan, PlanStep } from "@/types/common";
 
 export const getStepIcon = (type: PlanStep["type"]): string =>
   STEP_ICONS[type] ?? DEFAULT_STEP_ICON;

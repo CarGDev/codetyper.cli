@@ -8,7 +8,7 @@ import {
   getServerInstances,
   getAllTools,
   isMCPAvailable,
-} from "@services/mcp/index";
+} from "@services/mcp/manager";
 
 /**
  * Display MCP server status

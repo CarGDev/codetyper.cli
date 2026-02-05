@@ -3,7 +3,7 @@ import { useKeyboard } from "@opentui/solid";
 import { TextAttributes } from "@opentui/core";
 import { useTheme } from "@tui-solid/context/theme";
 import { useAppStore } from "@tui-solid/context/app";
-import type { ProviderStatus } from "@services/cascading-provider";
+import type { ProviderStatus } from "@services/cascading-provider/availability";
 
 interface ProviderOption {
   id: string;
@@ -217,7 +217,11 @@ export function ProviderSelect(props: ProviderSelectProps) {
                 <box flexDirection="row" marginLeft={4}>
                   <text fg={theme.colors.textDim}>{provider.description}</text>
                 </box>
-                <Show when={provider.id === "ollama" && provider.score !== undefined}>
+                <Show
+                  when={
+                    provider.id === "ollama" && provider.score !== undefined
+                  }
+                >
                   <box flexDirection="row" marginLeft={4}>
                     <text fg={theme.colors.textDim}>Quality Score: </text>
                     <text fg={getScoreColor(provider.score)}>

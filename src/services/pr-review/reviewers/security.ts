@@ -4,7 +4,10 @@
  * Analyzes code for security vulnerabilities.
  */
 
-import { MIN_CONFIDENCE_THRESHOLD, REVIEWER_PROMPTS } from "@constants/pr-review";
+import {
+  MIN_CONFIDENCE_THRESHOLD,
+  REVIEWER_PROMPTS,
+} from "@constants/pr-review";
 import type {
   PRReviewFinding,
   ParsedFileDiff,
@@ -51,7 +54,8 @@ const SECURITY_PATTERNS = {
       /\$\(.* \+ /,
     ],
     message: "Potential command injection vulnerability",
-    suggestion: "Avoid string concatenation in shell commands, use argument arrays",
+    suggestion:
+      "Avoid string concatenation in shell commands, use argument arrays",
     confidence: 90,
   },
 
@@ -82,11 +86,10 @@ const SECURITY_PATTERNS = {
   },
 
   INSECURE_RANDOM: {
-    patterns: [
-      /Math\.random\s*\(\)/,
-    ],
+    patterns: [/Math\.random\s*\(\)/],
     message: "Insecure random number generation",
-    suggestion: "Use crypto.randomBytes or crypto.getRandomValues for security-sensitive operations",
+    suggestion:
+      "Use crypto.randomBytes or crypto.getRandomValues for security-sensitive operations",
     confidence: 70,
   },
 

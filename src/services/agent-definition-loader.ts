@@ -16,10 +16,19 @@ import type {
   AgentTier,
   AgentColor,
 } from "@/types/agent-definition";
-import { DEFAULT_AGENT_DEFINITION, AGENT_DEFINITION_SCHEMA } from "@/types/agent-definition";
-import { AGENT_DEFINITION, AGENT_DEFINITION_PATHS, AGENT_MESSAGES } from "@constants/agent-definition";
+import {
+  DEFAULT_AGENT_DEFINITION,
+  AGENT_DEFINITION_SCHEMA,
+} from "@/types/agent-definition";
+import {
+  AGENT_DEFINITION,
+  AGENT_DEFINITION_PATHS,
+  AGENT_MESSAGES,
+} from "@constants/agent-definition";
 
-const parseFrontmatter = (content: string): { frontmatter: Record<string, unknown>; body: string } | null => {
+const parseFrontmatter = (
+  content: string,
+): { frontmatter: Record<string, unknown>; body: string } | null => {
   const delimiter = AGENT_DEFINITION.FRONTMATTER_DELIMITER;
   const lines = content.split("\n");
 
@@ -27,13 +36,18 @@ const parseFrontmatter = (content: string): { frontmatter: Record<string, unknow
     return null;
   }
 
-  const endIndex = lines.findIndex((line, index) => index > 0 && line.trim() === delimiter);
+  const endIndex = lines.findIndex(
+    (line, index) => index > 0 && line.trim() === delimiter,
+  );
   if (endIndex === -1) {
     return null;
   }
 
   const frontmatterLines = lines.slice(1, endIndex);
-  const body = lines.slice(endIndex + 1).join("\n").trim();
+  const body = lines
+    .slice(endIndex + 1)
+    .join("\n")
+    .trim();
 
   // Simple YAML parser for frontmatter
   const frontmatter: Record<string, unknown> = {};
@@ -85,7 +99,9 @@ const parseFrontmatter = (content: string): { frontmatter: Record<string, unknow
   return { frontmatter, body };
 };
 
-const validateFrontmatter = (frontmatter: Record<string, unknown>): AgentFrontmatter | null => {
+const validateFrontmatter = (
+  frontmatter: Record<string, unknown>,
+): AgentFrontmatter | null => {
   const { required } = AGENT_DEFINITION_SCHEMA;
 
   for (const field of required) {
@@ -98,7 +114,11 @@ const validateFrontmatter = (frontmatter: Record<string, unknown>): AgentFrontma
   const description = frontmatter.description;
   const tools = frontmatter.tools;
 
-  if (typeof name !== "string" || typeof description !== "string" || !Array.isArray(tools)) {
+  if (
+    typeof name !== "string" ||
+    typeof description !== "string" ||
+    !Array.isArray(tools)
+  ) {
     return null;
   }
 
@@ -108,7 +128,8 @@ const validateFrontmatter = (frontmatter: Record<string, unknown>): AgentFrontma
     tools: tools as ReadonlyArray<string>,
     tier: (frontmatter.tier as AgentTier) || DEFAULT_AGENT_DEFINITION.tier,
     color: (frontmatter.color as AgentColor) || DEFAULT_AGENT_DEFINITION.color,
-    maxTurns: (frontmatter.maxTurns as number) || DEFAULT_AGENT_DEFINITION.maxTurns,
+    maxTurns:
+      (frontmatter.maxTurns as number) || DEFAULT_AGENT_DEFINITION.maxTurns,
     triggerPhrases: (frontmatter.triggerPhrases as ReadonlyArray<string>) || [],
     capabilities: (frontmatter.capabilities as ReadonlyArray<string>) || [],
     allowedPaths: frontmatter.allowedPaths as ReadonlyArray<string> | undefined,
@@ -116,7 +137,10 @@ const validateFrontmatter = (frontmatter: Record<string, unknown>): AgentFrontma
   };
 };
 
-const frontmatterToDefinition = (frontmatter: AgentFrontmatter, content: string): AgentDefinition => ({
+const frontmatterToDefinition = (
+  frontmatter: AgentFrontmatter,
+  content: string,
+): AgentDefinition => ({
   name: frontmatter.name,
   description: frontmatter.description,
   tools: frontmatter.tools,
@@ -132,19 +156,29 @@ const frontmatterToDefinition = (frontmatter: AgentFrontmatter, content: string)
   },
 });
 
-export const loadAgentDefinitionFile = async (filePath: string): Promise<AgentLoadResult> => {
+export const loadAgentDefinitionFile = async (
+  filePath: string,
+): Promise<AgentLoadResult> => {
   try {
     const content = await readFile(filePath, "utf-8");
     const parsed = parseFrontmatter(content);
 
     if (!parsed) {
-      return { success: false, error: AGENT_MESSAGES.INVALID_FRONTMATTER, filePath };
+      return {
+        success: false,
+        error: AGENT_MESSAGES.INVALID_FRONTMATTER,
+        filePath,
+      };
     }
 
     const frontmatter = validateFrontmatter(parsed.frontmatter);
 
     if (!frontmatter) {
-      return { success: false, error: AGENT_MESSAGES.MISSING_REQUIRED, filePath };
+      return {
+        success: false,
+        error: AGENT_MESSAGES.MISSING_REQUIRED,
+        filePath,
+      };
     }
 
     const agent = frontmatterToDefinition(frontmatter, parsed.body);
@@ -157,7 +191,7 @@ export const loadAgentDefinitionFile = async (filePath: string): Promise<AgentLo
 };
 
 export const loadAgentDefinitionsFromDirectory = async (
-  directoryPath: string
+  directoryPath: string,
 ): Promise<ReadonlyArray<AgentLoadResult>> => {
   const resolvedPath = directoryPath.replace("~", homedir());
 
@@ -168,11 +202,11 @@ export const loadAgentDefinitionsFromDirectory = async (
   try {
     const files = await readdir(resolvedPath);
     const mdFiles = files.filter(
-      (file) => extname(file) === AGENT_DEFINITION.FILE_EXTENSION
+      (file) => extname(file) === AGENT_DEFINITION.FILE_EXTENSION,
     );
 
     const results = await Promise.all(
-      mdFiles.map((file) => loadAgentDefinitionFile(join(resolvedPath, file)))
+      mdFiles.map((file) => loadAgentDefinitionFile(join(resolvedPath, file))),
     );
 
     return results;
@@ -182,7 +216,7 @@ export const loadAgentDefinitionsFromDirectory = async (
 };
 
 export const loadAllAgentDefinitions = async (
-  projectPath: string
+  projectPath: string,
 ): Promise<AgentRegistry> => {
   const agents = new Map<string, AgentDefinition>();
   const byTrigger = new Map<string, string>();
@@ -225,7 +259,7 @@ export const loadAllAgentDefinitions = async (
 
 export const findAgentByTrigger = (
   registry: AgentRegistry,
-  text: string
+  text: string,
 ): AgentDefinition | undefined => {
   const normalized = text.toLowerCase();
 
@@ -240,23 +274,28 @@ export const findAgentByTrigger = (
 
 export const findAgentsByCapability = (
   registry: AgentRegistry,
-  capability: string
+  capability: string,
 ): ReadonlyArray<AgentDefinition> => {
   const agentNames = registry.byCapability.get(capability) || [];
   return agentNames
     .map((name: string) => registry.agents.get(name))
-    .filter((a: AgentDefinition | undefined): a is AgentDefinition => a !== undefined);
+    .filter(
+      (a: AgentDefinition | undefined): a is AgentDefinition => a !== undefined,
+    );
 };
 
 export const getAgentByName = (
   registry: AgentRegistry,
-  name: string
+  name: string,
 ): AgentDefinition | undefined => registry.agents.get(name);
 
-export const listAllAgents = (registry: AgentRegistry): ReadonlyArray<AgentDefinition> =>
-  Array.from(registry.agents.values());
+export const listAllAgents = (
+  registry: AgentRegistry,
+): ReadonlyArray<AgentDefinition> => Array.from(registry.agents.values());
 
-export const createAgentDefinitionContent = (agent: AgentDefinition): string => {
+export const createAgentDefinitionContent = (
+  agent: AgentDefinition,
+): string => {
   const frontmatter = [
     "---",
     `name: ${agent.name}`,
@@ -272,7 +311,9 @@ export const createAgentDefinitionContent = (agent: AgentDefinition): string => 
 
   if (agent.triggerPhrases && agent.triggerPhrases.length > 0) {
     frontmatter.push("triggerPhrases:");
-    agent.triggerPhrases.forEach((phrase: string) => frontmatter.push(`  - ${phrase}`));
+    agent.triggerPhrases.forEach((phrase: string) =>
+      frontmatter.push(`  - ${phrase}`),
+    );
   }
 
   if (agent.capabilities && agent.capabilities.length > 0) {
@@ -282,7 +323,8 @@ export const createAgentDefinitionContent = (agent: AgentDefinition): string => 
 
   frontmatter.push("---");
 
-  const content = agent.systemPrompt || `# ${agent.name}\n\n${agent.description}`;
+  const content =
+    agent.systemPrompt || `# ${agent.name}\n\n${agent.description}`;
 
   return `${frontmatter.join("\n")}\n\n${content}`;
 };

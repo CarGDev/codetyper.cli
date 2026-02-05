@@ -4,10 +4,7 @@
  * Manages user approval checkpoints during feature development.
  */
 
-import {
-  PHASE_CHECKPOINTS,
-  FEATURE_DEV_ERRORS,
-} from "@constants/feature-dev";
+import { PHASE_CHECKPOINTS, FEATURE_DEV_ERRORS } from "@constants/feature-dev";
 import type {
   FeatureDevPhase,
   FeatureDevState,
@@ -80,7 +77,9 @@ const buildCheckpointSummary = (
     },
 
     review: () => {
-      const issues = state.reviewFindings.filter((f) => f.type === "issue").length;
+      const issues = state.reviewFindings.filter(
+        (f) => f.type === "issue",
+      ).length;
       const suggestions = state.reviewFindings.filter(
         (f) => f.type === "suggestion",
       ).length;
@@ -145,7 +144,7 @@ export const processCheckpointDecision = (
   > = {
     approve: () => ({ proceed: true }),
     reject: () => ({ proceed: false, action: "rejected" }),
-    modify: () => ({ proceed: false, action: "modify", }),
+    modify: () => ({ proceed: false, action: "modify" }),
     skip: () => ({ proceed: true, action: "skipped" }),
     abort: () => ({ proceed: false, action: "aborted" }),
   };

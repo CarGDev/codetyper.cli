@@ -58,7 +58,12 @@ const runCommand = (
 
 const detectImageType = (buffer: Buffer): ImageMediaType | null => {
   // PNG: 89 50 4E 47
-  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) {
+  if (
+    buffer[0] === 0x89 &&
+    buffer[1] === 0x50 &&
+    buffer[2] === 0x4e &&
+    buffer[3] === 0x47
+  ) {
     return "image/png";
   }
   // JPEG: FF D8 FF
@@ -66,12 +71,27 @@ const detectImageType = (buffer: Buffer): ImageMediaType | null => {
     return "image/jpeg";
   }
   // GIF: 47 49 46 38
-  if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x38) {
+  if (
+    buffer[0] === 0x47 &&
+    buffer[1] === 0x49 &&
+    buffer[2] === 0x46 &&
+    buffer[3] === 0x38
+  ) {
     return "image/gif";
   }
   // WebP: 52 49 46 46 ... 57 45 42 50
-  if (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46) {
-    if (buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50) {
+  if (
+    buffer[0] === 0x52 &&
+    buffer[1] === 0x49 &&
+    buffer[2] === 0x46 &&
+    buffer[3] === 0x46
+  ) {
+    if (
+      buffer[8] === 0x57 &&
+      buffer[9] === 0x45 &&
+      buffer[10] === 0x42 &&
+      buffer[11] === 0x50
+    ) {
       return "image/webp";
     }
   }
@@ -134,7 +154,10 @@ const readClipboardImageMacOS = async (): Promise<PastedImage | null> => {
 const readClipboardImageLinux = async (): Promise<PastedImage | null> => {
   // Try xclip first, then wl-paste for Wayland
   const commands = [
-    { cmd: "xclip", args: ["-selection", "clipboard", "-t", "image/png", "-o"] },
+    {
+      cmd: "xclip",
+      args: ["-selection", "clipboard", "-t", "image/png", "-o"],
+    },
     { cmd: "wl-paste", args: ["--type", "image/png"] },
   ];
 

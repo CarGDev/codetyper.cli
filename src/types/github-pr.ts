@@ -14,13 +14,23 @@ export interface GitHubPRComment {
   line?: number;
   createdAt: string;
   diffHunk?: string;
-  state?: "PENDING" | "COMMENTED" | "APPROVED" | "CHANGES_REQUESTED" | "DISMISSED";
+  state?:
+    | "PENDING"
+    | "COMMENTED"
+    | "APPROVED"
+    | "CHANGES_REQUESTED"
+    | "DISMISSED";
 }
 
 export interface GitHubPRReview {
   id: number;
   author: string;
-  state: "PENDING" | "COMMENTED" | "APPROVED" | "CHANGES_REQUESTED" | "DISMISSED";
+  state:
+    | "PENDING"
+    | "COMMENTED"
+    | "APPROVED"
+    | "CHANGES_REQUESTED"
+    | "DISMISSED";
   body: string;
   submittedAt: string;
   comments: GitHubPRComment[];

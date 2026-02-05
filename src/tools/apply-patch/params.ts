@@ -9,9 +9,7 @@ import { PATCH_DEFAULTS } from "@constants/apply-patch";
  * Zod schema for apply_patch tool parameters
  */
 export const applyPatchParams = z.object({
-  patch: z
-    .string()
-    .describe("The unified diff patch content to apply"),
+  patch: z.string().describe("The unified diff patch content to apply"),
 
   targetFile: z
     .string()
@@ -31,7 +29,9 @@ export const applyPatchParams = z.object({
     .max(PATCH_DEFAULTS.MAX_FUZZ)
     .optional()
     .default(PATCH_DEFAULTS.FUZZ)
-    .describe(`Context line tolerance for fuzzy matching (0-${PATCH_DEFAULTS.MAX_FUZZ})`),
+    .describe(
+      `Context line tolerance for fuzzy matching (0-${PATCH_DEFAULTS.MAX_FUZZ})`,
+    ),
 
   reverse: z
     .boolean()

@@ -46,7 +46,10 @@ export interface ConfidenceFilterStats {
   readonly averageConfidence: number;
 }
 
-export const CONFIDENCE_LEVELS: Record<ConfidenceLevel, { min: number; max: number; color: string }> = {
+export const CONFIDENCE_LEVELS: Record<
+  ConfidenceLevel,
+  { min: number; max: number; color: string }
+> = {
   low: { min: 0, max: 49, color: "gray" },
   medium: { min: 50, max: 74, color: "yellow" },
   high: { min: 75, max: 89, color: "green" },

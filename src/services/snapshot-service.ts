@@ -185,7 +185,8 @@ export const createSnapshot = async (
 
   const id = uuidv4();
   const timestamp = Date.now();
-  const snapshotMessage = message ?? `Snapshot ${new Date(timestamp).toISOString()}`;
+  const snapshotMessage =
+    message ?? `Snapshot ${new Date(timestamp).toISOString()}`;
 
   // Get current state
   const currentCommit = getCurrentCommitHash(workingDir);
@@ -253,7 +254,11 @@ export const getSnapshot = async (
   workingDir: string,
   snapshotId: string,
 ): Promise<Snapshot | null> => {
-  const snapshotPath = path.join(workingDir, SNAPSHOTS_DIR, `${snapshotId}.json`);
+  const snapshotPath = path.join(
+    workingDir,
+    SNAPSHOTS_DIR,
+    `${snapshotId}.json`,
+  );
 
   try {
     const content = await fs.readFile(snapshotPath, "utf-8");
@@ -263,7 +268,9 @@ export const getSnapshot = async (
   }
 };
 
-export const listSnapshots = async (workingDir: string): Promise<SnapshotMetadata[]> => {
+export const listSnapshots = async (
+  workingDir: string,
+): Promise<SnapshotMetadata[]> => {
   const snapshotsDir = path.join(workingDir, SNAPSHOTS_DIR);
 
   if (!(await fileExists(snapshotsDir))) {
@@ -278,7 +285,10 @@ export const listSnapshots = async (workingDir: string): Promise<SnapshotMetadat
       if (!file.endsWith(".json")) continue;
 
       try {
-        const content = await fs.readFile(path.join(snapshotsDir, file), "utf-8");
+        const content = await fs.readFile(
+          path.join(snapshotsDir, file),
+          "utf-8",
+        );
         const snapshot = JSON.parse(content) as Snapshot;
         snapshots.push({
           id: snapshot.id,
@@ -302,7 +312,11 @@ export const deleteSnapshot = async (
   workingDir: string,
   snapshotId: string,
 ): Promise<boolean> => {
-  const snapshotPath = path.join(workingDir, SNAPSHOTS_DIR, `${snapshotId}.json`);
+  const snapshotPath = path.join(
+    workingDir,
+    SNAPSHOTS_DIR,
+    `${snapshotId}.json`,
+  );
 
   try {
     await fs.unlink(snapshotPath);
@@ -312,7 +326,9 @@ export const deleteSnapshot = async (
   }
 };
 
-export const pruneOldSnapshots = async (workingDir: string): Promise<number> => {
+export const pruneOldSnapshots = async (
+  workingDir: string,
+): Promise<number> => {
   const cutoff = Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000;
   const snapshots = await listSnapshots(workingDir);
   let deleted = 0;
@@ -351,7 +367,11 @@ export const validatePatch = async (
   patch: string,
 ): Promise<{ valid: boolean; errors: string[] }> => {
   // Write patch to temp file
-  const tempPatchPath = path.join(workingDir, SNAPSHOTS_DIR, `temp-${Date.now()}.patch`);
+  const tempPatchPath = path.join(
+    workingDir,
+    SNAPSHOTS_DIR,
+    `temp-${Date.now()}.patch`,
+  );
 
   try {
     await fs.writeFile(tempPatchPath, patch);

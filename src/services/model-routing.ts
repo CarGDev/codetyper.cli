@@ -39,11 +39,7 @@ export const MODEL_TIER_MAPPING: Record<ModelTier, string[]> = {
     "gpt-4.1",
   ],
   // Thorough tier: Best quality, higher cost (3x multiplier)
-  thorough: [
-    "claude-opus-4.5",
-    "gpt-5.2-codex",
-    "gpt-5.1-codex-max",
-  ],
+  thorough: ["claude-opus-4.5", "gpt-5.2-codex", "gpt-5.1-codex-max"],
 };
 
 /**

@@ -166,9 +166,13 @@ export const LANGUAGE_EXTENSIONS: Record<string, string> = {
 export const getLanguageId = (filePath: string): string | null => {
   const ext = filePath.includes(".")
     ? "." + filePath.split(".").pop()
-    : filePath.split("/").pop() ?? "";
+    : (filePath.split("/").pop() ?? "");
 
-  return LANGUAGE_EXTENSIONS[ext] ?? LANGUAGE_EXTENSIONS[filePath.split("/").pop() ?? ""] ?? null;
+  return (
+    LANGUAGE_EXTENSIONS[ext] ??
+    LANGUAGE_EXTENSIONS[filePath.split("/").pop() ?? ""] ??
+    null
+  );
 };
 
 export const getExtensionsForLanguage = (languageId: string): string[] => {

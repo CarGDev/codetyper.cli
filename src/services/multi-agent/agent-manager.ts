@@ -26,14 +26,18 @@ let agentRegistry: Map<string, AgentDefinition> = new Map();
 /**
  * Set the agent registry (called during initialization)
  */
-export const setAgentRegistry = (registry: Map<string, AgentDefinition>): void => {
+export const setAgentRegistry = (
+  registry: Map<string, AgentDefinition>,
+): void => {
   agentRegistry = registry;
 };
 
 /**
  * Get agent definition by name
  */
-export const getAgentDefinition = (name: string): AgentDefinition | undefined => {
+export const getAgentDefinition = (
+  name: string,
+): AgentDefinition | undefined => {
   return agentRegistry.get(name);
 };
 
@@ -50,7 +54,11 @@ export const createAgentInstance = (
 
   const activeCount = multiAgentStore.getActiveInstances().length;
   if (activeCount >= MULTI_AGENT_LIMITS.maxConcurrentRequests) {
-    return { error: MULTI_AGENT_ERRORS.MAX_CONCURRENT_EXCEEDED(MULTI_AGENT_LIMITS.maxConcurrentRequests) };
+    return {
+      error: MULTI_AGENT_ERRORS.MAX_CONCURRENT_EXCEEDED(
+        MULTI_AGENT_LIMITS.maxConcurrentRequests,
+      ),
+    };
   }
 
   const conversation: AgentConversation = {
@@ -122,7 +130,19 @@ export const completeAgent = (
     ...(result.success
       ? { result, timestamp: Date.now() }
       : { error: result.error ?? "Unknown error", timestamp: Date.now() }),
-  } as { type: "agent_completed"; agentId: string; result: AgentExecutionResult; timestamp: number } | { type: "agent_error"; agentId: string; error: string; timestamp: number });
+  } as
+    | {
+        type: "agent_completed";
+        agentId: string;
+        result: AgentExecutionResult;
+        timestamp: number;
+      }
+    | {
+        type: "agent_error";
+        agentId: string;
+        error: string;
+        timestamp: number;
+      });
 };
 
 /**

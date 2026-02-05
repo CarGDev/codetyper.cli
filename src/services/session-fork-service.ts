@@ -62,9 +62,10 @@ const generateCommitMessage = (messages: SessionMessage[]): string => {
   const count = messages.length;
 
   if (userMessages.length === 0) {
-    return COMMIT_MESSAGE_TEMPLATES.DEFAULT
-      .replace("{summary}", "session checkpoint")
-      .replace("{count}", String(count));
+    return COMMIT_MESSAGE_TEMPLATES.DEFAULT.replace(
+      "{summary}",
+      "session checkpoint",
+    ).replace("{count}", String(count));
   }
 
   // Get first user message as summary base
@@ -77,7 +78,10 @@ const generateCommitMessage = (messages: SessionMessage[]): string => {
   for (const [type, keywords] of Object.entries(COMMIT_TYPE_KEYWORDS)) {
     for (const keyword of keywords) {
       if (allContent.includes(keyword)) {
-        const template = COMMIT_MESSAGE_TEMPLATES[type as keyof typeof COMMIT_MESSAGE_TEMPLATES];
+        const template =
+          COMMIT_MESSAGE_TEMPLATES[
+            type as keyof typeof COMMIT_MESSAGE_TEMPLATES
+          ];
         return template
           .replace("{summary}", summary || keyword)
           .replace("{count}", String(count));
@@ -85,9 +89,10 @@ const generateCommitMessage = (messages: SessionMessage[]): string => {
     }
   }
 
-  return COMMIT_MESSAGE_TEMPLATES.DEFAULT
-    .replace("{summary}", summary || "session changes")
-    .replace("{count}", String(count));
+  return COMMIT_MESSAGE_TEMPLATES.DEFAULT.replace(
+    "{summary}",
+    summary || "session changes",
+  ).replace("{count}", String(count));
 };
 
 /**
@@ -124,7 +129,7 @@ const createEmptyForkFile = (sessionId: string): SessionForkFile => {
  */
 const loadForkFile = async (
   sessionId: string,
-  workingDir: string
+  workingDir: string,
 ): Promise<SessionForkFile> => {
   const filePath = getForkFilePath(sessionId, workingDir);
 
@@ -142,7 +147,7 @@ const loadForkFile = async (
  */
 const saveForkFile = async (
   file: SessionForkFile,
-  filePath: string
+  filePath: string,
 ): Promise<void> => {
   const dir = dirname(filePath);
 
@@ -160,7 +165,7 @@ const saveForkFile = async (
  */
 export const initializeForkService = async (
   sessionId: string,
-  workingDir: string
+  workingDir: string,
 ): Promise<void> => {
   const filePath = getForkFilePath(sessionId, workingDir);
   const file = await loadForkFile(sessionId, workingDir);
@@ -176,7 +181,9 @@ export const initializeForkService = async (
  */
 const getCurrentFork = (): SessionFork | null => {
   if (!state.file) return null;
-  return state.file.forks.find((f) => f.id === state.file?.currentForkId) || null;
+  return (
+    state.file.forks.find((f) => f.id === state.file?.currentForkId) || null
+  );
 };
 
 /**
@@ -186,8 +193,13 @@ export const createSnapshot = async (
   messages: SessionMessage[],
   todoItems: TodoItem[],
   contextFiles: string[],
-  metadata: { provider: string; model: string; agent: string; workingDir: string },
-  options: SnapshotOptions = {}
+  metadata: {
+    provider: string;
+    model: string;
+    agent: string;
+    workingDir: string;
+  },
+  options: SnapshotOptions = {},
 ): Promise<SnapshotCreateResult> => {
   if (!state.file || !state.filePath) {
     return { success: false, error: FORK_ERRORS.SESSION_NOT_FOUND };
@@ -203,7 +215,8 @@ export const createSnapshot = async (
   }
 
   // Generate snapshot name
-  const name = options.name || `${DEFAULT_SNAPSHOT_PREFIX}-${fork.snapshots.length + 1}`;
+  const name =
+    options.name || `${DEFAULT_SNAPSHOT_PREFIX}-${fork.snapshots.length + 1}`;
 
   // Check for duplicate name
   if (fork.snapshots.some((s) => s.name === name)) {
@@ -213,7 +226,8 @@ export const createSnapshot = async (
   const snapshotState: SessionSnapshotState = {
     messages: [...messages],
     todoItems: options.includeTodos !== false ? [...todoItems] : [],
-    contextFiles: options.includeContextFiles !== false ? [...contextFiles] : [],
+    contextFiles:
+      options.includeContextFiles !== false ? [...contextFiles] : [],
     metadata,
   };
 
@@ -240,19 +254,31 @@ export const createSnapshot = async (
  * Rewind to a snapshot
  */
 export const rewindToSnapshot = async (
-  target: string | number
+  target: string | number,
 ): Promise<RewindResult> => {
   if (!state.file || !state.filePath) {
-    return { success: false, messagesRestored: 0, error: FORK_ERRORS.SESSION_NOT_FOUND };
+    return {
+      success: false,
+      messagesRestored: 0,
+      error: FORK_ERRORS.SESSION_NOT_FOUND,
+    };
   }
 
   const fork = getCurrentFork();
   if (!fork) {
-    return { success: false, messagesRestored: 0, error: FORK_ERRORS.FORK_NOT_FOUND };
+    return {
+      success: false,
+      messagesRestored: 0,
+      error: FORK_ERRORS.FORK_NOT_FOUND,
+    };
   }
 
   if (fork.snapshots.length === 0) {
-    return { success: false, messagesRestored: 0, error: FORK_ERRORS.NO_SNAPSHOTS_TO_REWIND };
+    return {
+      success: false,
+      messagesRestored: 0,
+      error: FORK_ERRORS.NO_SNAPSHOTS_TO_REWIND,
+    };
   }
 
   let snapshot: SessionSnapshot | undefined;
@@ -260,7 +286,7 @@ export const rewindToSnapshot = async (
   if (typeof target === "number") {
     // Rewind by count (e.g., 1 = previous snapshot)
     const currentIndex = fork.snapshots.findIndex(
-      (s) => s.id === fork.currentSnapshotId
+      (s) => s.id === fork.currentSnapshotId,
     );
     const targetIndex = currentIndex - target;
 
@@ -275,7 +301,11 @@ export const rewindToSnapshot = async (
   }
 
   if (!snapshot) {
-    return { success: false, messagesRestored: 0, error: FORK_ERRORS.SNAPSHOT_NOT_FOUND };
+    return {
+      success: false,
+      messagesRestored: 0,
+      error: FORK_ERRORS.SNAPSHOT_NOT_FOUND,
+    };
   }
 
   fork.currentSnapshotId = snapshot.id;
@@ -295,7 +325,7 @@ export const rewindToSnapshot = async (
  * Create a new fork
  */
 export const createFork = async (
-  options: ForkOptions = {}
+  options: ForkOptions = {},
 ): Promise<ForkCreateResult> => {
   if (!state.file || !state.filePath) {
     return { success: false, error: FORK_ERRORS.SESSION_NOT_FOUND };
@@ -322,7 +352,7 @@ export const createFork = async (
   let branchFromId = currentFork.currentSnapshotId;
   if (options.fromSnapshot) {
     const snapshot = currentFork.snapshots.find(
-      (s) => s.name === options.fromSnapshot || s.id === options.fromSnapshot
+      (s) => s.name === options.fromSnapshot || s.id === options.fromSnapshot,
     );
     if (!snapshot) {
       return { success: false, error: FORK_ERRORS.SNAPSHOT_NOT_FOUND };
@@ -331,11 +361,15 @@ export const createFork = async (
   }
 
   // Copy snapshots up to branch point
-  const branchIndex = currentFork.snapshots.findIndex((s) => s.id === branchFromId);
-  const copiedSnapshots = currentFork.snapshots.slice(0, branchIndex + 1).map((s) => ({
-    ...s,
-    id: uuidv4(), // New IDs for copied snapshots
-  }));
+  const branchIndex = currentFork.snapshots.findIndex(
+    (s) => s.id === branchFromId,
+  );
+  const copiedSnapshots = currentFork.snapshots
+    .slice(0, branchIndex + 1)
+    .map((s) => ({
+      ...s,
+      id: uuidv4(), // New IDs for copied snapshots
+    }));
 
   const newFork: SessionFork = {
     id: uuidv4(),
@@ -385,7 +419,7 @@ export const listForks = (): ForkSummary[] => {
 
   return state.file.forks.map((fork) => {
     const currentSnapshot = fork.snapshots.find(
-      (s) => s.id === fork.currentSnapshotId
+      (s) => s.id === fork.currentSnapshotId,
     );
 
     return {
@@ -434,7 +468,9 @@ export const getSnapshot = (nameOrId: string): SessionSnapshot | null => {
   const fork = getCurrentFork();
   if (!fork) return null;
 
-  return fork.snapshots.find((s) => s.name === nameOrId || s.id === nameOrId) || null;
+  return (
+    fork.snapshots.find((s) => s.name === nameOrId || s.id === nameOrId) || null
+  );
 };
 
 /**

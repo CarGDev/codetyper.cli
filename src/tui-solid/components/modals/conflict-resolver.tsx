@@ -4,7 +4,14 @@
  * UI component for displaying and resolving file conflicts between agents.
  */
 
-import { For, Show, createSignal, createMemo, onMount, onCleanup } from "solid-js";
+import {
+  For,
+  Show,
+  createSignal,
+  createMemo,
+  onMount,
+  onCleanup,
+} from "solid-js";
 import { TextAttributes } from "@opentui/core";
 import { useTheme } from "@tui-solid/context/theme";
 import { multiAgentStore } from "@stores/core/multi-agent-store";
@@ -46,7 +53,9 @@ export function ConflictResolver(props: ConflictResolverProps) {
     onCleanup(unsubscribe);
   });
 
-  const currentConflict = createMemo(() => conflicts()[selectedConflictIndex()]);
+  const currentConflict = createMemo(
+    () => conflicts()[selectedConflictIndex()],
+  );
 
   const getAgentNames = (agentIds: string[]): string[] => {
     const state = multiAgentStore.getState();
@@ -61,7 +70,9 @@ export function ConflictResolver(props: ConflictResolverProps) {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
-  const selectedStrategy = createMemo(() => STRATEGY_OPTIONS[selectedStrategyIndex()]);
+  const selectedStrategy = createMemo(
+    () => STRATEGY_OPTIONS[selectedStrategyIndex()],
+  );
 
   return (
     <Show when={visible() && conflicts().length > 0}>
@@ -73,7 +84,11 @@ export function ConflictResolver(props: ConflictResolverProps) {
         backgroundColor={theme.colors.background}
       >
         {/* Header */}
-        <box flexDirection="row" justifyContent="space-between" marginBottom={1}>
+        <box
+          flexDirection="row"
+          justifyContent="space-between"
+          marginBottom={1}
+        >
           <text fg={theme.colors.warning} attributes={TextAttributes.BOLD}>
             ⚠ File Conflict Detected
           </text>
@@ -95,7 +110,9 @@ export function ConflictResolver(props: ConflictResolverProps) {
             <box flexDirection="row" gap={1}>
               <text fg={theme.colors.textDim}>Agents:</text>
               <text fg={theme.colors.text}>
-                {getAgentNames(currentConflict()!.conflictingAgentIds).join(" vs ")}
+                {getAgentNames(currentConflict()!.conflictingAgentIds).join(
+                  " vs ",
+                )}
               </text>
             </box>
 
@@ -119,15 +136,33 @@ export function ConflictResolver(props: ConflictResolverProps) {
               <box
                 flexDirection="row"
                 gap={1}
-                backgroundColor={index() === selectedStrategyIndex() ? theme.colors.bgHighlight : undefined}
+                backgroundColor={
+                  index() === selectedStrategyIndex()
+                    ? theme.colors.bgHighlight
+                    : undefined
+                }
                 paddingLeft={1}
               >
-                <text fg={index() === selectedStrategyIndex() ? theme.colors.primary : theme.colors.textDim}>
+                <text
+                  fg={
+                    index() === selectedStrategyIndex()
+                      ? theme.colors.primary
+                      : theme.colors.textDim
+                  }
+                >
                   {index() === selectedStrategyIndex() ? "▸" : " "}
                 </text>
                 <text
-                  fg={index() === selectedStrategyIndex() ? theme.colors.text : theme.colors.textDim}
-                  attributes={index() === selectedStrategyIndex() ? TextAttributes.BOLD : TextAttributes.NONE}
+                  fg={
+                    index() === selectedStrategyIndex()
+                      ? theme.colors.text
+                      : theme.colors.textDim
+                  }
+                  attributes={
+                    index() === selectedStrategyIndex()
+                      ? TextAttributes.BOLD
+                      : TextAttributes.NONE
+                  }
                 >
                   {option.label}
                 </text>
@@ -152,7 +187,7 @@ export function ConflictResolver(props: ConflictResolverProps) {
         {/* Actions */}
         <box flexDirection="row" gap={2} justifyContent="flex-end">
           <text fg={theme.colors.textDim}>
-            [↑/↓] Select  [Enter] Resolve  [Esc] Dismiss
+            [↑/↓] Select [Enter] Resolve [Esc] Dismiss
           </text>
         </box>
       </box>
@@ -169,7 +204,9 @@ export function ConflictIndicator() {
 
   onMount(() => {
     const unsubscribe = multiAgentStore.subscribe((state) => {
-      const unresolvedCount = state.conflicts.filter((c) => !c.resolution).length;
+      const unresolvedCount = state.conflicts.filter(
+        (c) => !c.resolution,
+      ).length;
       setConflictCount(unresolvedCount);
     });
 

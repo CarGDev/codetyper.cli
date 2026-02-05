@@ -2,7 +2,11 @@ import { getBannerLines } from "./banner/lines";
 import { renderBanner, renderBannerWithSubtitle } from "./banner/render";
 import { printBanner, printWelcome } from "./banner/print";
 import { getInlineLogo } from "./banner/logo";
-import { BANNER_STYLE_MAP, BANNER_LINES, GRADIENT_COLORS } from "@constants/banner";
+import {
+  BANNER_STYLE_MAP,
+  BANNER_LINES,
+  GRADIENT_COLORS,
+} from "@constants/banner";
 import { Style } from "@ui/styles";
 
 describe("Banner Utilities", () => {
@@ -39,11 +43,13 @@ describe("Banner Utilities", () => {
     it("should render banner with a specific style", () => {
       const style = "blocks";
       const banner = renderBanner(style);
-      const expectedLines = BANNER_STYLE_MAP[style].map((line, index) => {
-        const colorIndex = Math.min(index, GRADIENT_COLORS.length - 1);
-        const color = GRADIENT_COLORS[colorIndex];
-        return color + line + Style.RESET;
-      }).join("\n");
+      const expectedLines = BANNER_STYLE_MAP[style]
+        .map((line, index) => {
+          const colorIndex = Math.min(index, GRADIENT_COLORS.length - 1);
+          const color = GRADIENT_COLORS[colorIndex];
+          return color + line + Style.RESET;
+        })
+        .join("\n");
 
       expect(banner).toBe(expectedLines);
     });
@@ -63,7 +69,9 @@ describe("Banner Utilities", () => {
 
   describe("printBanner", () => {
     it("should print the banner to the console", () => {
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
       const style = "default";
 
       printBanner(style);
@@ -75,7 +83,9 @@ describe("Banner Utilities", () => {
 
   describe("printWelcome", () => {
     it("should print the welcome message to the console", () => {
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
       const version = "1.0.0";
       const provider = "OpenAI";
       const model = "GPT-4";
@@ -84,10 +94,12 @@ describe("Banner Utilities", () => {
 
       expect(consoleSpy).toHaveBeenCalledWith("\n" + renderBanner("blocks"));
       expect(consoleSpy).toHaveBeenCalledWith("");
-      expect(consoleSpy).toHaveBeenCalledWith(Style.DIM + "  AI Coding Assistant" + Style.RESET);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        Style.DIM + "  AI Coding Assistant" + Style.RESET,
+      );
       expect(consoleSpy).toHaveBeenCalledWith("");
       expect(consoleSpy).toHaveBeenCalledWith(
-        Style.DIM + `  v${version} | ${provider} | ${model}` + Style.RESET
+        Style.DIM + `  v${version} | ${provider} | ${model}` + Style.RESET,
       );
       expect(consoleSpy).toHaveBeenCalledWith("");
 

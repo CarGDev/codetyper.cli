@@ -9,7 +9,9 @@ export const webFetchParams = z.object({
   prompt: z
     .string()
     .optional()
-    .describe("Optional prompt to extract specific information from the content"),
+    .describe(
+      "Optional prompt to extract specific information from the content",
+    ),
   timeout: z
     .number()
     .optional()

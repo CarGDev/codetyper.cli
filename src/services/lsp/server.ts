@@ -54,8 +54,12 @@ const findProjectRoot = async (
 
 const findBinary = async (name: string): Promise<string | null> => {
   try {
-    const command = process.platform === "win32" ? `where ${name}` : `which ${name}`;
-    const result = execSync(command, { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] });
+    const command =
+      process.platform === "win32" ? `where ${name}` : `which ${name}`;
+    const result = execSync(command, {
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    });
     return result.trim().split("\n")[0] || null;
   } catch {
     return null;
@@ -83,7 +87,12 @@ export const SERVERS: Record<string, ServerInfo> = {
     id: "python",
     name: "Pyright",
     extensions: [".py", ".pyi"],
-    rootPatterns: ["pyproject.toml", "setup.py", "requirements.txt", "pyrightconfig.json"],
+    rootPatterns: [
+      "pyproject.toml",
+      "setup.py",
+      "requirements.txt",
+      "pyrightconfig.json",
+    ],
     command: "pyright-langserver",
     args: ["--stdio"],
   },
@@ -160,7 +169,12 @@ export const SERVERS: Record<string, ServerInfo> = {
     id: "eslint",
     name: "ESLint Language Server",
     extensions: [".ts", ".tsx", ".js", ".jsx"],
-    rootPatterns: [".eslintrc", ".eslintrc.js", ".eslintrc.json", "eslint.config.js"],
+    rootPatterns: [
+      ".eslintrc",
+      ".eslintrc.js",
+      ".eslintrc.json",
+      "eslint.config.js",
+    ],
     command: "vscode-eslint-language-server",
     args: ["--stdio"],
   },
@@ -212,8 +226,7 @@ export const getServersForFile = (filePath: string): ServerInfo[] => {
 
   return Object.values(SERVERS).filter((server) => {
     return (
-      server.extensions.includes(ext) ||
-      server.extensions.includes(fileName)
+      server.extensions.includes(ext) || server.extensions.includes(fileName)
     );
   });
 };
@@ -249,7 +262,9 @@ export const spawnServer = async (
   return { process: proc };
 };
 
-export const isServerAvailable = async (server: ServerInfo): Promise<boolean> => {
+export const isServerAvailable = async (
+  server: ServerInfo,
+): Promise<boolean> => {
   const binary = await findBinary(server.command);
   return binary !== null;
 };

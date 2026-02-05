@@ -1,6 +1,6 @@
 import { saveSession } from "@services/core/session";
 import { clearConversation } from "@commands/components/chat/history/clear-conversation";
-import { appStore } from "@tui/index";
+import { appStore } from "@tui-solid/context/app";
 import { showContextFiles } from "@commands/components/chat/context/show-context-files";
 import { removeFile } from "@commands/components/chat/context/remove-file";
 import { showContext } from "@commands/components/chat/history/show-context";

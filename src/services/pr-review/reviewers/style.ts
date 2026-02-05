@@ -4,7 +4,10 @@
  * Analyzes code for style and consistency issues.
  */
 
-import { MIN_CONFIDENCE_THRESHOLD, REVIEWER_PROMPTS } from "@constants/pr-review";
+import {
+  MIN_CONFIDENCE_THRESHOLD,
+  REVIEWER_PROMPTS,
+} from "@constants/pr-review";
 import type {
   PRReviewFinding,
   ParsedFileDiff,
@@ -16,9 +19,7 @@ import type {
  */
 const STYLE_PATTERNS = {
   CONSOLE_LOG: {
-    patterns: [
-      /console\.(log|debug|info)\s*\(/,
-    ],
+    patterns: [/console\.(log|debug|info)\s*\(/],
     message: "Console statement left in code",
     suggestion: "Remove console statements before committing or use a logger",
     confidence: 85,
@@ -46,36 +47,28 @@ const STYLE_PATTERNS = {
   },
 
   LONG_LINE: {
-    patterns: [
-      /.{121,}/,
-    ],
+    patterns: [/.{121,}/],
     message: "Line exceeds 120 characters",
     suggestion: "Break long lines for better readability",
     confidence: 75,
   },
 
   INCONSISTENT_QUOTES: {
-    patterns: [
-      /["'][^"']*["']/,
-    ],
+    patterns: [/["'][^"']*["']/],
     message: "Inconsistent quote style",
     suggestion: "Use consistent quotes (single or double) throughout the file",
     confidence: 60,
   },
 
   VAR_DECLARATION: {
-    patterns: [
-      /\bvar\s+\w+/,
-    ],
+    patterns: [/\bvar\s+\w+/],
     message: "Using 'var' instead of 'let' or 'const'",
     suggestion: "Prefer 'const' for immutable values, 'let' for mutable",
     confidence: 85,
   },
 
   NESTED_TERNARY: {
-    patterns: [
-      /\?[^:]+\?[^:]+:/,
-    ],
+    patterns: [/\?[^:]+\?[^:]+:/],
     message: "Nested ternary operator - hard to read",
     suggestion: "Use if-else statements or extract to a function",
     confidence: 80,
@@ -92,20 +85,14 @@ const STYLE_PATTERNS = {
   },
 
   ANY_TYPE: {
-    patterns: [
-      /:\s*any\b/,
-      /<any>/,
-      /as\s+any\b/,
-    ],
+    patterns: [/:\s*any\b/, /<any>/, /as\s+any\b/],
     message: "Using 'any' type reduces type safety",
     suggestion: "Use specific types or 'unknown' with type guards",
     confidence: 75,
   },
 
   SINGLE_LETTER_VAR: {
-    patterns: [
-      /\b(?:const|let|var)\s+[a-z]\s*=/,
-    ],
+    patterns: [/\b(?:const|let|var)\s+[a-z]\s*=/],
     message: "Single-letter variable name",
     suggestion: "Use descriptive variable names for clarity",
     confidence: 65,
@@ -122,9 +109,7 @@ const STYLE_PATTERNS = {
   },
 
   DUPLICATE_IMPORT: {
-    patterns: [
-      /import\s+\{[^}]+\}\s+from\s+['"]([^'"]+)['"]/,
-    ],
+    patterns: [/import\s+\{[^}]+\}\s+from\s+['"]([^'"]+)['"]/],
     message: "Check for duplicate or unused imports",
     suggestion: "Consolidate imports from the same module",
     confidence: 60,
@@ -158,7 +143,9 @@ export const reviewFile = (
           // For some patterns, only report once per file
           if (shouldReportOncePerFile(patternName)) {
             if (!foundInFile) {
-              findings.push(createFinding(path, lineNumber, config, patternName));
+              findings.push(
+                createFinding(path, lineNumber, config, patternName),
+              );
               foundInFile = true;
             }
           } else {

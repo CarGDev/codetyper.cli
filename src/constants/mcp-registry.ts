@@ -4,14 +4,18 @@
  * Constants for MCP server discovery and search
  */
 
-import type { MCPServerCategory, MCPRegistryServer } from "@/types/mcp-registry";
+import type {
+  MCPServerCategory,
+  MCPRegistryServer,
+} from "@/types/mcp-registry";
 
 /**
  * Default registry sources
  */
 export const MCP_REGISTRY_SOURCES = {
   /** Official MCP servers GitHub */
-  OFFICIAL: "https://raw.githubusercontent.com/modelcontextprotocol/servers/main/README.md",
+  OFFICIAL:
+    "https://raw.githubusercontent.com/modelcontextprotocol/servers/main/README.md",
   /** Smithery registry API */
   SMITHERY: "https://registry.smithery.ai/servers",
 } as const;
@@ -161,7 +165,8 @@ export const MCP_CURATED_SERVERS: MCPRegistryServer[] = [
     popularity: 75,
     verified: true,
     envVars: ["GITLAB_PERSONAL_ACCESS_TOKEN", "GITLAB_API_URL"],
-    installHint: "Set GITLAB_PERSONAL_ACCESS_TOKEN and optionally GITLAB_API_URL",
+    installHint:
+      "Set GITLAB_PERSONAL_ACCESS_TOKEN and optionally GITLAB_API_URL",
     updatedAt: "2024-12-01",
   },
   {

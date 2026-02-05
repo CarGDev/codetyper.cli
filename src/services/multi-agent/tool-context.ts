@@ -51,10 +51,7 @@ export const getToolContext = (agentId: string): AgentToolContext | null => {
 /**
  * Check if a path is allowed for an agent
  */
-export const isPathAllowed = (
-  agentId: string,
-  filePath: string,
-): boolean => {
+export const isPathAllowed = (agentId: string, filePath: string): boolean => {
   const context = activeContexts.get(agentId);
   if (!context) return false;
 
@@ -101,13 +98,21 @@ export const requestWriteAccess = async (
   // Detect conflicts with other agents
   const conflict = detectConflict(agentId, filePath);
   if (conflict) {
-    return { granted: false, conflict: true, reason: "File locked by another agent" };
+    return {
+      granted: false,
+      conflict: true,
+      reason: "File locked by another agent",
+    };
   }
 
   // Acquire file lock
   const acquired = await acquireFileLock(agentId, filePath);
   if (!acquired) {
-    return { granted: false, conflict: true, reason: "Could not acquire file lock" };
+    return {
+      granted: false,
+      conflict: true,
+      reason: "Could not acquire file lock",
+    };
   }
 
   // Track locked file
@@ -118,10 +123,7 @@ export const requestWriteAccess = async (
 /**
  * Record a file modification
  */
-export const recordModification = (
-  agentId: string,
-  filePath: string,
-): void => {
+export const recordModification = (agentId: string, filePath: string): void => {
   const context = activeContexts.get(agentId);
   if (!context) return;
 
@@ -132,10 +134,7 @@ export const recordModification = (
 /**
  * Release write access to a file
  */
-export const releaseWriteAccess = (
-  agentId: string,
-  filePath: string,
-): void => {
+export const releaseWriteAccess = (agentId: string, filePath: string): void => {
   const context = activeContexts.get(agentId);
   if (!context) return;
 

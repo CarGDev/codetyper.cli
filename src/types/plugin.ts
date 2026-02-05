@@ -65,11 +65,7 @@ export interface PluginHookReference {
 /**
  * Plugin capabilities
  */
-export type PluginCapability =
-  | "filesystem"
-  | "network"
-  | "shell"
-  | "mcp";
+export type PluginCapability = "filesystem" | "network" | "shell" | "mcp";
 
 /**
  * Tool definition from a plugin

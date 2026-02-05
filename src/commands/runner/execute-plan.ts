@@ -2,11 +2,15 @@
  * Plan execution utilities
  */
 
-import { failSpinner, succeedSpinner, startSpinner } from "@utils/core/terminal";
+import {
+  failSpinner,
+  succeedSpinner,
+  startSpinner,
+} from "@utils/core/terminal";
 import { RUNNER_DELAYS } from "@constants/runner";
 import { getStepIcon } from "@commands/runner/display-plan";
 import { delay } from "@commands/runner/utils";
-import type { ExecutionPlan, PlanStep } from "@/types/index";
+import type { ExecutionPlan, PlanStep } from "@/types/common";
 import type { StepContext } from "@/types/runner";
 
 const executeStep = async (context: StepContext): Promise<void> => {

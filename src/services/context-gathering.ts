@@ -37,7 +37,7 @@ const PROJECT_MARKERS: Record<string, { type: string; language: string }> = {
   "pyproject.toml": { type: "Python", language: "Python" },
   "setup.py": { type: "Python", language: "Python" },
   "requirements.txt": { type: "Python", language: "Python" },
-  "Gemfile": { type: "Ruby", language: "Ruby" },
+  Gemfile: { type: "Ruby", language: "Ruby" },
   "composer.json": { type: "PHP", language: "PHP" },
   ".csproj": { type: ".NET", language: "C#" },
 };
@@ -73,7 +73,9 @@ const IGNORED_DIRS = new Set([
   "coverage",
 ]);
 
-const detectProjectType = (workingDir: string): { type: string; language: string } => {
+const detectProjectType = (
+  workingDir: string,
+): { type: string; language: string } => {
   for (const [marker, info] of Object.entries(PROJECT_MARKERS)) {
     if (existsSync(join(workingDir, marker))) {
       return info;
@@ -132,7 +134,12 @@ const getDirectoryStructure = (
 
         if (stat.isDirectory()) {
           entries.push(`${indent}${item}/`);
-          const subEntries = getDirectoryStructure(fullPath, baseDir, depth + 1, maxDepth);
+          const subEntries = getDirectoryStructure(
+            fullPath,
+            baseDir,
+            depth + 1,
+            maxDepth,
+          );
           entries.push(...subEntries);
         } else if (depth < 2) {
           entries.push(`${indent}${item}`);

@@ -1,4 +1,4 @@
-import { appStore } from "@tui/index";
+import { appStore } from "@tui-solid/context/app";
 import type { LogType } from "@/types/log";
 
 export const onLog = (

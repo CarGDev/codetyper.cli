@@ -12,19 +12,15 @@ import {
   setWorkingDirectory,
 } from "@services/core/session";
 import { getConfig } from "@services/core/config";
-import type { Provider as ProviderName, ChatSession } from "@/types/index";
-import { getProvider, getProviderStatus } from "@providers/index";
-import {
-  printWelcome,
-  formatTipLine,
-  Style,
-  Theme,
-  createInputEditor,
-} from "@ui/index";
-import {
-  DEFAULT_SYSTEM_PROMPT,
-  buildSystemPromptWithRules,
-} from "@prompts/index";
+import type { Provider as ProviderName, ChatSession } from "@/types/common";
+import { getProvider } from "@providers/core/registry";
+import { getProviderStatus } from "@providers/core/status";
+import { printWelcome } from "@ui/banner/menu/print";
+import { formatTipLine } from "@ui/tips/render";
+import { Style, Theme } from "@constants/styles";
+import { createInputEditor } from "@ui/input-editor/core/editor";
+import { DEFAULT_SYSTEM_PROMPT } from "@prompts/system/default";
+import { buildSystemPromptWithRules } from "@services/rules/prompt";
 import type { ChatOptions } from "@interfaces/ChatOptions";
 
 import { createInitialState, type ChatState } from "./state";

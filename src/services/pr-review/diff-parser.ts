@@ -185,7 +185,10 @@ export const parseDiff = (diffContent: string): ParsedDiff => {
 /**
  * Create empty file diff structure
  */
-const createEmptyFileDiff = (oldPath: string, newPath: string): ParsedFileDiff => ({
+const createEmptyFileDiff = (
+  oldPath: string,
+  newPath: string,
+): ParsedFileDiff => ({
   oldPath: cleanPath(oldPath),
   newPath: cleanPath(newPath),
   hunks: [],

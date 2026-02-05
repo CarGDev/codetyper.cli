@@ -5,7 +5,11 @@
  * Coordinates conflict detection, resource management, and result aggregation.
  */
 
-import { PARALLEL_DEFAULTS, PARALLEL_ERRORS, TASK_TIMEOUTS } from "@constants/parallel";
+import {
+  PARALLEL_DEFAULTS,
+  PARALLEL_ERRORS,
+  TASK_TIMEOUTS,
+} from "@constants/parallel";
 import {
   registerActiveTask,
   unregisterActiveTask,
@@ -50,7 +54,10 @@ const executeTask = async <TInput, TOutput>(
   options: ParallelExecutorOptions,
 ): Promise<ParallelExecutionResult<TOutput>> => {
   const startedAt = Date.now();
-  const timeout = task.timeout ?? TASK_TIMEOUTS[task.type] ?? PARALLEL_DEFAULTS.defaultTimeout;
+  const timeout =
+    task.timeout ??
+    TASK_TIMEOUTS[task.type] ??
+    PARALLEL_DEFAULTS.defaultTimeout;
 
   try {
     // Notify task start
@@ -87,7 +94,10 @@ const executeTask = async <TInput, TOutput>(
       completedAt,
     };
 
-    options.onTaskError?.(task, error instanceof Error ? error : new Error(String(error)));
+    options.onTaskError?.(
+      task,
+      error instanceof Error ? error : new Error(String(error)),
+    );
     return executionResult;
   }
 };
@@ -134,7 +144,10 @@ export const executeParallel = async <TInput, TOutput>(
 
   // Track results
   const results: ParallelExecutionResult<TOutput>[] = [];
-  const pendingTasks = new Map<string, Promise<ParallelExecutionResult<TOutput>>>();
+  const pendingTasks = new Map<
+    string,
+    Promise<ParallelExecutionResult<TOutput>>
+  >();
 
   // Check if executor was aborted
   const checkAbort = (): boolean => {
@@ -209,9 +222,15 @@ const executeWithConflictHandling = async <TInput, TOutput>(
     const conflicts = checkConflicts(task);
 
     if (conflicts.hasConflict) {
-      const resolution = options.onConflict?.(task, conflicts) ?? conflicts.resolution ?? "wait";
+      const resolution =
+        options.onConflict?.(task, conflicts) ?? conflicts.resolution ?? "wait";
 
-      const handled = await handleConflict(task, conflicts, resolution, options);
+      const handled = await handleConflict(
+        task,
+        conflicts,
+        resolution,
+        options,
+      );
       if (!handled.continue) {
         releaseResources(task, 0, false);
         return handled.result;
@@ -244,7 +263,10 @@ const handleConflict = async <TInput, TOutput>(
   resolution: ConflictResolution,
   _options: ParallelExecutorOptions,
 ): Promise<{ continue: boolean; result: ParallelExecutionResult<TOutput> }> => {
-  const createFailResult = (status: "conflict" | "cancelled", error: string) => ({
+  const createFailResult = (
+    status: "conflict" | "cancelled",
+    error: string,
+  ) => ({
     continue: false,
     result: {
       taskId: task.id,
@@ -258,14 +280,25 @@ const handleConflict = async <TInput, TOutput>(
 
   const resolutionHandlers: Record<
     ConflictResolution,
-    () => Promise<{ continue: boolean; result: ParallelExecutionResult<TOutput> }>
+    () => Promise<{
+      continue: boolean;
+      result: ParallelExecutionResult<TOutput>;
+    }>
   > = {
     wait: async () => {
-      const resolved = await waitForConflictResolution(conflicts.conflictingTaskIds);
+      const resolved = await waitForConflictResolution(
+        conflicts.conflictingTaskIds,
+      );
       if (resolved) {
-        return { continue: true, result: {} as ParallelExecutionResult<TOutput> };
+        return {
+          continue: true,
+          result: {} as ParallelExecutionResult<TOutput>,
+        };
       }
-      return createFailResult("conflict", PARALLEL_ERRORS.CONFLICT(task.id, conflicts.conflictingPaths));
+      return createFailResult(
+        "conflict",
+        PARALLEL_ERRORS.CONFLICT(task.id, conflicts.conflictingPaths),
+      );
     },
 
     cancel: async () => {
@@ -282,7 +315,10 @@ const handleConflict = async <TInput, TOutput>(
     },
 
     abort: async () => {
-      return createFailResult("conflict", PARALLEL_ERRORS.CONFLICT(task.id, conflicts.conflictingPaths));
+      return createFailResult(
+        "conflict",
+        PARALLEL_ERRORS.CONFLICT(task.id, conflicts.conflictingPaths),
+      );
     },
   };
 

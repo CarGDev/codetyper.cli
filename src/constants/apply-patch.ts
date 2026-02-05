@@ -50,8 +50,7 @@ export const PATCH_ERRORS = {
   HUNK_FAILED: (index: number, reason: string) =>
     `Hunk #${index + 1} failed: ${reason}`,
   FILE_NOT_FOUND: (path: string) => `Target file not found: ${path}`,
-  CONTEXT_MISMATCH: (line: number) =>
-    `Context mismatch at line ${line}`,
+  CONTEXT_MISMATCH: (line: number) => `Context mismatch at line ${line}`,
   FUZZY_MATCH_FAILED: (hunk: number) =>
     `Could not find match for hunk #${hunk + 1} even with fuzzy matching`,
   ALREADY_APPLIED: "Patch appears to be already applied",

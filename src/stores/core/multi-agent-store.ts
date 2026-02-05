@@ -15,10 +15,7 @@ import type {
   ConflictResolutionResult,
 } from "@/types/multi-agent";
 import type { ChatMessage } from "@/types/common";
-import {
-  AGENT_ID_PREFIX,
-  REQUEST_ID_PREFIX,
-} from "@/constants/multi-agent";
+import { AGENT_ID_PREFIX, REQUEST_ID_PREFIX } from "@/constants/multi-agent";
 
 /**
  * Multi-agent store state
@@ -255,7 +252,9 @@ const resolveConflict = (
     return { conflicts: updatedConflicts };
   });
 
-  const conflict = store.getState().conflicts.find((c) => c.filePath === filePath);
+  const conflict = store
+    .getState()
+    .conflicts.find((c) => c.filePath === filePath);
   if (conflict) {
     addEvent({
       type: "conflict_resolved",
@@ -327,7 +326,9 @@ const isFileBeingModified = (filePath: string): boolean => {
  */
 const getAgentModifyingFile = (filePath: string): AgentInstance | null => {
   const activeInstances = getActiveInstances();
-  return activeInstances.find((i) => i.modifiedFiles.includes(filePath)) ?? null;
+  return (
+    activeInstances.find((i) => i.modifiedFiles.includes(filePath)) ?? null
+  );
 };
 
 /**

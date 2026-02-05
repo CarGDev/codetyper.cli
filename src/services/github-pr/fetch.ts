@@ -50,9 +50,7 @@ const runGitCommand = (
 /**
  * Fetch PR details using gh CLI
  */
-export const fetchPR = async (
-  parts: PRUrlParts,
-): Promise<GitHubPR | null> => {
+export const fetchPR = async (parts: PRUrlParts): Promise<GitHubPR | null> => {
   const { owner, repo, prNumber } = parts;
 
   const result = await executeGHCommand([

@@ -183,10 +183,16 @@ Examples:
     // Open file in LSP
     await lspService.openFile(file);
 
-    const operationHandlers: Record<string, () => Promise<{ title: string; output: string }>> = {
+    const operationHandlers: Record<
+      string,
+      () => Promise<{ title: string; output: string }>
+    > = {
       hover: async () => {
         if (!position) {
-          return { title: "Error", output: "Position required for hover operation" };
+          return {
+            title: "Error",
+            output: "Position required for hover operation",
+          };
         }
         const hover = await lspService.getHover(file, position);
         return { title: "Hover Info", output: formatHover(hover) };
@@ -194,7 +200,10 @@ Examples:
 
       definition: async () => {
         if (!position) {
-          return { title: "Error", output: "Position required for definition operation" };
+          return {
+            title: "Error",
+            output: "Position required for definition operation",
+          };
         }
         const definition = await lspService.getDefinition(file, position);
         return { title: "Definition", output: formatLocations(definition) };
@@ -202,7 +211,10 @@ Examples:
 
       references: async () => {
         if (!position) {
-          return { title: "Error", output: "Position required for references operation" };
+          return {
+            title: "Error",
+            output: "Position required for references operation",
+          };
         }
         const references = await lspService.getReferences(file, position);
         return {

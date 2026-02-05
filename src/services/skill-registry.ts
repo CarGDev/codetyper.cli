@@ -5,15 +5,8 @@
  * Uses progressive disclosure to load skills on demand.
  */
 
-import {
-  SKILL_MATCHING,
-  SKILL_LOADING,
-  SKILL_ERRORS,
-} from "@constants/skills";
-import {
-  loadAllSkills,
-  loadSkillById,
-} from "@services/skill-loader";
+import { SKILL_MATCHING, SKILL_LOADING, SKILL_ERRORS } from "@constants/skills";
+import { loadAllSkills, loadSkillById } from "@services/skill-loader";
 import type {
   SkillDefinition,
   SkillMatch,
@@ -175,7 +168,9 @@ const matchTrigger = (
 /**
  * Find matching skills for user input
  */
-export const findMatchingSkills = async (input: string): Promise<SkillMatch[]> => {
+export const findMatchingSkills = async (
+  input: string,
+): Promise<SkillMatch[]> => {
   await refreshIfNeeded();
 
   const matches: SkillMatch[] = [];
@@ -213,7 +208,9 @@ export const findMatchingSkills = async (input: string): Promise<SkillMatch[]> =
 /**
  * Find the best matching skill for input
  */
-export const findBestMatch = async (input: string): Promise<SkillMatch | null> => {
+export const findBestMatch = async (
+  input: string,
+): Promise<SkillMatch | null> => {
   const matches = await findMatchingSkills(input);
   return matches.length > 0 ? matches[0] : null;
 };
@@ -382,8 +379,8 @@ export const getAutoTriggerSkills = (): SkillDefinition[] => {
  * Get skills by tag
  */
 export const getSkillsByTag = (tag: string): SkillDefinition[] => {
-  return Array.from(registryState.skills.values()).filter(
-    (skill) => skill.tags?.includes(tag),
+  return Array.from(registryState.skills.values()).filter((skill) =>
+    skill.tags?.includes(tag),
   );
 };
 

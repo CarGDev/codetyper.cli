@@ -68,12 +68,13 @@ export const PLUGIN_CAPABILITY_LABELS: Record<PluginCapability, string> = {
 /**
  * Plugin capability descriptions
  */
-export const PLUGIN_CAPABILITY_DESCRIPTIONS: Record<PluginCapability, string> = {
-  filesystem: "Can read and write files on disk",
-  network: "Can make network requests",
-  shell: "Can execute shell commands",
-  mcp: "Can interact with MCP servers",
-};
+export const PLUGIN_CAPABILITY_DESCRIPTIONS: Record<PluginCapability, string> =
+  {
+    filesystem: "Can read and write files on disk",
+    network: "Can make network requests",
+    shell: "Can execute shell commands",
+    mcp: "Can interact with MCP servers",
+  };
 
 /**
  * Command file extension

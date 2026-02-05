@@ -160,7 +160,11 @@ export const acquireResources = async (task: ParallelTask): Promise<void> => {
 /**
  * Release resources after task completion
  */
-export const releaseResources = (task: ParallelTask, duration: number, success: boolean): void => {
+export const releaseResources = (
+  task: ParallelTask,
+  duration: number,
+  success: boolean,
+): void => {
   if (!globalSemaphore) return;
 
   // Release global permit

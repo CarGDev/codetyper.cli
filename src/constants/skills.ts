@@ -129,4 +129,9 @@ export const SKILL_TRIGGER_PATTERNS = {
 /**
  * Required fields in skill frontmatter
  */
-export const SKILL_REQUIRED_FIELDS = ["id", "name", "description", "triggers"] as const;
+export const SKILL_REQUIRED_FIELDS = [
+  "id",
+  "name",
+  "description",
+  "triggers",
+] as const;

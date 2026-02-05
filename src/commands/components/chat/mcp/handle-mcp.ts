@@ -10,17 +10,19 @@ import {
   connectAllServers,
   disconnectAllServers,
   getAllTools,
+} from "@services/mcp/manager";
+import {
   searchServers,
   getPopularServers,
   installServerById,
   getCategoriesWithCounts,
-} from "@services/mcp/index";
+} from "@services/mcp/registry";
 import {
   MCP_CATEGORY_LABELS,
   MCP_CATEGORY_ICONS,
 } from "@constants/mcp-registry";
 import { showMCPStatus } from "@commands/components/chat/mcp/show-mcp-status";
-import { appStore } from "@tui/index";
+import { appStore } from "@tui-solid/context/app";
 
 /**
  * Handle MCP subcommands
@@ -45,7 +47,9 @@ export const handleMCP = async (args: string[]): Promise<void> => {
   if (!handler) {
     console.log(chalk.yellow(`Unknown MCP command: ${subcommand}`));
     console.log(
-      chalk.gray("Available: status, connect, disconnect, tools, add, search, browse, install, popular, categories"),
+      chalk.gray(
+        "Available: status, connect, disconnect, tools, add, search, browse, install, popular, categories",
+      ),
     );
     return;
   }
@@ -277,7 +281,9 @@ const handleCategories = async (_args: string[]): Promise<void> => {
     for (const { category, count } of categories) {
       const icon = MCP_CATEGORY_ICONS[category];
       const label = MCP_CATEGORY_LABELS[category];
-      console.log(`${icon} ${chalk.white(label)} ${chalk.gray(`(${count} servers)`)}`);
+      console.log(
+        `${icon} ${chalk.white(label)} ${chalk.gray(`(${count} servers)`)}`,
+      );
     }
 
     console.log();

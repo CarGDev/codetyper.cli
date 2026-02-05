@@ -1,4 +1,4 @@
-import { appStore } from "@tui/index";
+import { appStore } from "@tui-solid/context/app";
 import { truncateOutput, detectDiffContent } from "@services/chat-tui-service";
 import { getThinkingMessage } from "@constants/status-messages";
 

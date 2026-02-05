@@ -142,7 +142,9 @@ const getKeyName = (key: readline.Key): string => {
 /**
  * Handle bracketed paste content - called from editor when paste ends
  */
-export const handleBracketedPaste = (state: InputEditorState): KeypressResult => {
+export const handleBracketedPaste = (
+  state: InputEditorState,
+): KeypressResult => {
   if (state.bracketedPasteBuffer.length === 0) {
     return { type: "none" };
   }

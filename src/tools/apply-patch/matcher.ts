@@ -23,10 +23,7 @@ const DEFAULT_MATCH_OPTIONS: ContextMatchOptions = {
 /**
  * Normalize line for comparison
  */
-const normalizeLine = (
-  line: string,
-  options: ContextMatchOptions,
-): string => {
+const normalizeLine = (line: string, options: ContextMatchOptions): string => {
   let normalized = line;
 
   if (options.ignoreWhitespace) {

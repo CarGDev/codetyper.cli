@@ -1,4 +1,4 @@
-import type { Provider as ProviderName } from "@/types/index";
+import type { Provider as ProviderName } from "@/types/common";
 import {
   errorMessage,
   warningMessage,
@@ -6,11 +6,9 @@ import {
   successMessage,
 } from "@utils/core/terminal";
 import { getConfig } from "@services/core/config";
-import {
-  getProvider,
-  getProviderStatus,
-  getDefaultModel,
-} from "@providers/index";
+import { getProvider } from "@providers/core/registry";
+import { getProviderStatus } from "@providers/core/status";
+import { getDefaultModel } from "@providers/core/chat";
 import type { ChatState } from "../state";
 
 export const switchProvider = async (

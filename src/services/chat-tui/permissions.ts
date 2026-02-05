@@ -9,7 +9,7 @@ import type {
   PermissionPromptRequest,
   PermissionPromptResponse,
 } from "@/types/permissions";
-import { appStore } from "@tui/index";
+import { appStore } from "@tui-solid/context/app";
 
 export const createPermissionHandler = (): ((
   request: PermissionPromptRequest,

@@ -18,11 +18,7 @@ export type ReviewFindingType =
 /**
  * Review finding severity
  */
-export type ReviewSeverity =
-  | "critical"
-  | "warning"
-  | "suggestion"
-  | "nitpick";
+export type ReviewSeverity = "critical" | "warning" | "suggestion" | "nitpick";
 
 /**
  * Confidence level for findings

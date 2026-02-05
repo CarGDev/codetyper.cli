@@ -128,7 +128,9 @@ export const enqueueBatch = async (items: SyncItem[]): Promise<number> => {
 /**
  * Get items from queue for processing
  */
-export const dequeue = async (limit: number = SYNC_CONFIG.MAX_BATCH_SIZE): Promise<OfflineQueueItem[]> => {
+export const dequeue = async (
+  limit: number = SYNC_CONFIG.MAX_BATCH_SIZE,
+): Promise<OfflineQueueItem[]> => {
   await loadQueue();
 
   // Get items that haven't exceeded retry limit

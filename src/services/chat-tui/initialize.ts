@@ -11,8 +11,8 @@ import {
 } from "@services/core/session";
 import { getConfig } from "@services/core/config";
 import { initializePermissions } from "@services/core/permissions";
-import { getProviderStatus } from "@providers/index";
-import { appStore } from "@tui/index";
+import { getProviderStatus } from "@providers/core/status";
+import { appStore } from "@tui-solid/context/app";
 import { themeActions } from "@stores/core/theme-store";
 import {
   buildBaseContext,
@@ -23,7 +23,7 @@ import * as brainService from "@services/brain";
 import { BRAIN_DISABLED } from "@constants/brain";
 import { addContextFile } from "@services/chat-tui/files";
 import type { ProviderName, Message } from "@/types/providers";
-import type { ChatSession } from "@/types/index";
+import type { ChatSession } from "@/types/common";
 import type { ChatTUIOptions } from "@interfaces/ChatTUIOptions";
 import type { ChatServiceState } from "@/types/chat-service";
 import type { InteractionMode } from "@/types/tui";

@@ -190,7 +190,10 @@ interface AppContextValue {
   // MCP actions
   setMcpServers: (servers: MCPServerDisplay[]) => void;
   addMcpServer: (server: MCPServerDisplay) => void;
-  updateMcpServerStatus: (id: string, status: MCPServerDisplay["status"]) => void;
+  updateMcpServerStatus: (
+    id: string,
+    status: MCPServerDisplay["status"],
+  ) => void;
 
   // Computed
   isInputLocked: () => boolean;
@@ -309,7 +312,8 @@ export const { provider: AppStoreProvider, use: useAppStore } =
       // Individual property accessors for fine-grained reactivity
       const streamingLogId = (): string | null => store.streamingLog.logId;
       const streamingLogContent = (): string => store.streamingLog.content;
-      const streamingLogIsActive = (): boolean => store.streamingLog.isStreaming;
+      const streamingLogIsActive = (): boolean =>
+        store.streamingLog.isStreaming;
       const suggestions = (): SuggestionState => store.suggestions;
       const cascadeEnabled = (): boolean => store.cascadeEnabled;
       const mcpServers = (): MCPServerDisplay[] => store.mcpServers;
@@ -520,7 +524,10 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         setStore("brain", { ...store.brain, user });
       };
 
-      const setBrainCounts = (knowledgeCount: number, memoryCount: number): void => {
+      const setBrainCounts = (
+        knowledgeCount: number,
+        memoryCount: number,
+      ): void => {
         setStore("brain", { ...store.brain, knowledgeCount, memoryCount });
       };
 
@@ -541,7 +548,9 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         setStore(
           produce((s) => {
             // Replace if exists, otherwise add
-            const existingIndex = s.mcpServers.findIndex((srv) => srv.id === server.id);
+            const existingIndex = s.mcpServers.findIndex(
+              (srv) => srv.id === server.id,
+            );
             if (existingIndex !== -1) {
               s.mcpServers[existingIndex] = server;
             } else {
@@ -551,7 +560,10 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         );
       };
 
-      const updateMcpServerStatus = (id: string, status: MCPServerDisplay["status"]): void => {
+      const updateMcpServerStatus = (
+        id: string,
+        status: MCPServerDisplay["status"],
+      ): void => {
         setStore(
           produce((s) => {
             const server = s.mcpServers.find((srv) => srv.id === id);
@@ -1193,7 +1205,10 @@ export const appStore = {
     storeRef.addMcpServer(server);
   },
 
-  updateMcpServerStatus: (id: string, status: MCPServerDisplay["status"]): void => {
+  updateMcpServerStatus: (
+    id: string,
+    status: MCPServerDisplay["status"],
+  ): void => {
     if (!storeRef) return;
     storeRef.updateMcpServerStatus(id, status);
   },

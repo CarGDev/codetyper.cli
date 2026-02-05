@@ -2,7 +2,7 @@
  * Agent Result Interface
  */
 
-import type { ToolCall, ToolResult } from "@tools/index";
+import type { ToolCall, ToolResult } from "@/types/tools";
 
 export interface AgentResult {
   success: boolean;

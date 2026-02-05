@@ -38,10 +38,7 @@ const createSuccessResult = (
   query: string,
 ): ToolResult => {
   const formattedResults = results
-    .map(
-      (r, i) =>
-        `${i + 1}. **${r.title}**\n   ${r.url}\n   ${r.snippet}`,
-    )
+    .map((r, i) => `${i + 1}. **${r.title}**\n   ${r.url}\n   ${r.snippet}`)
     .join("\n\n");
 
   return {
@@ -93,7 +90,10 @@ const parseRssResults = (rss: string, maxResults: number): SearchResult[] => {
   const itemPattern = /<item>([\s\S]*?)<\/item>/gi;
   let match: RegExpExecArray | null;
 
-  while ((match = itemPattern.exec(rss)) !== null && results.length < maxResults) {
+  while (
+    (match = itemPattern.exec(rss)) !== null &&
+    results.length < maxResults
+  ) {
     const itemContent = match[1];
 
     const titleMatch = itemContent.match(/<title>([^<]+)<\/title>/);

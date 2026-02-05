@@ -16,7 +16,7 @@ import {
   VALID_PROVIDERS,
   CONFIG_VALIDATION,
 } from "@constants/handlers";
-import type { CommandOptions, Provider } from "@/types/index";
+import type { CommandOptions, Provider } from "@/types/common";
 import type { ConfigAction, ConfigKey } from "@/types/handlers";
 
 type ConfigActionHandler = (key?: string, value?: string) => Promise<void>;

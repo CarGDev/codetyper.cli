@@ -4,7 +4,10 @@
  * Analyzes code for logical errors and edge cases.
  */
 
-import { MIN_CONFIDENCE_THRESHOLD, REVIEWER_PROMPTS } from "@constants/pr-review";
+import {
+  MIN_CONFIDENCE_THRESHOLD,
+  REVIEWER_PROMPTS,
+} from "@constants/pr-review";
 import type {
   PRReviewFinding,
   ParsedFileDiff,
@@ -17,8 +20,8 @@ import type {
 const LOGIC_PATTERNS = {
   MISSING_NULL_CHECK: {
     patterns: [
-      /\w+\.\w+\.\w+/,  // Deep property access without optional chaining
-      /(\w+)\[['"][^'"]+['"]\]\.\w+/,  // Object property followed by method
+      /\w+\.\w+\.\w+/, // Deep property access without optional chaining
+      /(\w+)\[['"][^'"]+['"]\]\.\w+/, // Object property followed by method
     ],
     message: "Potential null/undefined reference",
     suggestion: "Use optional chaining (?.) or add null checks",
@@ -27,7 +30,7 @@ const LOGIC_PATTERNS = {
 
   OPTIONAL_CHAIN_MISSING: {
     patterns: [
-      /if\s*\([^)]*\)\s*\{[^}]*\w+\./,  // Variable used after if check without ?.
+      /if\s*\([^)]*\)\s*\{[^}]*\w+\./, // Variable used after if check without ?.
     ],
     message: "Consider using optional chaining",
     suggestion: "Replace conditional access with ?. operator",
@@ -35,10 +38,7 @@ const LOGIC_PATTERNS = {
   },
 
   EMPTY_CATCH: {
-    patterns: [
-      /catch\s*\([^)]*\)\s*\{\s*\}/,
-      /catch\s*\{\s*\}/,
-    ],
+    patterns: [/catch\s*\([^)]*\)\s*\{\s*\}/, /catch\s*\{\s*\}/],
     message: "Empty catch block - errors silently ignored",
     suggestion: "Log the error or handle it appropriately",
     confidence: 90,
@@ -54,40 +54,28 @@ const LOGIC_PATTERNS = {
   },
 
   FLOATING_PROMISE: {
-    patterns: [
-      /^\s*\w+\s*\.\s*then\s*\(/m,
-      /^\s*\w+\([^)]*\)\.then\s*\(/m,
-    ],
+    patterns: [/^\s*\w+\s*\.\s*then\s*\(/m, /^\s*\w+\([^)]*\)\.then\s*\(/m],
     message: "Floating promise - missing await or error handling",
     suggestion: "Use await or add .catch() for error handling",
     confidence: 80,
   },
 
   ARRAY_INDEX_ACCESS: {
-    patterns: [
-      /\[\d+\]/,
-      /\[0\]/,
-      /\[-1\]/,
-    ],
+    patterns: [/\[\d+\]/, /\[0\]/, /\[-1\]/],
     message: "Direct array index access without bounds check",
     suggestion: "Consider using .at() or add bounds checking",
     confidence: 60,
   },
 
   EQUALITY_TYPE_COERCION: {
-    patterns: [
-      /[^=!]==[^=]/,
-      /[^!]!=[^=]/,
-    ],
+    patterns: [/[^=!]==[^=]/, /[^!]!=[^=]/],
     message: "Using == instead of === (type coercion)",
     suggestion: "Use strict equality (===) to avoid type coercion bugs",
     confidence: 85,
   },
 
   ASYNC_IN_FOREACH: {
-    patterns: [
-      /\.forEach\s*\(\s*async/,
-    ],
+    patterns: [/\.forEach\s*\(\s*async/],
     message: "Async callback in forEach - won't await properly",
     suggestion: "Use for...of loop or Promise.all with .map()",
     confidence: 90,
@@ -104,19 +92,14 @@ const LOGIC_PATTERNS = {
   },
 
   RACE_CONDITION: {
-    patterns: [
-      /let\s+\w+\s*=[^;]+;\s*await\s+[^;]+;\s*\w+\s*=/,
-    ],
+    patterns: [/let\s+\w+\s*=[^;]+;\s*await\s+[^;]+;\s*\w+\s*=/],
     message: "Potential race condition with shared state",
     suggestion: "Use atomic operations or proper synchronization",
     confidence: 70,
   },
 
   INFINITE_LOOP_RISK: {
-    patterns: [
-      /while\s*\(\s*true\s*\)/,
-      /for\s*\(\s*;\s*;\s*\)/,
-    ],
+    patterns: [/while\s*\(\s*true\s*\)/, /for\s*\(\s*;\s*;\s*\)/],
     message: "Infinite loop without clear exit condition",
     suggestion: "Ensure there's a clear break condition",
     confidence: 75,
@@ -204,7 +187,9 @@ const getAllAddedLines = (
 /**
  * Deduplicate findings with same message on adjacent lines
  */
-const deduplicateFindings = (findings: PRReviewFinding[]): PRReviewFinding[] => {
+const deduplicateFindings = (
+  findings: PRReviewFinding[],
+): PRReviewFinding[] => {
   const seen = new Map<string, PRReviewFinding>();
 
   for (const finding of findings) {

@@ -18,7 +18,8 @@ export interface RoutingContext {
 export const determineRoute = async (
   context: RoutingContext,
 ): Promise<RoutingDecision> => {
-  const { taskType, ollamaAvailable, copilotAvailable, cascadeEnabled } = context;
+  const { taskType, ollamaAvailable, copilotAvailable, cascadeEnabled } =
+    context;
 
   if (!ollamaAvailable && !copilotAvailable) {
     throw new Error("No providers available");

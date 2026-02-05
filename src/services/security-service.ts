@@ -45,7 +45,10 @@ const COMMAND_INJECTION_PATTERNS = [
   { pattern: /\x00/, description: "Null byte detected" },
   // Environment variable expansion
   { pattern: /\$\{[^}]+\}/, description: "Environment variable expansion" },
-  { pattern: /\$[A-Za-z_][A-Za-z0-9_]*/, description: "Variable reference detected" },
+  {
+    pattern: /\$[A-Za-z_][A-Za-z0-9_]*/,
+    description: "Variable reference detected",
+  },
 ];
 
 // XSS patterns
@@ -57,7 +60,10 @@ const XSS_PATTERNS = [
   // JavaScript protocol
   { pattern: /javascript:/i, description: "JavaScript protocol detected" },
   // Data URLs with script content
-  { pattern: /data:[^,]*;base64/i, description: "Data URL with base64 encoding" },
+  {
+    pattern: /data:[^,]*;base64/i,
+    description: "Data URL with base64 encoding",
+  },
   // Expression/eval
   { pattern: /expression\s*\(/i, description: "CSS expression detected" },
   // SVG with script
@@ -84,9 +90,15 @@ const DANGEROUS_CALLS_PATTERNS = [
   { pattern: /exec\s*\(/i, description: "exec() usage detected" },
   { pattern: /system\s*\(/i, description: "system() call detected" },
   { pattern: /os\.system\s*\(/i, description: "os.system() call detected" },
-  { pattern: /subprocess\.call\s*\(/i, description: "subprocess.call() detected" },
+  {
+    pattern: /subprocess\.call\s*\(/i,
+    description: "subprocess.call() detected",
+  },
   { pattern: /child_process/i, description: "child_process module usage" },
-  { pattern: /pickle\.loads?\s*\(/i, description: "Pickle deserialization detected" },
+  {
+    pattern: /pickle\.loads?\s*\(/i,
+    description: "Pickle deserialization detected",
+  },
   { pattern: /yaml\.unsafe_load\s*\(/i, description: "Unsafe YAML loading" },
   { pattern: /unserialize\s*\(/i, description: "PHP unserialize() detected" },
 ];
@@ -105,18 +117,31 @@ const TOKEN_PATTERNS = [
   // Generic API keys
   { pattern: /api[_-]?key[=:]["']?[a-zA-Z0-9_-]{20,}["']?/i, type: "API Key" },
   // OAuth tokens
-  { pattern: /bearer\s+[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+/i, type: "JWT Token" },
-  { pattern: /oauth[_-]?token[=:]["']?[a-zA-Z0-9_-]{20,}["']?/i, type: "OAuth Token" },
+  {
+    pattern: /bearer\s+[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+/i,
+    type: "JWT Token",
+  },
+  {
+    pattern: /oauth[_-]?token[=:]["']?[a-zA-Z0-9_-]{20,}["']?/i,
+    type: "OAuth Token",
+  },
   // AWS credentials
   { pattern: /AKIA[0-9A-Z]{16}/i, type: "AWS Access Key" },
-  { pattern: /aws[_-]?secret[_-]?access[_-]?key[=:]["']?[a-zA-Z0-9/+=]{40}["']?/i, type: "AWS Secret Key" },
+  {
+    pattern:
+      /aws[_-]?secret[_-]?access[_-]?key[=:]["']?[a-zA-Z0-9/+=]{40}["']?/i,
+    type: "AWS Secret Key",
+  },
   // GitHub tokens
   { pattern: /gh[pousr]_[A-Za-z0-9_]{36,}/i, type: "GitHub Token" },
   // Generic secrets
   { pattern: /password[=:]["']?[^\s"']{8,}["']?/i, type: "Password" },
   { pattern: /secret[=:]["']?[^\s"']{8,}["']?/i, type: "Secret" },
   // Private keys
-  { pattern: /-----BEGIN\s+(?:RSA|DSA|EC|OPENSSH)?\s*PRIVATE\s+KEY-----/i, type: "Private Key" },
+  {
+    pattern: /-----BEGIN\s+(?:RSA|DSA|EC|OPENSSH)?\s*PRIVATE\s+KEY-----/i,
+    type: "Private Key",
+  },
 ];
 
 const checkPatterns = (
@@ -156,11 +181,21 @@ export const detectXSS = (content: string): SecurityIssue[] => {
 };
 
 export const detectSQLInjection = (content: string): SecurityIssue[] => {
-  return checkPatterns(content, SQL_INJECTION_PATTERNS, "sql_injection", "critical");
+  return checkPatterns(
+    content,
+    SQL_INJECTION_PATTERNS,
+    "sql_injection",
+    "critical",
+  );
 };
 
 export const detectDangerousCalls = (code: string): SecurityIssue[] => {
-  return checkPatterns(code, DANGEROUS_CALLS_PATTERNS, "dangerous_call", "high");
+  return checkPatterns(
+    code,
+    DANGEROUS_CALLS_PATTERNS,
+    "dangerous_call",
+    "high",
+  );
 };
 
 export const detectShellContinuation = (command: string): SecurityIssue[] => {
@@ -200,7 +235,9 @@ export const filterSensitiveTokens = (content: string): string => {
   for (const { pattern } of TOKEN_PATTERNS) {
     filtered = filtered.replace(new RegExp(pattern, "gi"), (match) => {
       if (match.length > 12) {
-        return match.slice(0, 4) + "*".repeat(match.length - 8) + match.slice(-4);
+        return (
+          match.slice(0, 4) + "*".repeat(match.length - 8) + match.slice(-4)
+        );
       }
       return "*".repeat(match.length);
     });
@@ -262,7 +299,9 @@ export const explainPermission = (
 
       return {
         explanation: `Execute shell command: ${command.slice(0, 100)}${command.length > 100 ? "..." : ""}`,
-        risks: report.issues.map((i) => `${i.risk.toUpperCase()}: ${i.description}`),
+        risks: report.issues.map(
+          (i) => `${i.risk.toUpperCase()}: ${i.description}`,
+        ),
         recommendation: report.hasCritical
           ? "DENY - Critical security risk detected"
           : report.hasHigh
@@ -272,7 +311,8 @@ export const explainPermission = (
     },
 
     write: (args) => {
-      const filePath = (args.path as string) ?? (args.file_path as string) ?? "";
+      const filePath =
+        (args.path as string) ?? (args.file_path as string) ?? "";
       const content = (args.content as string) ?? "";
       const tokens = findSensitiveTokens(content);
 
@@ -292,7 +332,8 @@ export const explainPermission = (
     },
 
     edit: (args) => {
-      const filePath = (args.path as string) ?? (args.file_path as string) ?? "";
+      const filePath =
+        (args.path as string) ?? (args.file_path as string) ?? "";
 
       return {
         explanation: `Edit file: ${filePath}`,
@@ -304,7 +345,8 @@ export const explainPermission = (
     },
 
     read: (args) => {
-      const filePath = (args.path as string) ?? (args.file_path as string) ?? "";
+      const filePath =
+        (args.path as string) ?? (args.file_path as string) ?? "";
 
       return {
         explanation: `Read file: ${filePath}`,

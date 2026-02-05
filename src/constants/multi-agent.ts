@@ -41,12 +41,13 @@ export const EXECUTION_MODE_DESCRIPTIONS: Record<AgentExecutionMode, string> = {
 /**
  * Conflict strategy descriptions
  */
-export const CONFLICT_STRATEGY_DESCRIPTIONS: Record<ConflictStrategy, string> = {
-  serialize: "Wait for conflicting agent to complete before proceeding",
-  "abort-newer": "Abort the agent that started later when conflict detected",
-  "merge-results": "Attempt to merge changes from both agents",
-  isolated: "Each agent works in isolated context, merge at end",
-} as const;
+export const CONFLICT_STRATEGY_DESCRIPTIONS: Record<ConflictStrategy, string> =
+  {
+    serialize: "Wait for conflicting agent to complete before proceeding",
+    "abort-newer": "Abort the agent that started later when conflict detected",
+    "merge-results": "Attempt to merge changes from both agents",
+    isolated: "Each agent works in isolated context, merge at end",
+  } as const;
 
 /**
  * Error messages
@@ -56,17 +57,14 @@ export const MULTI_AGENT_ERRORS = {
     `Cannot spawn more than ${max} agents in a single request`,
   MAX_CONCURRENT_EXCEEDED: (max: number) =>
     `Maximum concurrent agents (${max}) reached`,
-  AGENT_NOT_FOUND: (name: string) =>
-    `Agent "${name}" not found in registry`,
-  AGENT_ALREADY_RUNNING: (id: string) =>
-    `Agent "${id}" is already running`,
+  AGENT_NOT_FOUND: (name: string) => `Agent "${name}" not found in registry`,
+  AGENT_ALREADY_RUNNING: (id: string) => `Agent "${id}" is already running`,
   EXECUTION_TIMEOUT: (agentId: string, timeout: number) =>
     `Agent "${agentId}" timed out after ${timeout}ms`,
   CONFLICT_RESOLUTION_FAILED: (filePath: string) =>
     `Failed to resolve conflict for file: ${filePath}`,
   EXECUTION_ABORTED: "Execution aborted by user",
-  INVALID_EXECUTION_MODE: (mode: string) =>
-    `Invalid execution mode: ${mode}`,
+  INVALID_EXECUTION_MODE: (mode: string) => `Invalid execution mode: ${mode}`,
   INVALID_CONFLICT_STRATEGY: (strategy: string) =>
     `Invalid conflict strategy: ${strategy}`,
   TOO_MANY_CONFLICTS: (count: number) =>

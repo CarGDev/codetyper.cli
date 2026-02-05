@@ -13,7 +13,7 @@ import {
   succeedSpinner,
   successMessage,
 } from "@utils/core/terminal";
-import type { CommandOptions } from "@/types/index";
+import type { CommandOptions } from "@/types/common";
 
 export const handlePlan = async (options: CommandOptions): Promise<void> => {
   const { intent, task, files = [], output } = options;

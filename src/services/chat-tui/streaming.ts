@@ -15,7 +15,7 @@ import type {
 } from "@/types/streaming";
 import type { ToolCall, ToolResult } from "@/types/tools";
 import { createStreamingAgent } from "@services/agent-stream";
-import { appStore } from "@tui/index";
+import { appStore } from "@tui-solid/context/app";
 
 // Re-export for convenience
 export type { StreamingChatOptions } from "@interfaces/StreamingChatOptions";

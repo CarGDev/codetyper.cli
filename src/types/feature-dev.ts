@@ -8,13 +8,13 @@
  * Feature development phases
  */
 export type FeatureDevPhase =
-  | "understand"   // Clarify requirements
-  | "explore"      // Find relevant code (parallel agents)
-  | "plan"         // Design implementation
-  | "implement"    // Write code
-  | "verify"       // Run tests
-  | "review"       // Self-review changes
-  | "finalize";    // Commit and cleanup
+  | "understand" // Clarify requirements
+  | "explore" // Find relevant code (parallel agents)
+  | "plan" // Design implementation
+  | "implement" // Write code
+  | "verify" // Run tests
+  | "review" // Self-review changes
+  | "finalize"; // Commit and cleanup
 
 /**
  * Phase status

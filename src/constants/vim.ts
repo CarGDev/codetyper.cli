@@ -41,27 +41,101 @@ export const VIM_MODE_HINTS: Record<VimMode, string> = {
  */
 export const VIM_DEFAULT_BINDINGS: VimKeyBinding[] = [
   // Normal mode - Navigation
-  { key: "j", mode: "normal", action: "scroll_down", description: "Scroll down" },
+  {
+    key: "j",
+    mode: "normal",
+    action: "scroll_down",
+    description: "Scroll down",
+  },
   { key: "k", mode: "normal", action: "scroll_up", description: "Scroll up" },
-  { key: "d", mode: "normal", action: "scroll_half_down", ctrl: true, description: "Half page down" },
-  { key: "u", mode: "normal", action: "scroll_half_up", ctrl: true, description: "Half page up" },
-  { key: "g", mode: "normal", action: "goto_top", description: "Go to top (gg)" },
-  { key: "G", mode: "normal", action: "goto_bottom", shift: true, description: "Go to bottom" },
+  {
+    key: "d",
+    mode: "normal",
+    action: "scroll_half_down",
+    ctrl: true,
+    description: "Half page down",
+  },
+  {
+    key: "u",
+    mode: "normal",
+    action: "scroll_half_up",
+    ctrl: true,
+    description: "Half page up",
+  },
+  {
+    key: "g",
+    mode: "normal",
+    action: "goto_top",
+    description: "Go to top (gg)",
+  },
+  {
+    key: "G",
+    mode: "normal",
+    action: "goto_bottom",
+    shift: true,
+    description: "Go to bottom",
+  },
 
   // Normal mode - Mode switching
-  { key: "i", mode: "normal", action: "enter_insert", description: "Enter insert mode" },
-  { key: "a", mode: "normal", action: "enter_insert", description: "Append (enter insert)" },
-  { key: ":", mode: "normal", action: "enter_command", description: "Enter command mode" },
-  { key: "v", mode: "normal", action: "enter_visual", description: "Enter visual mode" },
+  {
+    key: "i",
+    mode: "normal",
+    action: "enter_insert",
+    description: "Enter insert mode",
+  },
+  {
+    key: "a",
+    mode: "normal",
+    action: "enter_insert",
+    description: "Append (enter insert)",
+  },
+  {
+    key: ":",
+    mode: "normal",
+    action: "enter_command",
+    description: "Enter command mode",
+  },
+  {
+    key: "v",
+    mode: "normal",
+    action: "enter_visual",
+    description: "Enter visual mode",
+  },
 
   // Normal mode - Search
-  { key: "/", mode: "normal", action: "search_start", description: "Start search" },
-  { key: "n", mode: "normal", action: "search_next", description: "Next search match" },
-  { key: "N", mode: "normal", action: "search_prev", shift: true, description: "Previous search match" },
+  {
+    key: "/",
+    mode: "normal",
+    action: "search_start",
+    description: "Start search",
+  },
+  {
+    key: "n",
+    mode: "normal",
+    action: "search_next",
+    description: "Next search match",
+  },
+  {
+    key: "N",
+    mode: "normal",
+    action: "search_prev",
+    shift: true,
+    description: "Previous search match",
+  },
 
   // Normal mode - Word navigation
-  { key: "w", mode: "normal", action: "word_forward", description: "Next word" },
-  { key: "b", mode: "normal", action: "word_backward", description: "Previous word" },
+  {
+    key: "w",
+    mode: "normal",
+    action: "word_forward",
+    description: "Next word",
+  },
+  {
+    key: "b",
+    mode: "normal",
+    action: "word_backward",
+    description: "Previous word",
+  },
   { key: "0", mode: "normal", action: "line_start", description: "Line start" },
   { key: "$", mode: "normal", action: "line_end", description: "Line end" },
 
@@ -72,16 +146,41 @@ export const VIM_DEFAULT_BINDINGS: VimKeyBinding[] = [
   { key: "r", mode: "normal", action: "redo", ctrl: true, description: "Redo" },
 
   // Insert mode
-  { key: "escape", mode: "insert", action: "exit_mode", description: "Exit to normal mode" },
+  {
+    key: "escape",
+    mode: "insert",
+    action: "exit_mode",
+    description: "Exit to normal mode",
+  },
 
   // Command mode
-  { key: "escape", mode: "command", action: "cancel", description: "Cancel command" },
-  { key: "return", mode: "command", action: "execute_command", description: "Execute command" },
+  {
+    key: "escape",
+    mode: "command",
+    action: "cancel",
+    description: "Cancel command",
+  },
+  {
+    key: "return",
+    mode: "command",
+    action: "execute_command",
+    description: "Execute command",
+  },
 
   // Visual mode
-  { key: "escape", mode: "visual", action: "exit_mode", description: "Exit visual mode" },
+  {
+    key: "escape",
+    mode: "visual",
+    action: "exit_mode",
+    description: "Exit visual mode",
+  },
   { key: "y", mode: "visual", action: "yank", description: "Yank selection" },
-  { key: "d", mode: "visual", action: "delete", description: "Delete selection" },
+  {
+    key: "d",
+    mode: "visual",
+    action: "delete",
+    description: "Delete selection",
+  },
 ];
 
 /**

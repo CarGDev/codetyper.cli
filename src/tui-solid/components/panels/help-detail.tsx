@@ -78,7 +78,7 @@ export function HelpDetail(props: HelpDetailProps) {
         <text fg={theme.colors.warning} attributes={TextAttributes.BOLD}>
           Usage
         </text>
-        <text fg={theme.colors.success}>  {currentTopic.usage}</text>
+        <text fg={theme.colors.success}> {currentTopic.usage}</text>
       </Show>
 
       <Show when={currentTopic.examples && currentTopic.examples.length > 0}>
@@ -87,9 +87,7 @@ export function HelpDetail(props: HelpDetailProps) {
           Examples
         </text>
         <For each={currentTopic.examples}>
-          {(example) => (
-            <text fg={theme.colors.text}>  • {example}</text>
-          )}
+          {(example) => <text fg={theme.colors.text}> • {example}</text>}
         </For>
       </Show>
 
@@ -99,17 +97,13 @@ export function HelpDetail(props: HelpDetailProps) {
           Shortcuts
         </text>
         <For each={currentTopic.shortcuts}>
-          {(shortcut) => (
-            <text fg={theme.colors.primary}>  {shortcut}</text>
-          )}
+          {(shortcut) => <text fg={theme.colors.primary}> {shortcut}</text>}
         </For>
       </Show>
 
       <box height={1} />
 
-      <text fg={theme.colors.textDim}>
-        Esc/Backspace back | Enter close
-      </text>
+      <text fg={theme.colors.textDim}>Esc/Backspace back | Enter close</text>
     </box>
   );
 }

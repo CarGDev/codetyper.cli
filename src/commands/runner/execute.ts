@@ -19,7 +19,7 @@ import { displayPlan } from "@commands/runner/display-plan";
 import { createPlan } from "@commands/runner/create-plan";
 import { executePlan } from "@commands/runner/execute-plan";
 import { delay } from "@commands/runner/utils";
-import type { CommandOptions, AgentType } from "@/types/index";
+import type { CommandOptions, AgentType } from "@/types/common";
 import type { RunnerOptions } from "@/types/runner";
 
 const parseOptions = (options: CommandOptions): RunnerOptions | null => {

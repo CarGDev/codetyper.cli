@@ -1,7 +1,7 @@
-import type { Provider as ProviderName } from "@/types/index";
-import type { Message } from "@providers/index";
-import type { InputEditorInstance } from "@ui/index";
-import { DEFAULT_SYSTEM_PROMPT } from "@prompts/index";
+import type { Provider as ProviderName } from "@/types/common";
+import type { Message } from "@/types/providers";
+import type { InputEditorInstance } from "@ui/input-editor/core/editor";
+import { DEFAULT_SYSTEM_PROMPT } from "@prompts/system/default";
 
 export interface ChatState {
   inputEditor: InputEditorInstance | null;

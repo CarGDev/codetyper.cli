@@ -5,7 +5,11 @@
  * and task types. Read-only tasks don't conflict with each other.
  */
 
-import { CONFLICT_CONFIG, READ_ONLY_TASK_TYPES, MODIFYING_TASK_TYPES } from "@constants/parallel";
+import {
+  CONFLICT_CONFIG,
+  READ_ONLY_TASK_TYPES,
+  MODIFYING_TASK_TYPES,
+} from "@constants/parallel";
 import type {
   ParallelTask,
   ConflictCheckResult,
@@ -143,7 +147,9 @@ export const checkConflicts = (task: ParallelTask): ConflictCheckResult => {
   const hasConflict = conflictingTaskIds.length > 0;
 
   // Suggest resolution
-  const resolution = hasConflict ? suggestResolution(task, conflictingTaskIds) : undefined;
+  const resolution = hasConflict
+    ? suggestResolution(task, conflictingTaskIds)
+    : undefined;
 
   return {
     hasConflict,

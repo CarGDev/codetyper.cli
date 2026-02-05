@@ -23,7 +23,12 @@ export const DEFAULT_REVIEW_CONFIG: PRReviewConfig = {
   minConfidence: MIN_CONFIDENCE_THRESHOLD,
   reviewers: [
     { name: "security", type: "security", enabled: true, minConfidence: 80 },
-    { name: "performance", type: "performance", enabled: true, minConfidence: 80 },
+    {
+      name: "performance",
+      type: "performance",
+      enabled: true,
+      minConfidence: 80,
+    },
     { name: "style", type: "style", enabled: true, minConfidence: 85 },
     { name: "logic", type: "logic", enabled: true, minConfidence: 80 },
   ],
@@ -167,9 +172,21 @@ export const RATING_THRESHOLDS = {
  */
 export const RECOMMENDATION_THRESHOLDS = {
   approve: { maxCritical: 0, maxWarning: 0, maxSuggestion: 5 },
-  approve_with_suggestions: { maxCritical: 0, maxWarning: 3, maxSuggestion: Infinity },
-  request_changes: { maxCritical: 1, maxWarning: Infinity, maxSuggestion: Infinity },
-  needs_discussion: { maxCritical: Infinity, maxWarning: Infinity, maxSuggestion: Infinity },
+  approve_with_suggestions: {
+    maxCritical: 0,
+    maxWarning: 3,
+    maxSuggestion: Infinity,
+  },
+  request_changes: {
+    maxCritical: 1,
+    maxWarning: Infinity,
+    maxSuggestion: Infinity,
+  },
+  needs_discussion: {
+    maxCritical: Infinity,
+    maxWarning: Infinity,
+    maxSuggestion: Infinity,
+  },
 } as const;
 
 /**

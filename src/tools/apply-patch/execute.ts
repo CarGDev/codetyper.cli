@@ -12,8 +12,17 @@ import {
   PATCH_MESSAGES,
   PATCH_TITLES,
 } from "@constants/apply-patch";
-import { parsePatch, validatePatch, getTargetPath, reversePatch } from "@tools/apply-patch/parser";
-import { findHunkPosition, isHunkApplied, previewHunkApplication } from "@tools/apply-patch/matcher";
+import {
+  parsePatch,
+  validatePatch,
+  getTargetPath,
+  reversePatch,
+} from "@tools/apply-patch/parser";
+import {
+  findHunkPosition,
+  isHunkApplied,
+  previewHunkApplication,
+} from "@tools/apply-patch/matcher";
 import type { ApplyPatchParams } from "@tools/apply-patch/params";
 import type {
   FilePatchResult,
@@ -79,14 +88,10 @@ export const executeApplyPatch = async (
         : join(ctx.workingDir, targetPath);
 
       // Apply the file patch
-      const result = await applyFilePatch(
-        filePatch,
-        absolutePath,
-        {
-          fuzz: params.fuzz ?? PATCH_DEFAULTS.FUZZ,
-          dryRun: params.dryRun ?? false,
-        },
-      );
+      const result = await applyFilePatch(filePatch, absolutePath, {
+        fuzz: params.fuzz ?? PATCH_DEFAULTS.FUZZ,
+        dryRun: params.dryRun ?? false,
+      });
 
       results.push(result);
 
@@ -210,7 +215,9 @@ const applyFilePatch = async (
       }
 
       // Find position with fuzzy matching
-      const position = findHunkPosition(currentContent, hunk, { fuzz: options.fuzz });
+      const position = findHunkPosition(currentContent, hunk, {
+        fuzz: options.fuzz,
+      });
 
       if (!position.found) {
         hunkResults.push({
@@ -223,7 +230,11 @@ const applyFilePatch = async (
       }
 
       // Apply the hunk
-      const preview = previewHunkApplication(currentContent, hunk, position.lineNumber);
+      const preview = previewHunkApplication(
+        currentContent,
+        hunk,
+        position.lineNumber,
+      );
 
       if (!preview.success) {
         hunkResults.push({

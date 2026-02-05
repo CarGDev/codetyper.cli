@@ -152,7 +152,10 @@ export const openFile = async (filePath: string): Promise<void> => {
   }
 };
 
-export const updateFile = async (filePath: string, content: string): Promise<void> => {
+export const updateFile = async (
+  filePath: string,
+  content: string,
+): Promise<void> => {
   const absolutePath = path.resolve(filePath);
   const clients = await getClientsForFile(absolutePath);
 
@@ -176,7 +179,10 @@ export const closeFile = async (filePath: string): Promise<void> => {
   }
 };
 
-export const getHover = async (filePath: string, position: Position): Promise<Hover | null> => {
+export const getHover = async (
+  filePath: string,
+  position: Position,
+): Promise<Hover | null> => {
   const absolutePath = path.resolve(filePath);
   const clients = await getClientsForFile(absolutePath);
 
@@ -213,7 +219,11 @@ export const getReferences = async (
 
   const allRefs: Location[] = [];
   for (const client of clients) {
-    const refs = await client.getReferences(absolutePath, position, includeDeclaration);
+    const refs = await client.getReferences(
+      absolutePath,
+      position,
+      includeDeclaration,
+    );
     allRefs.push(...refs);
   }
 
@@ -243,7 +253,9 @@ export const getCompletions = async (
   return allCompletions;
 };
 
-export const getDocumentSymbols = async (filePath: string): Promise<DocumentSymbol[]> => {
+export const getDocumentSymbols = async (
+  filePath: string,
+): Promise<DocumentSymbol[]> => {
   const absolutePath = path.resolve(filePath);
   const clients = await getClientsForFile(absolutePath);
 
@@ -255,7 +267,9 @@ export const getDocumentSymbols = async (filePath: string): Promise<DocumentSymb
   return [];
 };
 
-export const getDiagnostics = (filePath?: string): Map<string, Diagnostic[]> => {
+export const getDiagnostics = (
+  filePath?: string,
+): Map<string, Diagnostic[]> => {
   const allDiagnostics = new Map<string, Diagnostic[]>();
 
   for (const client of state.clients.values()) {
@@ -278,7 +292,9 @@ export const getStatus = (): {
   connected: Array<{ serverId: string; root: string }>;
   broken: string[];
 } => {
-  const connected = Array.from(state.clients.values()).map((client) => client.getInfo());
+  const connected = Array.from(state.clients.values()).map((client) =>
+    client.getInfo(),
+  );
   const broken = Array.from(state.broken);
 
   return { connected, broken };
@@ -303,7 +319,11 @@ export const shutdown = (): void => {
 };
 
 export const onDiagnostics = (
-  callback: (data: { uri: string; diagnostics: Diagnostic[]; serverId: string }) => void,
+  callback: (data: {
+    uri: string;
+    diagnostics: Diagnostic[];
+    serverId: string;
+  }) => void,
 ): (() => void) => {
   events.on("diagnostics", callback);
   return () => events.off("diagnostics", callback);

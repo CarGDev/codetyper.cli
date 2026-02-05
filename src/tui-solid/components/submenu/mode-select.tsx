@@ -131,7 +131,7 @@ export function ModeSelect(props: ModeSelectProps) {
                 )}
               </box>
               <box>
-                <text fg={theme.colors.textDim}>    {mode.description}</text>
+                <text fg={theme.colors.textDim}> {mode.description}</text>
               </box>
             </box>
           );

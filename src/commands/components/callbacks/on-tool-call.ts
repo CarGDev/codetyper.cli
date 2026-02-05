@@ -1,4 +1,4 @@
-import { appStore } from "@tui/index";
+import { appStore } from "@tui-solid/context/app";
 import { isQuietTool } from "@utils/core/tools";
 import type { ToolCallParams } from "@interfaces/ToolCallParams";
 

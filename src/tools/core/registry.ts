@@ -16,8 +16,8 @@ import { todoReadTool } from "@/tools/todo-read";
 import { globToolDefinition } from "@/tools/glob/definition";
 import { grepToolDefinition } from "@/tools/grep/definition";
 import { webSearchTool } from "@/tools/web-search";
-import { webFetchTool } from "@/tools/web-fetch";
-import { multiEditTool } from "@/tools/multi-edit";
+import { webFetchTool } from "@tools/web-fetch/execute";
+import { multiEditTool } from "@tools/multi-edit/execute";
 import { lspTool } from "@/tools/lsp";
 import { applyPatchTool } from "@/tools/apply-patch";
 import {

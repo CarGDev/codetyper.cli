@@ -13,15 +13,14 @@ export const grepParams = z.object({
   path: z
     .string()
     .optional()
-    .describe("File or directory to search in. Defaults to current working directory."),
+    .describe(
+      "File or directory to search in. Defaults to current working directory.",
+    ),
   glob: z
     .string()
     .optional()
     .describe("Glob pattern to filter files (e.g., '*.ts', '**/*.tsx')"),
-  case_insensitive: z
-    .boolean()
-    .optional()
-    .describe("Case insensitive search"),
+  case_insensitive: z.boolean().optional().describe("Case insensitive search"),
   context_lines: z
     .number()
     .optional()

@@ -24,7 +24,7 @@ const FIELD_LABELS: Record<FormField, string> = {
 const FIELD_PLACEHOLDERS: Record<FormField, string> = {
   name: "e.g., filesystem",
   command: "e.g., npx",
-  args: "e.g., -y @modelcontextprotocol/server-filesystem \"/path/to/dir\"",
+  args: 'e.g., -y @modelcontextprotocol/server-filesystem "/path/to/dir"',
   scope: "",
 };
 
@@ -206,21 +206,31 @@ export function MCPAddForm(props: MCPAddFormProps) {
         <box flexDirection="row" marginBottom={1}>
           <text
             fg={isCurrentField ? theme.colors.primary : theme.colors.text}
-            attributes={isCurrentField ? TextAttributes.BOLD : TextAttributes.NONE}
+            attributes={
+              isCurrentField ? TextAttributes.BOLD : TextAttributes.NONE
+            }
           >
             {isCurrentField ? "> " : "  "}
             {FIELD_LABELS[field]}:{" "}
           </text>
           <text
             fg={!isGlobal() ? theme.colors.success : theme.colors.textDim}
-            attributes={!isGlobal() && isCurrentField ? TextAttributes.BOLD : TextAttributes.NONE}
+            attributes={
+              !isGlobal() && isCurrentField
+                ? TextAttributes.BOLD
+                : TextAttributes.NONE
+            }
           >
             [Local]
           </text>
           <text fg={theme.colors.textDim}> / </text>
           <text
             fg={isGlobal() ? theme.colors.warning : theme.colors.textDim}
-            attributes={isGlobal() && isCurrentField ? TextAttributes.BOLD : TextAttributes.NONE}
+            attributes={
+              isGlobal() && isCurrentField
+                ? TextAttributes.BOLD
+                : TextAttributes.NONE
+            }
           >
             [Global]
           </text>
@@ -232,7 +242,9 @@ export function MCPAddForm(props: MCPAddFormProps) {
       <box flexDirection="row" marginBottom={1}>
         <text
           fg={isCurrentField ? theme.colors.primary : theme.colors.text}
-          attributes={isCurrentField ? TextAttributes.BOLD : TextAttributes.NONE}
+          attributes={
+            isCurrentField ? TextAttributes.BOLD : TextAttributes.NONE
+          }
         >
           {isCurrentField ? "> " : "  "}
           {FIELD_LABELS[field]}:{" "}
@@ -287,9 +299,7 @@ export function MCPAddForm(props: MCPAddFormProps) {
         <text fg={theme.colors.textDim}>
           Tab/Enter next | Shift+Tab prev | ↑↓ navigate | Esc cancel
         </text>
-        <text fg={theme.colors.textDim}>
-          Enter on Scope to submit
-        </text>
+        <text fg={theme.colors.textDim}>Enter on Scope to submit</text>
       </box>
     </box>
   );

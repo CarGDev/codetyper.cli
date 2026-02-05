@@ -13,7 +13,10 @@ import {
   MULTI_EDIT_TITLES,
   MULTI_EDIT_DESCRIPTION,
 } from "@constants/multi-edit";
-import { isFileOpAllowed, promptFilePermission } from "@services/core/permissions";
+import {
+  isFileOpAllowed,
+  promptFilePermission,
+} from "@services/core/permissions";
 import { formatDiff } from "@utils/diff/format";
 import { generateDiff } from "@utils/diff/generate";
 import { multiEditParams } from "@tools/multi-edit/params";

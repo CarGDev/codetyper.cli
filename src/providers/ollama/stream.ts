@@ -68,7 +68,10 @@ export const ollamaChatStream = async (
 ): Promise<void> => {
   const baseUrl = getOllamaBaseUrl();
   const body = buildChatRequest(messages, options, true);
-  addDebugLog("api", `Ollama stream request: ${messages.length} msgs, model=${body.model}`);
+  addDebugLog(
+    "api",
+    `Ollama stream request: ${messages.length} msgs, model=${body.model}`,
+  );
 
   const stream = got.stream.post(`${baseUrl}${OLLAMA_ENDPOINTS.CHAT}`, {
     json: body,

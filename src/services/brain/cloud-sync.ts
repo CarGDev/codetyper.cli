@@ -448,9 +448,7 @@ const pullFromCloud = async (
 /**
  * Check if pulled item conflicts with local changes
  */
-const checkLocalConflict = async (
-  _item: SyncItem,
-): Promise<boolean> => {
+const checkLocalConflict = async (_item: SyncItem): Promise<boolean> => {
   // Check if we have pending changes for this item
   const queued = await hasQueuedItems();
   return queued;

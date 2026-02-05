@@ -60,7 +60,8 @@ export const BRAIN_TIMEOUTS = {
 } as const;
 
 export const BRAIN_ERRORS = {
-  NOT_RUNNING: "Brain service not available. Start the API server at localhost:5001",
+  NOT_RUNNING:
+    "Brain service not available. Start the API server at localhost:5001",
   NOT_AUTHENTICATED: "Not authenticated. Please login or set an API key.",
   INVALID_API_KEY: "Invalid API key. Please check your credentials.",
   CONNECTION_FAILED: "Failed to connect to Brain service.",

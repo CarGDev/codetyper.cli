@@ -124,12 +124,20 @@ export const DEFAULT_BRAIN_MCP_SERVER_CONFIG: BrainMcpServerConfig = {
 export const BRAIN_MCP_TOOLS: ReadonlyArray<BrainMcpTool> = [
   {
     name: "brain_recall",
-    description: "Retrieve relevant concepts from the knowledge graph based on a query",
+    description:
+      "Retrieve relevant concepts from the knowledge graph based on a query",
     inputSchema: {
       type: "object",
       properties: {
-        query: { type: "string", description: "The search query to find relevant concepts" },
-        limit: { type: "number", description: "Maximum number of concepts to return", default: 5 },
+        query: {
+          type: "string",
+          description: "The search query to find relevant concepts",
+        },
+        limit: {
+          type: "number",
+          description: "Maximum number of concepts to return",
+          default: 5,
+        },
       },
       required: ["query"],
     },
@@ -142,10 +150,25 @@ export const BRAIN_MCP_TOOLS: ReadonlyArray<BrainMcpTool> = [
       type: "object",
       properties: {
         name: { type: "string", description: "The name of the concept" },
-        whatItDoes: { type: "string", description: "Description of what the concept does" },
-        keywords: { type: "array", items: { type: "string", description: "Keyword item" }, description: "Keywords for the concept" },
-        patterns: { type: "array", items: { type: "string", description: "Pattern item" }, description: "Code patterns related to the concept" },
-        files: { type: "array", items: { type: "string", description: "File path item" }, description: "Files related to the concept" },
+        whatItDoes: {
+          type: "string",
+          description: "Description of what the concept does",
+        },
+        keywords: {
+          type: "array",
+          items: { type: "string", description: "Keyword item" },
+          description: "Keywords for the concept",
+        },
+        patterns: {
+          type: "array",
+          items: { type: "string", description: "Pattern item" },
+          description: "Code patterns related to the concept",
+        },
+        files: {
+          type: "array",
+          items: { type: "string", description: "File path item" },
+          description: "Files related to the concept",
+        },
       },
       required: ["name", "whatItDoes"],
     },
@@ -158,8 +181,16 @@ export const BRAIN_MCP_TOOLS: ReadonlyArray<BrainMcpTool> = [
       type: "object",
       properties: {
         query: { type: "string", description: "The search query" },
-        limit: { type: "number", description: "Maximum number of memories to return", default: 10 },
-        type: { type: "string", description: "Memory type filter", enum: ["fact", "pattern", "correction", "preference", "context"] },
+        limit: {
+          type: "number",
+          description: "Maximum number of memories to return",
+          default: 10,
+        },
+        type: {
+          type: "string",
+          description: "Memory type filter",
+          enum: ["fact", "pattern", "correction", "preference", "context"],
+        },
       },
       required: ["query"],
     },
@@ -171,10 +202,32 @@ export const BRAIN_MCP_TOOLS: ReadonlyArray<BrainMcpTool> = [
     inputSchema: {
       type: "object",
       properties: {
-        sourceConcept: { type: "string", description: "Name of the source concept" },
-        targetConcept: { type: "string", description: "Name of the target concept" },
-        relationType: { type: "string", description: "Type of relationship", enum: ["depends_on", "uses", "extends", "similar_to", "part_of", "implements", "contradicts"] },
-        weight: { type: "number", description: "Strength of the relationship (0-1)", default: 0.5 },
+        sourceConcept: {
+          type: "string",
+          description: "Name of the source concept",
+        },
+        targetConcept: {
+          type: "string",
+          description: "Name of the target concept",
+        },
+        relationType: {
+          type: "string",
+          description: "Type of relationship",
+          enum: [
+            "depends_on",
+            "uses",
+            "extends",
+            "similar_to",
+            "part_of",
+            "implements",
+            "contradicts",
+          ],
+        },
+        weight: {
+          type: "number",
+          description: "Strength of the relationship (0-1)",
+          default: 0.5,
+        },
       },
       required: ["sourceConcept", "targetConcept", "relationType"],
     },
@@ -182,12 +235,17 @@ export const BRAIN_MCP_TOOLS: ReadonlyArray<BrainMcpTool> = [
   },
   {
     name: "brain_context",
-    description: "Build a context string from relevant knowledge for prompt injection",
+    description:
+      "Build a context string from relevant knowledge for prompt injection",
     inputSchema: {
       type: "object",
       properties: {
         query: { type: "string", description: "The context query" },
-        maxConcepts: { type: "number", description: "Maximum concepts to include", default: 5 },
+        maxConcepts: {
+          type: "number",
+          description: "Maximum concepts to include",
+          default: 5,
+        },
       },
       required: ["query"],
     },

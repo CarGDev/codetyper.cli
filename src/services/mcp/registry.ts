@@ -154,7 +154,7 @@ const mapCategory = (category: string): MCPServerCategory => {
  * Get all servers (curated + external)
  */
 export const getAllServers = async (
-  forceRefresh = false
+  forceRefresh = false,
 ): Promise<MCPRegistryServer[]> => {
   // Check in-memory cache first
   if (!forceRefresh && registryCache && isCacheValid(registryCache)) {
@@ -202,7 +202,7 @@ export const getCuratedServers = (): MCPRegistryServer[] => {
  * Search for MCP servers
  */
 export const searchServers = async (
-  options: MCPSearchOptions = {}
+  options: MCPSearchOptions = {},
 ): Promise<MCPSearchResult> => {
   const {
     query = "",
@@ -227,7 +227,9 @@ export const searchServers = async (
         server.description,
         server.author,
         ...server.tags,
-      ].join(" ").toLowerCase();
+      ]
+        .join(" ")
+        .toLowerCase();
 
       return searchableText.includes(lowerQuery);
     });
@@ -243,9 +245,9 @@ export const searchServers = async (
     filtered = filtered.filter((server) =>
       tags.some((tag) =>
         server.tags.some((serverTag) =>
-          serverTag.toLowerCase().includes(tag.toLowerCase())
-        )
-      )
+          serverTag.toLowerCase().includes(tag.toLowerCase()),
+        ),
+      ),
     );
   }
 
@@ -255,10 +257,14 @@ export const searchServers = async (
   }
 
   // Sort
-  const sortFunctions: Record<string, (a: MCPRegistryServer, b: MCPRegistryServer) => number> = {
+  const sortFunctions: Record<
+    string,
+    (a: MCPRegistryServer, b: MCPRegistryServer) => number
+  > = {
     popularity: (a, b) => b.popularity - a.popularity,
     name: (a, b) => a.name.localeCompare(b.name),
-    updated: (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+    updated: (a, b) =>
+      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
   };
 
   filtered.sort(sortFunctions[sortBy] || sortFunctions.popularity);
@@ -279,7 +285,7 @@ export const searchServers = async (
  * Get server by ID
  */
 export const getServerById = async (
-  id: string
+  id: string,
 ): Promise<MCPRegistryServer | undefined> => {
   const allServers = await getAllServers();
   return allServers.find((server) => server.id === id);
@@ -289,7 +295,7 @@ export const getServerById = async (
  * Get servers by category
  */
 export const getServersByCategory = async (
-  category: MCPServerCategory
+  category: MCPServerCategory,
 ): Promise<MCPRegistryServer[]> => {
   const allServers = await getAllServers();
   return allServers.filter((server) => server.category === category);
@@ -300,9 +306,10 @@ export const getServersByCategory = async (
  */
 export const isServerInstalled = (serverId: string): boolean => {
   const instances = getServerInstances();
-  return Array.from(instances.values()).some((instance) =>
-    instance.config.name === serverId ||
-    instance.config.name.toLowerCase() === serverId.toLowerCase()
+  return Array.from(instances.values()).some(
+    (instance) =>
+      instance.config.name === serverId ||
+      instance.config.name.toLowerCase() === serverId.toLowerCase(),
   );
 };
 
@@ -315,7 +322,7 @@ export const installServer = async (
     global?: boolean;
     connect?: boolean;
     customArgs?: string[];
-  } = {}
+  } = {},
 ): Promise<MCPInstallResult> => {
   const { global = false, connect = true, customArgs } = options;
 
@@ -339,7 +346,7 @@ export const installServer = async (
         transport: server.transport,
         enabled: true,
       },
-      global
+      global,
     );
 
     let connected = false;
@@ -363,7 +370,10 @@ export const installServer = async (
     return {
       success: false,
       serverName: server.id,
-      error: error instanceof Error ? error.message : MCP_REGISTRY_ERRORS.INSTALL_FAILED,
+      error:
+        error instanceof Error
+          ? error.message
+          : MCP_REGISTRY_ERRORS.INSTALL_FAILED,
       connected: false,
     };
   }
@@ -378,7 +388,7 @@ export const installServerById = async (
     global?: boolean;
     connect?: boolean;
     customArgs?: string[];
-  } = {}
+  } = {},
 ): Promise<MCPInstallResult> => {
   const server = await getServerById(serverId);
 
@@ -398,12 +408,10 @@ export const installServerById = async (
  * Get popular servers
  */
 export const getPopularServers = async (
-  limit = 10
+  limit = 10,
 ): Promise<MCPRegistryServer[]> => {
   const allServers = await getAllServers();
-  return allServers
-    .sort((a, b) => b.popularity - a.popularity)
-    .slice(0, limit);
+  return allServers.sort((a, b) => b.popularity - a.popularity).slice(0, limit);
 };
 
 /**

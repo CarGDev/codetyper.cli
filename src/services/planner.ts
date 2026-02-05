@@ -3,7 +3,7 @@
  */
 
 import chalk from "chalk";
-import { chat as providerChat } from "@providers/index";
+import { chat as providerChat } from "@providers/core/chat";
 import type { Message, ProviderName } from "@/types/providers";
 import type {
   Plan,
@@ -11,7 +11,7 @@ import type {
   PlanStepStatus,
   PlanStepType,
 } from "@/types/planner";
-import { PLAN_SYSTEM_PROMPT } from "@prompts/index";
+import { PLAN_SYSTEM_PROMPT } from "@prompts/system/planner";
 
 /**
  * Status icon mapping

@@ -100,7 +100,9 @@ const validateRequest = (
   }
 
   if (request.agents.length > MULTI_AGENT_LIMITS.maxAgentsPerRequest) {
-    return MULTI_AGENT_ERRORS.MAX_AGENTS_EXCEEDED(MULTI_AGENT_LIMITS.maxAgentsPerRequest);
+    return MULTI_AGENT_ERRORS.MAX_AGENTS_EXCEEDED(
+      MULTI_AGENT_LIMITS.maxAgentsPerRequest,
+    );
   }
 
   // Validate each agent config
@@ -146,7 +148,8 @@ const executeParallel = async (
   results: AgentInstance[],
   conflicts: FileConflict[],
 ): Promise<void> => {
-  const maxConcurrent = request.maxConcurrent ?? MULTI_AGENT_DEFAULTS.maxConcurrent;
+  const maxConcurrent =
+    request.maxConcurrent ?? MULTI_AGENT_DEFAULTS.maxConcurrent;
   const chunks = chunkArray(request.agents, maxConcurrent);
 
   for (const chunk of chunks) {
@@ -182,7 +185,8 @@ const executeAdaptive = async (
   results: AgentInstance[],
   conflicts: FileConflict[],
 ): Promise<void> => {
-  const maxConcurrent = request.maxConcurrent ?? MULTI_AGENT_DEFAULTS.maxConcurrent;
+  const maxConcurrent =
+    request.maxConcurrent ?? MULTI_AGENT_DEFAULTS.maxConcurrent;
   let conflictCount = 0;
   let useSequential = false;
 
@@ -260,12 +264,7 @@ const executeSingleAgent = async (
   const instance = instanceOrError;
 
   // Create tool context
-  createToolContext(
-    instance.id,
-    process.cwd(),
-    config.contextFiles,
-    [],
-  );
+  createToolContext(instance.id, process.cwd(), config.contextFiles, []);
 
   // Start agent
   startAgent(instance.id);
@@ -353,7 +352,8 @@ const aggregateResults = (
     cancelled,
     conflicts,
     totalDuration: Date.now() - startTime,
-    aggregatedOutput: outputs.length > 0 ? outputs.join("\n\n---\n\n") : undefined,
+    aggregatedOutput:
+      outputs.length > 0 ? outputs.join("\n\n---\n\n") : undefined,
   };
 };
 

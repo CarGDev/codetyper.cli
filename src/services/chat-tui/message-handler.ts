@@ -6,14 +6,13 @@ import { addMessage, saveSession } from "@services/core/session";
 import { createStreamingAgent } from "@services/agent-stream";
 import { CHAT_MESSAGES } from "@constants/chat-service";
 import { enrichMessageWithIssues } from "@services/github-issue-service";
+import { checkGitHubCLI } from "@services/github-pr/cli";
+import { extractPRUrls } from "@services/github-pr/url";
+import { fetchPR, fetchPRComments } from "@services/github-pr/fetch";
 import {
-  checkGitHubCLI,
-  extractPRUrls,
-  fetchPR,
-  fetchPRComments,
   formatPRContext,
   formatPendingComments,
-} from "@services/github-pr";
+} from "@services/github-pr/format";
 import {
   analyzeFileChange,
   clearSuggestions,
@@ -33,21 +32,25 @@ import {
   getModelCompactionConfig,
   checkCompactionNeeded,
 } from "@services/auto-compaction";
+import { detectTaskType } from "@services/provider-quality/task-detector";
 import {
-  detectTaskType,
   determineRoute,
-  recordAuditResult,
-  isCorrection,
   getRoutingExplanation,
-} from "@services/provider-quality";
+} from "@services/provider-quality/router";
+import { recordAuditResult } from "@services/provider-quality/score-manager";
+import { isCorrection } from "@services/provider-quality/feedback-detector";
 import {
   checkOllamaAvailability,
   checkCopilotAvailability,
-} from "@services/cascading-provider";
+} from "@services/cascading-provider/availability";
 import { chat, getDefaultModel } from "@providers/core/chat";
-import { AUDIT_SYSTEM_PROMPT, createAuditPrompt, parseAuditResponse } from "@prompts/audit-prompt";
+import {
+  AUDIT_SYSTEM_PROMPT,
+  createAuditPrompt,
+  parseAuditResponse,
+} from "@prompts/audit-prompt";
 import { PROVIDER_IDS } from "@constants/provider-quality";
-import { appStore } from "@tui/index";
+import { appStore } from "@tui-solid/context/app";
 import type { StreamCallbacks } from "@/types/streaming";
 import type { TaskType } from "@/types/provider-quality";
 import type {
@@ -62,10 +65,7 @@ import {
   detectCommand,
   executeDetectedCommand,
 } from "@services/command-detection";
-import {
-  detectSkillCommand,
-  executeSkill,
-} from "@services/skill-service";
+import { detectSkillCommand, executeSkill } from "@services/skill-service";
 
 // Track last response for feedback learning
 let lastResponseContext: {
@@ -101,7 +101,10 @@ const createToolCallHandler =
   ) =>
   (call: { id: string; name: string; arguments?: Record<string, unknown> }) => {
     const args = call.arguments;
-    if ((FILE_MODIFYING_TOOLS as readonly string[]).includes(call.name) && args?.path) {
+    if (
+      (FILE_MODIFYING_TOOLS as readonly string[]).includes(call.name) &&
+      args?.path
+    ) {
       toolCallRef.current = { name: call.name, path: String(args.path) };
     } else {
       toolCallRef.current = { name: call.name };
@@ -152,7 +155,10 @@ const createStreamCallbacks = (): StreamCallbacksWithState => {
   const callbacks: StreamCallbacks = {
     onContentChunk: (content: string) => {
       chunkCount++;
-      addDebugLog("stream", `Chunk #${chunkCount}: "${content.substring(0, 30)}${content.length > 30 ? "..." : ""}"`);
+      addDebugLog(
+        "stream",
+        `Chunk #${chunkCount}: "${content.substring(0, 30)}${content.length > 30 ? "..." : ""}"`,
+      );
       appStore.appendStreamContent(content);
     },
 
@@ -187,7 +193,10 @@ const createStreamCallbacks = (): StreamCallbacksWithState => {
       // Note: Don't call completeStreaming() here!
       // The agent loop may have multiple iterations (tool calls + final response)
       // Streaming will be completed manually after the entire agent finishes
-      addDebugLog("stream", `Stream iteration done (${chunkCount} chunks total)`);
+      addDebugLog(
+        "stream",
+        `Stream iteration done (${chunkCount} chunks total)`,
+      );
     },
 
     onError: (error: string) => {
@@ -213,13 +222,20 @@ const runAudit = async (
   userPrompt: string,
   ollamaResponse: string,
   callbacks: ChatServiceCallbacks,
-): Promise<{ approved: boolean; hasMajorIssues: boolean; correctedResponse?: string }> => {
+): Promise<{
+  approved: boolean;
+  hasMajorIssues: boolean;
+  correctedResponse?: string;
+}> => {
   try {
     callbacks.onLog("system", "Auditing response with Copilot...");
 
     const auditMessages = [
       { role: "system" as const, content: AUDIT_SYSTEM_PROMPT },
-      { role: "user" as const, content: createAuditPrompt(userPrompt, ollamaResponse) },
+      {
+        role: "user" as const,
+        content: createAuditPrompt(userPrompt, ollamaResponse),
+      },
     ];
 
     const auditResponse = await chat("copilot", auditMessages, {});
@@ -237,7 +253,8 @@ const runAudit = async (
 
     return {
       approved: parsed.approved,
-      hasMajorIssues: parsed.severity === "major" || parsed.severity === "critical",
+      hasMajorIssues:
+        parsed.severity === "major" || parsed.severity === "critical",
       correctedResponse: parsed.correctedResponse,
     };
   } catch (error) {
@@ -285,10 +302,7 @@ export const handleMessage = async (
   const skillMatch = await detectSkillCommand(message);
   if (skillMatch) {
     addDebugLog("info", `Detected skill: /${skillMatch.skill.command}`);
-    callbacks.onLog(
-      "system",
-      `Running skill: ${skillMatch.skill.name}`,
-    );
+    callbacks.onLog("system", `Running skill: ${skillMatch.skill.name}`);
 
     // Execute the skill and get the expanded prompt
     const { expandedPrompt } = executeSkill(skillMatch.skill, skillMatch.args);
@@ -302,7 +316,10 @@ export const handleMessage = async (
     // Process the expanded prompt as the actual message
     // Fall through to normal processing with the expanded prompt
     message = expandedPrompt;
-    addDebugLog("info", `Expanded skill prompt: ${expandedPrompt.substring(0, 100)}...`);
+    addDebugLog(
+      "info",
+      `Expanded skill prompt: ${expandedPrompt.substring(0, 100)}...`,
+    );
   }
 
   // Detect explicit command requests and execute directly
@@ -328,7 +345,10 @@ export const handleMessage = async (
     });
 
     appStore.setMode("tool_execution");
-    const result = await executeDetectedCommand(detected.command, process.cwd());
+    const result = await executeDetectedCommand(
+      detected.command,
+      process.cwd(),
+    );
     appStore.setMode("idle");
 
     // Show result
@@ -351,15 +371,13 @@ export const handleMessage = async (
 
   // Get interaction mode and cascade setting from app store
   const { interactionMode, cascadeEnabled } = appStore.getState();
-  const isReadOnlyMode = interactionMode === "ask" || interactionMode === "code-review";
+  const isReadOnlyMode =
+    interactionMode === "ask" || interactionMode === "code-review";
 
   // Rebuild system prompt if mode has changed
   if (state.currentMode !== interactionMode) {
     await rebuildSystemPromptForMode(state, interactionMode);
-    callbacks.onLog(
-      "system",
-      `Switched to ${interactionMode} mode`,
-    );
+    callbacks.onLog("system", `Switched to ${interactionMode} mode`);
   }
 
   if (isReadOnlyMode) {
@@ -494,7 +512,10 @@ export const handleMessage = async (
         cascadeEnabled: true,
       });
 
-      const explanation = await getRoutingExplanation(routingDecision, taskType);
+      const explanation = await getRoutingExplanation(
+        routingDecision,
+        taskType,
+      );
       callbacks.onLog("system", explanation);
 
       if (routingDecision === "ollama_only") {
@@ -518,8 +539,14 @@ export const handleMessage = async (
       : getDefaultModel(effectiveProvider);
 
   // Start streaming UI
-  addDebugLog("state", `Starting request: provider=${effectiveProvider}, model=${effectiveModel}`);
-  addDebugLog("state", `Mode: ${appStore.getState().interactionMode}, Cascade: ${cascadeEnabled}`);
+  addDebugLog(
+    "state",
+    `Starting request: provider=${effectiveProvider}, model=${effectiveModel}`,
+  );
+  addDebugLog(
+    "state",
+    `Mode: ${appStore.getState().interactionMode}, Cascade: ${cascadeEnabled}`,
+  );
   appStore.setMode("thinking");
   appStore.startThinking();
   appStore.startStreaming();
@@ -554,20 +581,33 @@ export const handleMessage = async (
   currentAgent = agent;
 
   try {
-    addDebugLog("api", `Agent.run() started with ${state.messages.length} messages`);
+    addDebugLog(
+      "api",
+      `Agent.run() started with ${state.messages.length} messages`,
+    );
     const result = await agent.run(state.messages);
-    addDebugLog("api", `Agent.run() completed: success=${result.success}, iterations=${result.iterations}`);
+    addDebugLog(
+      "api",
+      `Agent.run() completed: success=${result.success}, iterations=${result.iterations}`,
+    );
 
     // Stop thinking timer
     appStore.stopThinking();
 
     if (result.finalResponse) {
-      addDebugLog("info", `Final response length: ${result.finalResponse.length} chars`);
+      addDebugLog(
+        "info",
+        `Final response length: ${result.finalResponse.length} chars`,
+      );
       let finalResponse = result.finalResponse;
 
       // Run audit if cascade mode with Ollama
       if (shouldAudit && effectiveProvider === "ollama") {
-        const auditResult = await runAudit(message, result.finalResponse, callbacks);
+        const auditResult = await runAudit(
+          message,
+          result.finalResponse,
+          callbacks,
+        );
 
         // Record quality score based on audit
         await recordAuditResult(
@@ -599,7 +639,10 @@ export const handleMessage = async (
       // Check if streaming content was received - if not, add the response as a log
       // This handles cases where streaming didn't work or content was all in final response
       if (!streamState.hasReceivedContent() && finalResponse) {
-        addDebugLog("info", "No streaming content received, adding fallback log");
+        addDebugLog(
+          "info",
+          "No streaming content received, adding fallback log",
+        );
         // Streaming didn't receive content, manually add the response
         appStore.cancelStreaming(); // Remove empty streaming log
         appStore.addLog({
@@ -616,11 +659,7 @@ export const handleMessage = async (
       addMessage("assistant", finalResponse);
       await saveSession();
 
-      await processLearningsFromExchange(
-        message,
-        finalResponse,
-        callbacks,
-      );
+      await processLearningsFromExchange(message, finalResponse, callbacks);
 
       const suggestions = getPendingSuggestions();
       if (suggestions.length > 0) {

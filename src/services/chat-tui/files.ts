@@ -16,7 +16,7 @@ import {
   BINARY_EXTENSIONS,
   type BinaryExtension,
 } from "@constants/file-picker";
-import { appStore } from "@tui/index";
+import { appStore } from "@tui-solid/context/app";
 import type { ChatServiceState } from "@/types/chat-service";
 
 const isBinaryFile = (filePath: string): boolean => {

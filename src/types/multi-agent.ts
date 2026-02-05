@@ -12,29 +12,29 @@ import type { ChatMessage } from "@/types/common";
  * Agent execution modes
  */
 export type AgentExecutionMode =
-  | "sequential"  // Execute agents one after another
-  | "parallel"    // Execute all agents concurrently
-  | "adaptive";   // Start parallel, serialize on conflict
+  | "sequential" // Execute agents one after another
+  | "parallel" // Execute all agents concurrently
+  | "adaptive"; // Start parallel, serialize on conflict
 
 /**
  * Conflict resolution strategies
  */
 export type ConflictStrategy =
-  | "serialize"      // Wait for conflicting agent to complete
-  | "abort-newer"    // Abort the newer agent
-  | "merge-results"  // Attempt to merge both results
-  | "isolated";      // Each agent works in isolated context
+  | "serialize" // Wait for conflicting agent to complete
+  | "abort-newer" // Abort the newer agent
+  | "merge-results" // Attempt to merge both results
+  | "isolated"; // Each agent works in isolated context
 
 /**
  * Agent instance status
  */
 export type AgentInstanceStatus =
-  | "pending"           // Waiting to start
-  | "running"           // Actively executing
-  | "waiting_conflict"  // Paused due to conflict
-  | "completed"         // Successfully finished
-  | "error"             // Failed with error
-  | "cancelled";        // Cancelled by user or system
+  | "pending" // Waiting to start
+  | "running" // Actively executing
+  | "waiting_conflict" // Paused due to conflict
+  | "completed" // Successfully finished
+  | "error" // Failed with error
+  | "cancelled"; // Cancelled by user or system
 
 /**
  * Tool call record for agent conversation
@@ -168,11 +168,20 @@ export interface MultiAgentState {
  */
 export type MultiAgentEvent =
   | { type: "agent_started"; agentId: string; timestamp: number }
-  | { type: "agent_completed"; agentId: string; result: AgentExecutionResult; timestamp: number }
+  | {
+      type: "agent_completed";
+      agentId: string;
+      result: AgentExecutionResult;
+      timestamp: number;
+    }
   | { type: "agent_error"; agentId: string; error: string; timestamp: number }
   | { type: "conflict_detected"; conflict: FileConflict; timestamp: number }
   | { type: "conflict_resolved"; conflict: FileConflict; timestamp: number }
-  | { type: "execution_completed"; result: MultiAgentResult; timestamp: number };
+  | {
+      type: "execution_completed";
+      result: MultiAgentResult;
+      timestamp: number;
+    };
 
 /**
  * Multi-agent executor options

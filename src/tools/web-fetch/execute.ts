@@ -318,10 +318,7 @@ export const executeWebFetch = async (
 
     // Check content length
     if (content.length > WEB_FETCH_DEFAULTS.MAX_CONTENT_LENGTH) {
-      content = truncateContent(
-        content,
-        WEB_FETCH_DEFAULTS.MAX_CONTENT_LENGTH,
-      );
+      content = truncateContent(content, WEB_FETCH_DEFAULTS.MAX_CONTENT_LENGTH);
     }
 
     // Process content based on type

@@ -19,10 +19,7 @@ import {
   loadPluginCommands,
   loadPluginHooks,
 } from "@services/plugin-loader";
-import {
-  PLUGIN_TOOL_SEPARATOR,
-  PLUGIN_ERRORS,
-} from "@constants/plugin";
+import { PLUGIN_TOOL_SEPARATOR, PLUGIN_ERRORS } from "@constants/plugin";
 
 /**
  * Plugin registry singleton
@@ -40,7 +37,7 @@ const registry: PluginRegistry = {
 const loadPlugin = async (
   _name: string,
   path: string,
-  manifestPath: string
+  manifestPath: string,
 ): Promise<PluginLoadResult> => {
   const manifest = await parseManifest(manifestPath);
 
@@ -86,7 +83,7 @@ export const initializePlugins = async (workingDir: string): Promise<void> => {
     const result = await loadPlugin(
       discovered.name,
       discovered.path,
-      discovered.manifestPath
+      discovered.manifestPath,
     );
 
     if (result.success && result.plugin) {
@@ -173,7 +170,7 @@ export const getPluginToolsForApi = (): {
  * Get a plugin command by name
  */
 export const getPluginCommand = (
-  name: string
+  name: string,
 ): PluginCommandDefinition | undefined => {
   return registry.commands.get(name);
 };

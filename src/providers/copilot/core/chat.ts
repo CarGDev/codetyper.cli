@@ -9,7 +9,10 @@ import {
   COPILOT_UNLIMITED_MODEL,
 } from "@constants/copilot";
 import { refreshToken, buildHeaders } from "@providers/copilot/auth/token";
-import { getDefaultModel, isModelUnlimited } from "@providers/copilot/core/models";
+import {
+  getDefaultModel,
+  isModelUnlimited,
+} from "@providers/copilot/core/models";
 import {
   sleep,
   isRateLimitError,
@@ -246,7 +249,10 @@ const executeStream = (
             if (delta?.tool_calls) {
               for (const tc of delta.tool_calls) {
                 addDebugLog("api", `Tool call chunk: ${JSON.stringify(tc)}`);
-                console.log("Debug: Tool call chunk received:", JSON.stringify(tc));
+                console.log(
+                  "Debug: Tool call chunk received:",
+                  JSON.stringify(tc),
+                );
                 onChunk({ type: "tool_call", toolCall: tc });
               }
             }

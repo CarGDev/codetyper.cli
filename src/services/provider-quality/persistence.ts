@@ -6,7 +6,11 @@
 
 import { join } from "path";
 import { homedir } from "os";
-import type { ProviderQualityData, TaskType, QualityScore } from "@/types/provider-quality";
+import type {
+  ProviderQualityData,
+  TaskType,
+  QualityScore,
+} from "@/types/provider-quality";
 import { QUALITY_THRESHOLDS } from "@constants/provider-quality";
 
 const QUALITY_DATA_DIR = join(homedir(), ".config", "codetyper");

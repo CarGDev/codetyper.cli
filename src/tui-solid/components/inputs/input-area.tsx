@@ -170,14 +170,19 @@ export function InputArea(props: InputAreaProps) {
     }
 
     // Normalize line endings (Windows ConPTY sends CR-only newlines)
-    const normalizedText = event.text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    const normalizedText = event.text
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n");
     const pastedContent = normalizedText.trim();
 
     if (!pastedContent) return;
 
     // Check if paste should be summarized
     const lineCount = (pastedContent.match(/\n/g)?.length ?? 0) + 1;
-    if (lineCount >= MIN_PASTE_LINES || pastedContent.length > MIN_PASTE_CHARS) {
+    if (
+      lineCount >= MIN_PASTE_LINES ||
+      pastedContent.length > MIN_PASTE_CHARS
+    ) {
       event.preventDefault();
       pasteText(pastedContent, `[Pasted ~${lineCount} lines]`);
     }

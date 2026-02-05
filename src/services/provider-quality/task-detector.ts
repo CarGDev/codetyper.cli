@@ -44,7 +44,9 @@ export const getTaskTypeConfidence = (
     return 0.3;
   }
 
-  const matchCount = patterns.filter((p) => p.test(prompt.toLowerCase())).length;
+  const matchCount = patterns.filter((p) =>
+    p.test(prompt.toLowerCase()),
+  ).length;
   const confidence = Math.min(0.5 + matchCount * 0.15, 1.0);
 
   return confidence;

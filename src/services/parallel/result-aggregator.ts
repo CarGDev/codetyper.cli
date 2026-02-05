@@ -24,7 +24,9 @@ export const collectResults = <TOutput>(
   results: ParallelExecutionResult<TOutput>[],
 ): AggregatedResults<TOutput> => {
   const successful = results.filter((r) => r.status === "completed").length;
-  const failed = results.filter((r) => r.status === "error" || r.status === "timeout").length;
+  const failed = results.filter(
+    (r) => r.status === "error" || r.status === "timeout",
+  ).length;
   const cancelled = results.filter((r) => r.status === "cancelled").length;
 
   const totalDuration = results.reduce((sum, r) => sum + r.duration, 0);
@@ -97,7 +99,9 @@ export const deduplicateFileResults = (
 /**
  * Deduplicate search results (by path and content)
  */
-export const deduplicateSearchResults = <T extends { path: string; match?: string }>(
+export const deduplicateSearchResults = <
+  T extends { path: string; match?: string },
+>(
   results: T[],
 ): DeduplicationResult<T> => {
   return deduplicateResults(results, (item) => ({
@@ -137,9 +141,13 @@ export const mergeByPriority = <T>(
   const sorted = [...results].sort((a, b) => a.completedAt - b.completedAt);
 
   // Return the most recent successful result
-  const successful = sorted.filter((r) => r.status === "completed" && r.result !== undefined);
+  const successful = sorted.filter(
+    (r) => r.status === "completed" && r.result !== undefined,
+  );
 
-  return successful.length > 0 ? successful[successful.length - 1].result : undefined;
+  return successful.length > 0
+    ? successful[successful.length - 1].result
+    : undefined;
 };
 
 // ============================================================================
@@ -274,7 +282,5 @@ export const aggregateAll = (
 export const aggregateAny = (
   results: ParallelExecutionResult<boolean>[],
 ): boolean => {
-  return results.some(
-    (r) => r.status === "completed" && r.result === true,
-  );
+  return results.some((r) => r.status === "completed" && r.result === true);
 };

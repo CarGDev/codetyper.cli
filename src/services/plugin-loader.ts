@@ -28,7 +28,7 @@ import { DIRS, LOCAL_CONFIG_DIR } from "@constants/paths";
  * Discover plugins in a directory
  */
 const discoverPluginsInDir = async (
-  baseDir: string
+  baseDir: string,
 ): Promise<PluginDiscoveryResult[]> => {
   const pluginsPath = join(baseDir, PLUGINS_DIR);
   const results: PluginDiscoveryResult[] = [];
@@ -66,7 +66,7 @@ const discoverPluginsInDir = async (
  * Discover all plugins from global and local directories
  */
 export const discoverPlugins = async (
-  workingDir: string
+  workingDir: string,
 ): Promise<PluginDiscoveryResult[]> => {
   const [globalPlugins, localPlugins] = await Promise.all([
     discoverPluginsInDir(DIRS.config),
@@ -91,7 +91,7 @@ export const discoverPlugins = async (
  * Parse plugin manifest
  */
 export const parseManifest = async (
-  manifestPath: string
+  manifestPath: string,
 ): Promise<PluginManifest | null> => {
   try {
     const content = await readFile(manifestPath, "utf-8");
@@ -112,7 +112,7 @@ export const parseManifest = async (
  * Parse command file with frontmatter
  */
 export const parseCommandFile = async (
-  filePath: string
+  filePath: string,
 ): Promise<PluginCommandDefinition | null> => {
   try {
     const content = await readFile(filePath, "utf-8");
@@ -157,7 +157,10 @@ export const parseCommandFile = async (
     }
 
     // Rest is the prompt
-    const prompt = lines.slice(endIndex + 1).join("\n").trim();
+    const prompt = lines
+      .slice(endIndex + 1)
+      .join("\n")
+      .trim();
 
     const name = frontmatter.name || basename(filePath, COMMAND_FILE_EXTENSION);
     const description = frontmatter.description || `Custom command: ${name}`;
@@ -176,7 +179,7 @@ export const parseCommandFile = async (
  * Load tool module dynamically
  */
 export const loadToolModule = async (
-  filePath: string
+  filePath: string,
 ): Promise<PluginToolDefinition | null> => {
   try {
     // For Bun, we can use dynamic import
@@ -184,7 +187,12 @@ export const loadToolModule = async (
     const toolDef = module.default || module;
 
     // Validate tool definition
-    if (!toolDef.name || !toolDef.description || !toolDef.parameters || !toolDef.execute) {
+    if (
+      !toolDef.name ||
+      !toolDef.description ||
+      !toolDef.parameters ||
+      !toolDef.execute
+    ) {
       return null;
     }
 
@@ -199,7 +207,7 @@ export const loadToolModule = async (
  */
 export const loadPluginHooks = async (
   pluginPath: string,
-  manifest: PluginManifest
+  manifest: PluginManifest,
 ): Promise<HookDefinition[]> => {
   const hooks: HookDefinition[] = [];
 
@@ -253,7 +261,7 @@ export const loadPluginHooks = async (
         if (baseName.toLowerCase().includes(eventType.toLowerCase())) {
           // Check if already added from manifest
           const alreadyAdded = hooks.some(
-            (h) => h.script === scriptPath && h.event === eventType
+            (h) => h.script === scriptPath && h.event === eventType,
           );
 
           if (!alreadyAdded) {
@@ -279,7 +287,7 @@ export const loadPluginHooks = async (
  */
 export const loadPluginCommands = async (
   pluginPath: string,
-  manifest: PluginManifest
+  manifest: PluginManifest,
 ): Promise<Map<string, PluginCommandDefinition>> => {
   const commands = new Map<string, PluginCommandDefinition>();
 
@@ -329,7 +337,7 @@ export const loadPluginCommands = async (
  */
 export const loadPluginTools = async (
   pluginPath: string,
-  manifest: PluginManifest
+  manifest: PluginManifest,
 ): Promise<Map<string, PluginToolDefinition>> => {
   const tools = new Map<string, PluginToolDefinition>();
 

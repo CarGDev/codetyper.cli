@@ -1,6 +1,6 @@
 import chalk from "chalk";
-import type { Provider as ProviderName } from "@/types/index";
-import { getProvider } from "@providers/index";
+import type { Provider as ProviderName } from "@/types/common";
+import { getProvider } from "@providers/core/registry";
 
 export const showModels = async (
   currentProvider: ProviderName,

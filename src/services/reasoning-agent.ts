@@ -21,7 +21,7 @@ import type {
   ToolCallMessage,
   ToolResultMessage,
 } from "@/types/agent";
-import { chat as providerChat } from "@providers/index";
+import { chat as providerChat } from "@providers/core/chat";
 import { getTool, getToolsForApi, refreshMCPTools } from "@tools/index";
 import type { ToolContext, ToolCall, ToolResult } from "@/types/tools";
 import { initializePermissions } from "@services/core/permissions";
@@ -37,18 +37,19 @@ import type {
 
 import {
   createInitialState,
+  evaluateResponseQuality,
+  decideRetry,
+  checkTermination,
   createMemoryStore,
   addMemory,
   createMemoryItem,
-  evaluateResponseQuality,
-  decideRetry,
+} from "@services/reasoning/orchestrator";
+import {
   compressContext,
   markMessagesWithAge,
   getPreservationCandidates,
-  checkTermination,
-  estimateTokens,
-  createTimestamp,
-} from "@services/reasoning";
+} from "@services/reasoning/context-compression";
+import { estimateTokens, createTimestamp } from "@services/reasoning/utils";
 
 // =============================================================================
 // TYPES

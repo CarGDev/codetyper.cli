@@ -4,12 +4,10 @@ import { Command } from "commander";
 import { handleCommand } from "@commands/core/handlers";
 import { execute } from "@commands/chat-tui";
 import versionData from "@/version.json";
-import {
-  initializeProviders,
-  loginProvider,
-  getProviderNames,
-  displayProvidersStatus,
-} from "@providers/index";
+import { initializeProviders } from "@providers/login/core/initialize";
+import { loginProvider } from "@providers/login/handlers";
+import { getProviderNames } from "@providers/core/registry";
+import { displayProvidersStatus } from "@providers/core/status";
 import { getConfig } from "@services/core/config";
 import { deleteSession, getSessionSummaries } from "@services/core/session";
 import {
@@ -206,7 +204,8 @@ program
     const config = await getConfig();
     const targetProvider = (provider || config.get("provider")) as any;
 
-    const { getProvider, getProviderStatus } = await import("@providers/index");
+    const { getProvider } = await import("@providers/core/registry");
+    const { getProviderStatus } = await import("@providers/core/status");
     const providerInstance = getProvider(targetProvider);
     const status = await getProviderStatus(targetProvider);
 

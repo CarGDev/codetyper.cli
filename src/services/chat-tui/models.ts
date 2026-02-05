@@ -4,12 +4,12 @@
 
 import { MODEL_MESSAGES } from "@constants/chat-service";
 import { getConfig } from "@services/core/config";
+import { getProvider } from "@providers/core/registry";
 import {
-  getProvider,
   getDefaultModel,
   getModels as getProviderModels,
-} from "@providers/index";
-import { appStore } from "@tui/index";
+} from "@providers/core/chat";
+import { appStore } from "@tui-solid/context/app";
 import type { ProviderName, ProviderModel } from "@/types/providers";
 import type {
   ChatServiceState,

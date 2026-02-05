@@ -18,7 +18,7 @@ import type {
   CommandOptions,
   IntentRequest,
   IntentResponse,
-} from "@/types/index";
+} from "@/types/common";
 
 const classifyIntent = async (
   request: IntentRequest,

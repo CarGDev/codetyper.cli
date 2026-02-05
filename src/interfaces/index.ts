@@ -1,4 +1,5 @@
-import { AgentType, IntentType, Provider } from "@/types/index";
+import type { AgentType, IntentType, Provider } from "@/types/common";
+import type { ProviderModel } from "@/types/providers";
 
 export interface TuiInput {
   sessionId?: string;

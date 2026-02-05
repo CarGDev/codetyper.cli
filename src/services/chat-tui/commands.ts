@@ -3,7 +3,7 @@
  */
 
 import { saveSession as saveSessionSession } from "@services/core/session";
-import { appStore } from "@tui/index";
+import { appStore } from "@tui-solid/context/app";
 import { CHAT_MESSAGES, type CommandName } from "@constants/chat-service";
 import { handleLogin, handleLogout, showWhoami } from "@services/chat-tui/auth";
 import {
@@ -14,8 +14,8 @@ import { showUsageStats } from "@services/chat-tui/usage";
 import {
   checkOllamaAvailability,
   checkCopilotAvailability,
-} from "@services/cascading-provider";
-import { getOverallScore } from "@services/provider-quality";
+} from "@services/cascading-provider/availability";
+import { getOverallScore } from "@services/provider-quality/score-manager";
 import { PROVIDER_IDS } from "@constants/provider-quality";
 import type {
   ChatServiceState,

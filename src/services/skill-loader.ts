@@ -31,7 +31,9 @@ import type {
 /**
  * Parse YAML-like frontmatter from SKILL.md content
  */
-const parseFrontmatter = (content: string): { frontmatter: string; body: string } => {
+const parseFrontmatter = (
+  content: string,
+): { frontmatter: string; body: string } => {
   const delimiter = SKILL_FILE.FRONTMATTER_DELIMITER;
   const lines = content.split("\n");
 
@@ -52,7 +54,10 @@ const parseFrontmatter = (content: string): { frontmatter: string; body: string 
   }
 
   const frontmatter = lines.slice(1, endIndex).join("\n");
-  const body = lines.slice(endIndex + 1).join("\n").trim();
+  const body = lines
+    .slice(endIndex + 1)
+    .join("\n")
+    .trim();
 
   return { frontmatter, body };
 };
@@ -141,7 +146,9 @@ const validateFrontmatter = (
 
   // Validate triggers is an array
   if (!Array.isArray(data.triggers)) {
-    throw new Error(SKILL_ERRORS.MISSING_REQUIRED_FIELD("triggers (array)", filePath));
+    throw new Error(
+      SKILL_ERRORS.MISSING_REQUIRED_FIELD("triggers (array)", filePath),
+    );
   }
 
   return {
@@ -151,7 +158,8 @@ const validateFrontmatter = (
     version: data.version ? String(data.version) : undefined,
     triggers: data.triggers as string[],
     triggerType: data.triggerType as SkillFrontmatter["triggerType"],
-    autoTrigger: typeof data.autoTrigger === "boolean" ? data.autoTrigger : undefined,
+    autoTrigger:
+      typeof data.autoTrigger === "boolean" ? data.autoTrigger : undefined,
     requiredTools: Array.isArray(data.requiredTools)
       ? (data.requiredTools as string[])
       : undefined,
@@ -206,7 +214,9 @@ const parseExamples = (body: string): SkillExample[] => {
 /**
  * Load and parse a SKILL.md file
  */
-export const loadSkillFile = async (filePath: string): Promise<ParsedSkillFile> => {
+export const loadSkillFile = async (
+  filePath: string,
+): Promise<ParsedSkillFile> => {
   try {
     const stat = await fs.stat(filePath);
     if (stat.size > SKILL_LOADING.MAX_FILE_SIZE_BYTES) {
@@ -247,7 +257,8 @@ export const toSkillMetadata = (parsed: ParsedSkillFile): SkillMetadata => ({
   triggers: parsed.frontmatter.triggers,
   triggerType: parsed.frontmatter.triggerType ?? SKILL_DEFAULTS.TRIGGER_TYPE,
   autoTrigger: parsed.frontmatter.autoTrigger ?? SKILL_DEFAULTS.AUTO_TRIGGER,
-  requiredTools: parsed.frontmatter.requiredTools ?? SKILL_DEFAULTS.REQUIRED_TOOLS,
+  requiredTools:
+    parsed.frontmatter.requiredTools ?? SKILL_DEFAULTS.REQUIRED_TOOLS,
   tags: parsed.frontmatter.tags,
 });
 
@@ -272,7 +283,9 @@ export const toSkillDefinition = (parsed: ParsedSkillFile): SkillDefinition => {
 /**
  * Parse skill body to extract system prompt and instructions
  */
-const parseSkillBody = (body: string): { systemPrompt: string; instructions: string } => {
+const parseSkillBody = (
+  body: string,
+): { systemPrompt: string; instructions: string } => {
   // Look for ## System Prompt section
   const systemPromptMatch = body.match(
     /## System Prompt([\s\S]*?)(?=## Instructions|## Examples|$)/i,
@@ -285,7 +298,9 @@ const parseSkillBody = (body: string): { systemPrompt: string; instructions: str
 
   // If no sections found, use the whole body as instructions
   const systemPrompt = systemPromptMatch ? systemPromptMatch[1].trim() : "";
-  const instructions = instructionsMatch ? instructionsMatch[1].trim() : body.trim();
+  const instructions = instructionsMatch
+    ? instructionsMatch[1].trim()
+    : body.trim();
 
   return { systemPrompt, instructions };
 };

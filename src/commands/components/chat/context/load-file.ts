@@ -1,6 +1,10 @@
 import { readFile, stat } from "fs/promises";
 import { basename } from "path";
-import { warningMessage, successMessage, errorMessage } from "@utils/core/terminal";
+import {
+  warningMessage,
+  successMessage,
+  errorMessage,
+} from "@utils/core/terminal";
 import { addContextFile } from "@services/core/session";
 
 export const loadFile = async (

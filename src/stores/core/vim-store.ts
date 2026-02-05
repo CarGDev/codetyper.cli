@@ -6,12 +6,7 @@
  */
 
 import { createStore } from "zustand/vanilla";
-import type {
-  VimState,
-  VimMode,
-  VimSearchMatch,
-  VimConfig,
-} from "@/types/vim";
+import type { VimState, VimMode, VimSearchMatch, VimConfig } from "@/types/vim";
 import { DEFAULT_VIM_CONFIG } from "@constants/vim";
 
 /**
@@ -190,9 +185,7 @@ export const vimStore = createStore<VimStore>((set, get) => ({
     if (searchMatches.length === 0) return;
 
     const prevIndex =
-      currentMatchIndex <= 0
-        ? searchMatches.length - 1
-        : currentMatchIndex - 1;
+      currentMatchIndex <= 0 ? searchMatches.length - 1 : currentMatchIndex - 1;
     set({ currentMatchIndex: prevIndex });
   },
 
@@ -223,23 +216,31 @@ export const vimActions = {
   enable: () => vimStore.getState().enable(),
   disable: () => vimStore.getState().disable(),
   toggle: () => vimStore.getState().toggle(),
-  setSearchPattern: (pattern: string) => vimStore.getState().setSearchPattern(pattern),
-  setCommandBuffer: (buffer: string) => vimStore.getState().setCommandBuffer(buffer),
-  appendCommandBuffer: (char: string) => vimStore.getState().appendCommandBuffer(char),
+  setSearchPattern: (pattern: string) =>
+    vimStore.getState().setSearchPattern(pattern),
+  setCommandBuffer: (buffer: string) =>
+    vimStore.getState().setCommandBuffer(buffer),
+  appendCommandBuffer: (char: string) =>
+    vimStore.getState().appendCommandBuffer(char),
   clearCommandBuffer: () => vimStore.getState().clearCommandBuffer(),
-  setVisualStart: (position: number | null) => vimStore.getState().setVisualStart(position),
+  setVisualStart: (position: number | null) =>
+    vimStore.getState().setVisualStart(position),
   setCount: (count: number) => vimStore.getState().setCount(count),
   resetCount: () => vimStore.getState().resetCount(),
-  setPendingOperator: (operator: string | null) => vimStore.getState().setPendingOperator(operator),
+  setPendingOperator: (operator: string | null) =>
+    vimStore.getState().setPendingOperator(operator),
   setSearchDirection: (direction: "forward" | "backward") =>
     vimStore.getState().setSearchDirection(direction),
   setRegister: (content: string) => vimStore.getState().setRegister(content),
-  setSearchMatches: (matches: VimSearchMatch[]) => vimStore.getState().setSearchMatches(matches),
-  setCurrentMatchIndex: (index: number) => vimStore.getState().setCurrentMatchIndex(index),
+  setSearchMatches: (matches: VimSearchMatch[]) =>
+    vimStore.getState().setSearchMatches(matches),
+  setCurrentMatchIndex: (index: number) =>
+    vimStore.getState().setCurrentMatchIndex(index),
   nextMatch: () => vimStore.getState().nextMatch(),
   prevMatch: () => vimStore.getState().prevMatch(),
   clearSearch: () => vimStore.getState().clearSearch(),
-  setConfig: (config: Partial<VimConfig>) => vimStore.getState().setConfig(config),
+  setConfig: (config: Partial<VimConfig>) =>
+    vimStore.getState().setConfig(config),
   reset: () => vimStore.getState().reset(),
   getState: () => vimStore.getState(),
   subscribe: vimStore.subscribe,

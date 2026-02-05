@@ -55,7 +55,9 @@ const formatQuotaBar = (
 
   if (quota.unlimited) {
     lines.push(name);
-    lines.push(PROGRESS_BAR.FILLED_CHAR.repeat(PROGRESS_BAR.WIDTH) + " Unlimited");
+    lines.push(
+      PROGRESS_BAR.FILLED_CHAR.repeat(PROGRESS_BAR.WIDTH) + " Unlimited",
+    );
     return lines;
   }
 

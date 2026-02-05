@@ -1,8 +1,7 @@
-import { tui, appStore } from "@tui/app";
-
+import { tui } from "@tui-solid/app";
 import { appStore } from "@tui-solid/context/app";
 import { getProviderInfo } from "@services/chat-tui-service";
-import { addServer, connectServer } from "@services/mcp/index";
+import { addServer, connectServer } from "@services/mcp/manager";
 import * as brainService from "@services/brain";
 import type { ChatServiceState } from "@services/chat-tui-service";
 import type { AgentConfig } from "@/types/agent-config";

@@ -12,7 +12,11 @@
  */
 
 import chalk from "chalk";
-import { errorMessage, infoMessage, successMessage } from "@utils/core/terminal";
+import {
+  errorMessage,
+  infoMessage,
+  successMessage,
+} from "@utils/core/terminal";
 import {
   initializeMCP,
   getMCPConfig,
@@ -24,7 +28,7 @@ import {
   disconnectAllServers,
   getServerInstances,
   getAllTools,
-} from "@services/mcp/index";
+} from "@services/mcp/manager";
 
 /**
  * MCP command handler

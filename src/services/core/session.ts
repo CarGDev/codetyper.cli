@@ -1,7 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import type { AgentType } from "@/types/common";
-import { ChatSession, ChatMessage, AgentType } from "@interafaces/index";
+import type { AgentType, ChatSession, ChatMessage } from "@/types/common";
 import type { SessionInfo } from "@/types/session";
 import { DIRS } from "@constants/paths";
 

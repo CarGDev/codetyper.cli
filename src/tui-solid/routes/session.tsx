@@ -1,4 +1,11 @@
-import { Show, Switch, Match, createSignal, createMemo, onMount } from "solid-js";
+import {
+  Show,
+  Switch,
+  Match,
+  createSignal,
+  createMemo,
+  onMount,
+} from "solid-js";
 import { useTheme } from "@tui-solid/context/theme";
 import { useAppStore } from "@tui-solid/context/app";
 import { Header } from "@tui-solid/components/layout/header";
@@ -23,8 +30,13 @@ import { CenteredModal } from "@tui-solid/components/modals/centered-modal";
 import { DebugLogPanel } from "@tui-solid/components/logs/debug-log-panel";
 import { BrainMenu } from "@tui-solid/components/menu/brain-menu";
 import { BRAIN_DISABLED } from "@constants/brain";
-import { initializeMCP, getServerInstances } from "@services/mcp";
-import type { PermissionScope, LearningScope, InteractionMode, MCPServerDisplay } from "@/types/tui";
+import { initializeMCP, getServerInstances } from "@services/mcp/manager";
+import type {
+  PermissionScope,
+  LearningScope,
+  InteractionMode,
+  MCPServerDisplay,
+} from "@/types/tui";
 import type { MCPAddFormData } from "@/types/mcp";
 
 interface AgentOption {
@@ -93,8 +105,12 @@ export function Session(props: SessionProps) {
         servers.push({
           id,
           name: instance.config.name || id,
-          status: instance.state === "connected" ? "connected" :
-                  instance.state === "error" ? "error" : "disconnected",
+          status:
+            instance.state === "connected"
+              ? "connected"
+              : instance.state === "error"
+                ? "error"
+                : "disconnected",
           description: instance.config.command,
         });
       }
@@ -112,7 +128,7 @@ export function Session(props: SessionProps) {
 
   // Local state for help menu
   const [selectedHelpTopic, setSelectedHelpTopic] = createSignal<string | null>(
-    null
+    null,
   );
 
   const handleCommandSelect = (command: string): void => {
@@ -142,7 +158,11 @@ export function Session(props: SessionProps) {
       app.transitionFromCommandMenu("provider_select");
       return;
     }
-    if (lowerCommand === "help" || lowerCommand === "h" || lowerCommand === "?") {
+    if (
+      lowerCommand === "help" ||
+      lowerCommand === "h" ||
+      lowerCommand === "?"
+    ) {
       app.transitionFromCommandMenu("help_menu");
       return;
     }

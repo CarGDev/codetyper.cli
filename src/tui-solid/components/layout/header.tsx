@@ -155,7 +155,10 @@ export function Header(props: HeaderProps) {
               [{MODE_LABELS[app.interactionMode()]}]
             </text>
             <Show when={app.currentAgent() !== "default"}>
-              <text fg={theme.colors.secondary} attributes={TextAttributes.BOLD}>
+              <text
+                fg={theme.colors.secondary}
+                attributes={TextAttributes.BOLD}
+              >
                 {" "}
                 @{app.currentAgent()}
               </text>

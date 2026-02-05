@@ -36,7 +36,10 @@ export const parsePatch = (patchContent: string): ParsedPatch => {
     // Git diff header
     const gitDiffMatch = line.match(PATCH_PATTERNS.GIT_DIFF);
     if (gitDiffMatch) {
-      if (currentFile && (currentFile.hunks.length > 0 || currentFile.isBinary)) {
+      if (
+        currentFile &&
+        (currentFile.hunks.length > 0 || currentFile.isBinary)
+      ) {
         files.push(currentFile);
       }
       currentFile = createEmptyFilePatch(gitDiffMatch[1], gitDiffMatch[2]);
@@ -174,7 +177,10 @@ export const parsePatch = (patchContent: string): ParsedPatch => {
 /**
  * Create empty file patch structure
  */
-const createEmptyFilePatch = (oldPath: string, newPath: string): ParsedFilePatch => ({
+const createEmptyFilePatch = (
+  oldPath: string,
+  newPath: string,
+): ParsedFilePatch => ({
   oldPath: cleanPath(oldPath),
   newPath: cleanPath(newPath),
   hunks: [],

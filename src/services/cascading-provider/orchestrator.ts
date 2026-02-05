@@ -12,13 +12,13 @@ import type {
 } from "@/types/provider-quality";
 import { PROVIDER_IDS } from "@constants/provider-quality";
 import { parseAuditResponse } from "@prompts/audit-prompt";
+import { detectTaskType } from "@services/provider-quality/task-detector";
+import { determineRoute } from "@services/provider-quality/router";
 import {
-  detectTaskType,
-  determineRoute,
   recordAuditResult,
   recordApproval,
   recordRejection,
-} from "@services/provider-quality";
+} from "@services/provider-quality/score-manager";
 import {
   checkOllamaAvailability,
   checkCopilotAvailability,
@@ -39,7 +39,11 @@ export interface CascadeOptions {
 }
 
 export interface ProviderCallFn {
-  (prompt: string, provider: "ollama" | "copilot", isAudit?: boolean): Promise<string>;
+  (
+    prompt: string,
+    provider: "ollama" | "copilot",
+    isAudit?: boolean,
+  ): Promise<string>;
 }
 
 export const executeCascade = async (

@@ -1,5 +1,5 @@
 import { getConfig } from "@services/core/config";
-import { displayProvidersStatus } from "@providers/index";
+import { displayProvidersStatus } from "@providers/core/status";
 
 export const showProviders = async (): Promise<void> => {
   const config = await getConfig();

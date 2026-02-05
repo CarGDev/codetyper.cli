@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { appStore } from "@tui/index";
+import { appStore } from "@tui-solid/context/app";
 import type { LearningResponse } from "@/types/tui";
 import type { LearningCandidate } from "@services/learning-service";
 

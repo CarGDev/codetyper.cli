@@ -88,7 +88,8 @@ const processStreamChunk = (
 
       // OpenAI streaming format includes index in each chunk
       // Use index from chunk if available, otherwise find by id or default to 0
-      const chunkIndex = tc.index ?? (tc.id ? getToolCallIndex(tc.id, accumulator) : 0);
+      const chunkIndex =
+        tc.index ?? (tc.id ? getToolCallIndex(tc.id, accumulator) : 0);
 
       // Get or create partial tool call
       let partial = accumulator.toolCalls.get(chunkIndex);

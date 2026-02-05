@@ -4,7 +4,10 @@
  * Analyzes code for performance issues.
  */
 
-import { MIN_CONFIDENCE_THRESHOLD, REVIEWER_PROMPTS } from "@constants/pr-review";
+import {
+  MIN_CONFIDENCE_THRESHOLD,
+  REVIEWER_PROMPTS,
+} from "@constants/pr-review";
 import type {
   PRReviewFinding,
   ParsedFileDiff,
@@ -23,7 +26,8 @@ const PERFORMANCE_PATTERNS = {
       /while\s*\([^)]+\)\s*\{[^}]*while\s*\([^)]+\)/,
     ],
     message: "Nested loops detected - potential O(n²) complexity",
-    suggestion: "Consider using a Map/Set for O(1) lookups or restructuring the algorithm",
+    suggestion:
+      "Consider using a Map/Set for O(1) lookups or restructuring the algorithm",
     confidence: 75,
   },
 
@@ -47,7 +51,8 @@ const PERFORMANCE_PATTERNS = {
       /style\s*=\s*\{\s*\{/,
     ],
     message: "Potential unnecessary re-render in React component",
-    suggestion: "Use useMemo/useCallback for objects/arrays, extract styles outside component",
+    suggestion:
+      "Use useMemo/useCallback for objects/arrays, extract styles outside component",
     confidence: 70,
   },
 
@@ -90,7 +95,8 @@ const PERFORMANCE_PATTERNS = {
       /require\s*\(\s*['"]lodash['"]\s*\)/,
     ],
     message: "Large library import may increase bundle size",
-    suggestion: "Use specific imports (lodash/get) or smaller alternatives (date-fns)",
+    suggestion:
+      "Use specific imports (lodash/get) or smaller alternatives (date-fns)",
     confidence: 80,
   },
 
@@ -102,7 +108,8 @@ const PERFORMANCE_PATTERNS = {
       /existsSync\s*\(/,
     ],
     message: "Synchronous file operation may block event loop",
-    suggestion: "Use async versions (readFile, writeFile) for better performance",
+    suggestion:
+      "Use async versions (readFile, writeFile) for better performance",
     confidence: 80,
   },
 } as const;
@@ -120,7 +127,7 @@ export const reviewFile = (
   const addedLines = getAllAddedLines(diff);
 
   // Combine lines for multi-line pattern matching
-  const combinedContent = addedLines.map(l => l.content).join("\n");
+  const combinedContent = addedLines.map((l) => l.content).join("\n");
 
   // Check each pattern
   for (const [patternName, config] of Object.entries(PERFORMANCE_PATTERNS)) {

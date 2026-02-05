@@ -19,7 +19,7 @@ import type {
   ToolCallMessage,
   ToolResultMessage,
 } from "@/types/agent";
-import { chat as providerChat } from "@providers/index";
+import { chat as providerChat } from "@providers/core/chat";
 import { getTool, getToolsForApi, refreshMCPTools } from "@tools/index";
 import type { ToolContext, ToolCall, ToolResult } from "@/types/tools";
 import { initializePermissions } from "@services/core/permissions";

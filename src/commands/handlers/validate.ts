@@ -14,7 +14,7 @@ import {
   filePath,
 } from "@utils/core/terminal";
 import { getConfig } from "@services/core/config";
-import type { CommandOptions } from "@/types/index";
+import type { CommandOptions } from "@/types/common";
 
 export const handleValidate = async (
   options: CommandOptions,

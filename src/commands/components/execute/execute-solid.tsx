@@ -1,4 +1,4 @@
-import { tui } from "@tui-solid/index";
+import { tui } from "@tui-solid/app";
 import { getProviderInfo } from "@services/chat-tui-service";
 import type { ChatServiceState } from "@services/chat-tui-service";
 import type { AgentConfig } from "@/types/agent-config";

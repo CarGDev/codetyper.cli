@@ -4,9 +4,7 @@
  * Handles sync conflicts between local and remote brain data.
  */
 
-import {
-  CONFLICT_LABELS,
-} from "@constants/brain-cloud";
+import { CONFLICT_LABELS } from "@constants/brain-cloud";
 import type {
   SyncConflict,
   ConflictStrategy,
@@ -83,21 +81,22 @@ export const resolveAllConflicts = (
 /**
  * Conflict resolution strategies
  */
-const resolvers: Record<ConflictStrategy, (conflict: SyncConflict) => unknown> = {
-  "local-wins": (conflict) => conflict.localData,
+const resolvers: Record<ConflictStrategy, (conflict: SyncConflict) => unknown> =
+  {
+    "local-wins": (conflict) => conflict.localData,
 
-  "remote-wins": (conflict) => conflict.remoteData,
+    "remote-wins": (conflict) => conflict.remoteData,
 
-  manual: (_conflict) => {
-    // Manual resolution returns null - requires user input
-    return null;
-  },
+    manual: (_conflict) => {
+      // Manual resolution returns null - requires user input
+      return null;
+    },
 
-  merge: (conflict) => {
-    // Attempt to merge the data
-    return mergeData(conflict.localData, conflict.remoteData);
-  },
-};
+    merge: (conflict) => {
+      // Attempt to merge the data
+      return mergeData(conflict.localData, conflict.remoteData);
+    },
+  };
 
 /**
  * Attempt to merge two data objects
@@ -119,7 +118,9 @@ const mergeData = (local: unknown, remote: unknown): unknown => {
 
     // Use most recent timestamp
     const localTime = (localObj.updatedAt ?? localObj.timestamp ?? 0) as number;
-    const remoteTime = (remoteObj.updatedAt ?? remoteObj.timestamp ?? 0) as number;
+    const remoteTime = (remoteObj.updatedAt ??
+      remoteObj.timestamp ??
+      0) as number;
     merged.updatedAt = Math.max(localTime, remoteTime);
 
     return merged;

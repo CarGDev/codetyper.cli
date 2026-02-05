@@ -14,10 +14,10 @@ export type SkillLoadLevel = "metadata" | "body" | "full";
  * Skill trigger types
  */
 export type SkillTriggerType =
-  | "command"      // /commit, /review
-  | "pattern"      // "commit changes", "review PR"
-  | "auto"         // Automatically triggered based on context
-  | "explicit";    // Only when explicitly invoked
+  | "command" // /commit, /review
+  | "pattern" // "commit changes", "review PR"
+  | "auto" // Automatically triggered based on context
+  | "explicit"; // Only when explicitly invoked
 
 /**
  * Example for a skill

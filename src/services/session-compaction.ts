@@ -111,8 +111,8 @@ export const pruneToolOutputs = (
     // Check for tool messages
     if (msg.role === "tool") {
       // Extract tool name from tool_call_id if possible
-      const toolName = (msg as { tool_call_id?: string }).tool_call_id
-        ?.split("-")[0] ?? "";
+      const toolName =
+        (msg as { tool_call_id?: string }).tool_call_id?.split("-")[0] ?? "";
 
       // Skip protected tools
       if (protectedTools.has(toolName)) {
@@ -189,7 +189,10 @@ export const performSessionCompaction = async (
   const pruneResult = pruneToolOutputs(messages);
 
   if (pruneResult.prunedCount > 0) {
-    options?.onPruneComplete?.(pruneResult.prunedCount, pruneResult.tokensSaved);
+    options?.onPruneComplete?.(
+      pruneResult.prunedCount,
+      pruneResult.tokensSaved,
+    );
 
     // Check if pruning was enough
     const afterPruneCheck = checkCompactionNeeded(pruneResult.messages, config);
@@ -236,7 +239,8 @@ export const createCompactionMiddleware = (
   ) => Promise<{ messages: Message[]; summary: string }>;
 } => {
   return {
-    shouldCompact: (messages: Message[]) => isContextOverflow(messages, modelId),
+    shouldCompact: (messages: Message[]) =>
+      isContextOverflow(messages, modelId),
 
     compact: async (messages: Message[]) => {
       // Notify UI that compaction is starting

@@ -4,7 +4,14 @@
  * Displays active agents, their status, and execution progress.
  */
 
-import { For, Show, createMemo, createSignal, onMount, onCleanup } from "solid-js";
+import {
+  For,
+  Show,
+  createMemo,
+  createSignal,
+  onMount,
+  onCleanup,
+} from "solid-js";
 import { TextAttributes } from "@opentui/core";
 import { useTheme } from "@tui-solid/context/theme";
 import { multiAgentStore } from "@stores/core/multi-agent-store";
@@ -45,7 +52,9 @@ export function MultiAgentPanel(props: MultiAgentPanelProps) {
       running: all.filter((i) => i.status === "running").length,
       waiting: all.filter((i) => i.status === "waiting_conflict").length,
       completed: all.filter((i) => i.status === "completed").length,
-      failed: all.filter((i) => i.status === "error" || i.status === "cancelled").length,
+      failed: all.filter(
+        (i) => i.status === "error" || i.status === "cancelled",
+      ).length,
       total: all.length,
     };
   });
@@ -107,24 +116,16 @@ export function MultiAgentPanel(props: MultiAgentPanelProps) {
         {/* Status Summary */}
         <box flexDirection="row" gap={1} marginBottom={1}>
           <Show when={stats().running > 0}>
-            <text fg={theme.colors.info}>
-              ● {stats().running}
-            </text>
+            <text fg={theme.colors.info}>● {stats().running}</text>
           </Show>
           <Show when={stats().waiting > 0}>
-            <text fg={theme.colors.warning}>
-              ⏸ {stats().waiting}
-            </text>
+            <text fg={theme.colors.warning}>⏸ {stats().waiting}</text>
           </Show>
           <Show when={stats().completed > 0}>
-            <text fg={theme.colors.success}>
-              ✓ {stats().completed}
-            </text>
+            <text fg={theme.colors.success}>✓ {stats().completed}</text>
           </Show>
           <Show when={stats().failed > 0}>
-            <text fg={theme.colors.error}>
-              ✗ {stats().failed}
-            </text>
+            <text fg={theme.colors.error}>✗ {stats().failed}</text>
           </Show>
         </box>
 
@@ -136,7 +137,11 @@ export function MultiAgentPanel(props: MultiAgentPanelProps) {
                 <box
                   flexDirection="column"
                   marginBottom={1}
-                  backgroundColor={index() === selectedIndex() ? theme.colors.bgHighlight : undefined}
+                  backgroundColor={
+                    index() === selectedIndex()
+                      ? theme.colors.bgHighlight
+                      : undefined
+                  }
                   paddingLeft={1}
                   paddingRight={1}
                 >

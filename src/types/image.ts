@@ -2,7 +2,11 @@
  * Image types for multimodal message support
  */
 
-export type ImageMediaType = "image/png" | "image/jpeg" | "image/gif" | "image/webp";
+export type ImageMediaType =
+  | "image/png"
+  | "image/jpeg"
+  | "image/gif"
+  | "image/webp";
 
 export interface ImageContent {
   type: "image";
@@ -43,11 +47,15 @@ export interface PastedImage {
   timestamp: number;
 }
 
-export const isImageContent = (content: MessageContent): content is ImageContent => {
+export const isImageContent = (
+  content: MessageContent,
+): content is ImageContent => {
   return content.type === "image";
 };
 
-export const isTextContent = (content: MessageContent): content is TextContent => {
+export const isTextContent = (
+  content: MessageContent,
+): content is TextContent => {
   return content.type === "text";
 };
 

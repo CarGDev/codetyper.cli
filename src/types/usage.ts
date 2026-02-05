@@ -29,7 +29,11 @@ export interface ContextWindowState {
   model: string;
 }
 
-export type ContextWindowStatus = "normal" | "warning" | "critical" | "compacting";
+export type ContextWindowStatus =
+  | "normal"
+  | "warning"
+  | "critical"
+  | "compacting";
 
 /**
  * Calculate context window state from usage stats

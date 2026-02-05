@@ -4,7 +4,7 @@
 
 import { errorMessage } from "@utils/core/terminal";
 import { COMMAND_REGISTRY, isValidCommand } from "@commands/handlers/registry";
-import type { CommandOptions } from "@/types/index";
+import type { CommandOptions } from "@/types/common";
 
 export const handleCommand = async (
   command: string,

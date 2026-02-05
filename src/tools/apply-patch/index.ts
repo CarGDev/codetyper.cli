@@ -9,9 +9,23 @@ import { applyPatchParams } from "@tools/apply-patch/params";
 import { executeApplyPatch } from "@tools/apply-patch/execute";
 
 export { applyPatchParams } from "@tools/apply-patch/params";
-export { executeApplyPatch, rollbackPatch, getAvailableRollbacks, clearRollbacks } from "@tools/apply-patch/execute";
-export { parsePatch, validatePatch, getTargetPath, reversePatch } from "@tools/apply-patch/parser";
-export { findHunkPosition, isHunkApplied, previewHunkApplication } from "@tools/apply-patch/matcher";
+export {
+  executeApplyPatch,
+  rollbackPatch,
+  getAvailableRollbacks,
+  clearRollbacks,
+} from "@tools/apply-patch/execute";
+export {
+  parsePatch,
+  validatePatch,
+  getTargetPath,
+  reversePatch,
+} from "@tools/apply-patch/parser";
+export {
+  findHunkPosition,
+  isHunkApplied,
+  previewHunkApplication,
+} from "@tools/apply-patch/matcher";
 
 /**
  * Tool description

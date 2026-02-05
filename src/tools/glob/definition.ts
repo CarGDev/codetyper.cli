@@ -7,11 +7,17 @@ import { executeGlob } from "@tools/glob/execute";
 import type { ToolDefinition, ToolContext, ToolResult } from "@/types/tools";
 
 export const globParams = z.object({
-  pattern: z.string().describe("The glob pattern to match files against (e.g., '**/*.ts', 'src/**/*.tsx')"),
+  pattern: z
+    .string()
+    .describe(
+      "The glob pattern to match files against (e.g., '**/*.ts', 'src/**/*.tsx')",
+    ),
   path: z
     .string()
     .optional()
-    .describe("The directory to search in. Defaults to current working directory."),
+    .describe(
+      "The directory to search in. Defaults to current working directory.",
+    ),
 });
 
 type GlobParams = z.infer<typeof globParams>;

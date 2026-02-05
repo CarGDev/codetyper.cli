@@ -58,9 +58,10 @@ const addToGitignore = async (workingDir: string): Promise<boolean> => {
     }
 
     // Add .codetyper to gitignore
-    const newContent = content.endsWith("\n") || content === ""
-      ? `${content}${GITIGNORE_ENTRY}\n`
-      : `${content}\n${GITIGNORE_ENTRY}\n`;
+    const newContent =
+      content.endsWith("\n") || content === ""
+        ? `${content}${GITIGNORE_ENTRY}\n`
+        : `${content}\n${GITIGNORE_ENTRY}\n`;
 
     await fs.writeFile(gitignorePath, newContent, "utf-8");
     return true;
@@ -340,7 +341,9 @@ const createDefaultAgents = async (workingDir: string): Promise<string[]> => {
   return created;
 };
 
-export const setupProject = async (workingDir: string): Promise<SetupResult> => {
+export const setupProject = async (
+  workingDir: string,
+): Promise<SetupResult> => {
   const result: SetupResult = {
     gitignoreUpdated: false,
     agentsCreated: [],
@@ -365,13 +368,17 @@ export const setupProject = async (workingDir: string): Promise<SetupResult> => 
   return result;
 };
 
-export const getSetupStatus = async (workingDir: string): Promise<{
+export const getSetupStatus = async (
+  workingDir: string,
+): Promise<{
   hasGit: boolean;
   hasCodetyperDir: boolean;
   agentCount: number;
 }> => {
   const hasGit = await isGitRepository(workingDir);
-  const hasCodetyperDir = await fileExists(path.join(workingDir, CODETYPER_DIR));
+  const hasCodetyperDir = await fileExists(
+    path.join(workingDir, CODETYPER_DIR),
+  );
 
   let agentCount = 0;
   if (hasCodetyperDir) {

@@ -9,7 +9,7 @@ import {
   ESTIMATED_TIME_PER_STEP,
 } from "@constants/runner";
 import { delay } from "@commands/runner/utils";
-import type { AgentType, ExecutionPlan, PlanStep } from "@/types/index";
+import type { AgentType, ExecutionPlan, PlanStep } from "@/types/common";
 
 export const createPlan = async (
   task: string,

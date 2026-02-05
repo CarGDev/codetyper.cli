@@ -18,11 +18,14 @@ export function StreamingMessage(props: StreamingMessageProps) {
   // This ensures proper reactivity with the store
   const [displayContent, setDisplayContent] = createSignal(props.entry.content);
   const [isActiveStreaming, setIsActiveStreaming] = createSignal(
-    props.entry.metadata?.isStreaming ?? false
+    props.entry.metadata?.isStreaming ?? false,
   );
 
   onMount(() => {
-    addDebugLog("render", `StreamingMessage mounted for entry: ${props.entry.id}`);
+    addDebugLog(
+      "render",
+      `StreamingMessage mounted for entry: ${props.entry.id}`,
+    );
   });
 
   // Effect to sync content from store's streamingLog
@@ -36,7 +39,10 @@ export function StreamingMessage(props: StreamingMessageProps) {
     // Check if this entry is the currently streaming log
     const isCurrentLog = logId === props.entry.id;
 
-    addDebugLog("render", `Effect: logId=${logId}, entryId=${props.entry.id}, isActive=${isActive}, contentLen=${storeContent?.length ?? 0}`);
+    addDebugLog(
+      "render",
+      `Effect: logId=${logId}, entryId=${props.entry.id}, isActive=${isActive}, contentLen=${storeContent?.length ?? 0}`,
+    );
 
     if (isCurrentLog && isActive) {
       setDisplayContent(storeContent);

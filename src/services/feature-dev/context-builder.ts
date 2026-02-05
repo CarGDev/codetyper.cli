@@ -4,14 +4,8 @@
  * Builds context for each phase of feature development.
  */
 
-import {
-  PHASE_PROMPTS,
-  PHASE_DESCRIPTIONS,
-} from "@constants/feature-dev";
-import type {
-  FeatureDevPhase,
-  FeatureDevState,
-} from "@/types/feature-dev";
+import { PHASE_PROMPTS, PHASE_DESCRIPTIONS } from "@constants/feature-dev";
+import type { FeatureDevPhase, FeatureDevState } from "@/types/feature-dev";
 
 /**
  * Build the full context for a phase execution
@@ -220,7 +214,9 @@ const buildStateContext = (
 
       // Test status
       if (state.testResults) {
-        const status = state.testResults.passed ? "✓ All tests passing" : "✗ Tests failing";
+        const status = state.testResults.passed
+          ? "✓ All tests passing"
+          : "✗ Tests failing";
         lines.push(`### Test Status: ${status}`);
       }
 

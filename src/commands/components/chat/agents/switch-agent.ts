@@ -3,7 +3,11 @@
  */
 
 import chalk from "chalk";
-import { errorMessage, infoMessage, warningMessage } from "@utils/core/terminal";
+import {
+  errorMessage,
+  infoMessage,
+  warningMessage,
+} from "@utils/core/terminal";
 import { agentLoader } from "@services/agent-loader";
 import type { ChatState } from "@commands/components/chat/state";
 

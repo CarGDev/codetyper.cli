@@ -3,7 +3,7 @@
  */
 
 import type { ProviderName } from "@/types/providers";
-import type { ToolCall, ToolResult } from "@tools/index";
+import type { ToolCall, ToolResult } from "@/types/tools";
 
 export interface AgentOptions {
   provider: ProviderName;

@@ -48,7 +48,9 @@ export const formatPRComments = (comments: GitHubPRComment[]): string => {
   for (const comment of comments) {
     lines.push(`### Comment by ${comment.author}`);
     if (comment.path) {
-      lines.push(`**File:** ${comment.path}${comment.line ? `:${comment.line}` : ""}`);
+      lines.push(
+        `**File:** ${comment.path}${comment.line ? `:${comment.line}` : ""}`,
+      );
     }
     lines.push(`**Date:** ${new Date(comment.createdAt).toLocaleDateString()}`);
     lines.push("");
@@ -90,7 +92,9 @@ export const formatPRReviews = (reviews: GitHubPRReview[]): string => {
   for (const review of reviews) {
     const emoji = stateEmojis[review.state] || "";
     lines.push(`### ${emoji} ${review.state} by ${review.author}`);
-    lines.push(`**Date:** ${new Date(review.submittedAt).toLocaleDateString()}`);
+    lines.push(
+      `**Date:** ${new Date(review.submittedAt).toLocaleDateString()}`,
+    );
 
     if (review.body) {
       lines.push("");
@@ -154,7 +158,9 @@ export const formatCommentForSolving = (comment: GitHubPRComment): string => {
   }
 
   lines.push("");
-  lines.push("Please address this comment by making the necessary changes to the code.");
+  lines.push(
+    "Please address this comment by making the necessary changes to the code.",
+  );
 
   return lines.join("\n");
 };
@@ -167,17 +173,16 @@ export const formatPendingComments = (comments: GitHubPRComment[]): string => {
     return "No pending comments to address.";
   }
 
-  const lines: string[] = [
-    `## ${comments.length} Comment(s) to Address`,
-    "",
-  ];
+  const lines: string[] = [`## ${comments.length} Comment(s) to Address`, ""];
 
   for (let i = 0; i < comments.length; i++) {
     const comment = comments[i];
     lines.push(`### ${i + 1}. Comment by ${comment.author}`);
 
     if (comment.path) {
-      lines.push(`**File:** ${comment.path}${comment.line ? `:${comment.line}` : ""}`);
+      lines.push(
+        `**File:** ${comment.path}${comment.line ? `:${comment.line}` : ""}`,
+      );
     }
 
     lines.push("");

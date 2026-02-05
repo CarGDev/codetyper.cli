@@ -49,7 +49,10 @@ export interface DocumentSymbol {
 }
 
 export interface Hover {
-  contents: string | { kind: string; value: string } | Array<string | { kind: string; value: string }>;
+  contents:
+    | string
+    | { kind: string; value: string }
+    | Array<string | { kind: string; value: string }>;
   range?: Range;
 }
 
@@ -163,7 +166,10 @@ export class LSPClient extends EventEmitter {
 
   private handleNotification(method: string, params: unknown): void {
     if (method === "textDocument/publishDiagnostics") {
-      const { uri, diagnostics } = params as { uri: string; diagnostics: Diagnostic[] };
+      const { uri, diagnostics } = params as {
+        uri: string;
+        diagnostics: Diagnostic[];
+      };
       this.diagnosticsMap.set(uri, diagnostics);
       this.emit("diagnostics", uri, diagnostics);
     }
@@ -213,7 +219,9 @@ export class LSPClient extends EventEmitter {
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
-    const result = await this.request<{ capabilities: Record<string, unknown> }>("initialize", {
+    const result = await this.request<{
+      capabilities: Record<string, unknown>;
+    }>("initialize", {
       processId: process.pid,
       rootUri: `file://${this.root}`,
       rootPath: this.root,
@@ -319,45 +327,60 @@ export class LSPClient extends EventEmitter {
     }
   }
 
-  async getDefinition(filePath: string, position: Position): Promise<Location | Location[] | null> {
+  async getDefinition(
+    filePath: string,
+    position: Position,
+  ): Promise<Location | Location[] | null> {
     const uri = `file://${filePath}`;
 
     try {
-      return await this.request<Location | Location[] | null>("textDocument/definition", {
-        textDocument: { uri },
-        position,
-      });
+      return await this.request<Location | Location[] | null>(
+        "textDocument/definition",
+        {
+          textDocument: { uri },
+          position,
+        },
+      );
     } catch {
       return null;
     }
   }
 
-  async getReferences(filePath: string, position: Position, includeDeclaration = true): Promise<Location[]> {
+  async getReferences(
+    filePath: string,
+    position: Position,
+    includeDeclaration = true,
+  ): Promise<Location[]> {
     const uri = `file://${filePath}`;
 
     try {
-      const result = await this.request<Location[] | null>("textDocument/references", {
-        textDocument: { uri },
-        position,
-        context: { includeDeclaration },
-      });
+      const result = await this.request<Location[] | null>(
+        "textDocument/references",
+        {
+          textDocument: { uri },
+          position,
+          context: { includeDeclaration },
+        },
+      );
       return result ?? [];
     } catch {
       return [];
     }
   }
 
-  async getCompletions(filePath: string, position: Position): Promise<CompletionItem[]> {
+  async getCompletions(
+    filePath: string,
+    position: Position,
+  ): Promise<CompletionItem[]> {
     const uri = `file://${filePath}`;
 
     try {
-      const result = await this.request<{ items: CompletionItem[] } | CompletionItem[] | null>(
-        "textDocument/completion",
-        {
-          textDocument: { uri },
-          position,
-        },
-      );
+      const result = await this.request<
+        { items: CompletionItem[] } | CompletionItem[] | null
+      >("textDocument/completion", {
+        textDocument: { uri },
+        position,
+      });
 
       if (!result) return [];
       return Array.isArray(result) ? result : result.items;
@@ -370,9 +393,12 @@ export class LSPClient extends EventEmitter {
     const uri = `file://${filePath}`;
 
     try {
-      const result = await this.request<DocumentSymbol[] | null>("textDocument/documentSymbol", {
-        textDocument: { uri },
-      });
+      const result = await this.request<DocumentSymbol[] | null>(
+        "textDocument/documentSymbol",
+        {
+          textDocument: { uri },
+        },
+      );
       return result ?? [];
     } catch {
       return [];

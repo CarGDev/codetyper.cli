@@ -332,7 +332,10 @@ export const connect = async (): Promise<boolean> => {
 
     // Try to get stats to verify credentials are valid
     const projectId = brainState.projectId ?? BRAIN_DEFAULTS.PROJECT_ID;
-    const statsResponse = await brainApi.getKnowledgeStats(projectId, authToken);
+    const statsResponse = await brainApi.getKnowledgeStats(
+      projectId,
+      authToken,
+    );
 
     if (statsResponse.success && statsResponse.data) {
       updateState({
@@ -539,7 +542,9 @@ export const extractAndLearn = async (
     if (response.success) {
       // Update knowledge count
       const newCount =
-        brainState.knowledgeCount + response.data.stored + response.data.updated;
+        brainState.knowledgeCount +
+        response.data.stored +
+        response.data.updated;
       updateState({ knowledgeCount: newCount });
       return response;
     }
@@ -563,7 +568,9 @@ export const extractAndLearn = async (
 export const searchMemories = async (
   query: string,
   limit = 10,
-): Promise<{ memories: Array<{ content: string; similarity: number }> } | null> => {
+): Promise<{
+  memories: Array<{ content: string; similarity: number }>;
+} | null> => {
   if (!isConnected()) {
     return null;
   }
@@ -599,7 +606,12 @@ export const searchMemories = async (
  */
 export const storeMemory = async (
   content: string,
-  type: "fact" | "pattern" | "correction" | "preference" | "context" = "context",
+  type:
+    | "fact"
+    | "pattern"
+    | "correction"
+    | "preference"
+    | "context" = "context",
 ): Promise<boolean> => {
   if (!isConnected()) {
     return false;

@@ -9,8 +9,15 @@ import {
   PR_REVIEW_ERRORS,
   PR_REVIEW_MESSAGES,
 } from "@constants/pr-review";
-import { parseDiff, filterFiles, getFilePath } from "@services/pr-review/diff-parser";
-import { generateReport, formatReportMarkdown } from "@services/pr-review/report-generator";
+import {
+  parseDiff,
+  filterFiles,
+  getFilePath,
+} from "@services/pr-review/diff-parser";
+import {
+  generateReport,
+  formatReportMarkdown,
+} from "@services/pr-review/report-generator";
 import * as securityReviewer from "@services/pr-review/reviewers/security";
 import * as performanceReviewer from "@services/pr-review/reviewers/performance";
 import * as logicReviewer from "@services/pr-review/reviewers/logic";
@@ -120,7 +127,8 @@ const runReviewers = async (
     onProgress?.(PR_REVIEW_MESSAGES.REVIEWING(reviewerConfig.name));
 
     const startTime = Date.now();
-    const reviewerModule = reviewers[reviewerConfig.name as keyof typeof reviewers];
+    const reviewerModule =
+      reviewers[reviewerConfig.name as keyof typeof reviewers];
 
     if (!reviewerModule) {
       return {
@@ -180,7 +188,12 @@ export const quickReview = async (
     {
       config: {
         reviewers: [
-          { name: "security", type: "security", enabled: true, minConfidence: 90 },
+          {
+            name: "security",
+            type: "security",
+            enabled: true,
+            minConfidence: 90,
+          },
           { name: "logic", type: "logic", enabled: true, minConfidence: 90 },
         ],
       },

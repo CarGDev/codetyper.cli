@@ -11,23 +11,20 @@ import { batch } from "solid-js";
 import { getFiles } from "@services/file-picker/files";
 import { abortCurrentOperation } from "@services/chat-tui-service";
 import versionData from "@/version.json";
+import { ExitProvider, useExit } from "@tui-solid/context/exit";
+import { RouteProvider, useRoute } from "@tui-solid/context/route";
 import {
-  ExitProvider,
-  useExit,
-  RouteProvider,
-  useRoute,
   AppStoreProvider,
   useAppStore,
   setAppStoreRef,
-  ThemeProvider,
-  useTheme,
-  KeybindProvider,
-  DialogProvider,
-} from "@tui-solid/context";
+} from "@tui-solid/context/app";
+import { ThemeProvider, useTheme } from "@tui-solid/context/theme";
+import { KeybindProvider } from "@tui-solid/context/keybind";
+import { DialogProvider } from "@tui-solid/context/dialog";
 import { ToastProvider, Toast, useToast } from "@tui-solid/ui/toast";
 import { Home } from "@tui-solid/routes/home";
 import { Session } from "@tui-solid/routes/session";
-import type { TuiInput, TuiOutput } from "@tui-solid/types";
+import type { TuiInput, TuiOutput } from "@interfaces/index";
 import type { MCPServerDisplay } from "@/types/tui";
 import type { PermissionScope, LearningScope } from "@/types/tui";
 import type { MCPAddFormData } from "@/types/mcp";

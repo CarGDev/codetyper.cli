@@ -11,10 +11,7 @@ import type {
   AgentInstance,
 } from "@/types/multi-agent";
 import { multiAgentStore } from "@stores/core/multi-agent-store";
-import {
-  MULTI_AGENT_ERRORS,
-  FILE_LOCK,
-} from "@/constants/multi-agent";
+import { MULTI_AGENT_ERRORS, FILE_LOCK } from "@/constants/multi-agent";
 import {
   pauseAgentForConflict,
   resumeAgent,
@@ -28,10 +25,13 @@ const fileLocks: Map<string, string> = new Map(); // filePath -> agentId
 /**
  * Pending lock requests
  */
-const pendingLocks: Map<string, Array<{
-  agentId: string;
-  resolve: (acquired: boolean) => void;
-}>> = new Map();
+const pendingLocks: Map<
+  string,
+  Array<{
+    agentId: string;
+    resolve: (acquired: boolean) => void;
+  }>
+> = new Map();
 
 /**
  * Acquire a file lock for an agent
@@ -256,7 +256,10 @@ const waitForAgentCompletion = (agentId: string): Promise<void> => {
   return new Promise((resolve) => {
     const checkInterval = setInterval(() => {
       const agent = multiAgentStore.getState().instances.get(agentId);
-      if (!agent || ["completed", "error", "cancelled"].includes(agent.status)) {
+      if (
+        !agent ||
+        ["completed", "error", "cancelled"].includes(agent.status)
+      ) {
         clearInterval(checkInterval);
         resolve();
       }

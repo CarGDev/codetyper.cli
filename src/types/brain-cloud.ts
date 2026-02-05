@@ -32,11 +32,7 @@ export type SyncDirection = "push" | "pull" | "both";
 /**
  * Sync operation type
  */
-export type SyncOperationType =
-  | "create"
-  | "update"
-  | "delete"
-  | "conflict";
+export type SyncOperationType = "create" | "update" | "delete" | "conflict";
 
 /**
  * Brain sync state

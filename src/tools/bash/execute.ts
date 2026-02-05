@@ -109,13 +109,10 @@ const executeCommand = (
   args: BashParams,
   ctx: ToolContext,
 ): Promise<ToolResult> => {
-  const {
-    command,
-    workdir,
-    timeout = BASH_DEFAULTS.TIMEOUT,
-  } = args;
+  const { command, workdir, timeout = BASH_DEFAULTS.TIMEOUT } = args;
   // Provide default description if not specified
-  const description = args.description ?? `Running: ${command.substring(0, 50)}`;
+  const description =
+    args.description ?? `Running: ${command.substring(0, 50)}`;
   const cwd = workdir ?? ctx.workingDir;
 
   updateRunningStatus(ctx, description);
@@ -179,7 +176,8 @@ export const executeBash = async (
   }
 
   // Provide default description if not specified
-  const description = args.description ?? `Running: ${command.substring(0, 50)}`;
+  const description =
+    args.description ?? `Running: ${command.substring(0, 50)}`;
 
   const allowed = await checkPermission(
     command,

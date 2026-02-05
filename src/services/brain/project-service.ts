@@ -39,7 +39,13 @@ interface ProjectServiceState {
 const state: ProjectServiceState = {
   projects: new Map(),
   activeProjectId: null,
-  configPath: join(homedir(), ".local", "share", "codetyper", BRAIN_PROJECT_STORAGE.CONFIG_FILE),
+  configPath: join(
+    homedir(),
+    ".local",
+    "share",
+    "codetyper",
+    BRAIN_PROJECT_STORAGE.CONFIG_FILE,
+  ),
   initialized: false,
 };
 
@@ -116,7 +122,9 @@ export const initialize = async (): Promise<void> => {
   state.initialized = true;
 };
 
-export const createProject = async (input: BrainProjectCreateInput): Promise<BrainProject> => {
+export const createProject = async (
+  input: BrainProjectCreateInput,
+): Promise<BrainProject> => {
   await initialize();
 
   // Validate name
@@ -130,7 +138,7 @@ export const createProject = async (input: BrainProjectCreateInput): Promise<Bra
 
   // Check for duplicate names
   const existingProject = Array.from(state.projects.values()).find(
-    (p) => p.name.toLowerCase() === input.name.toLowerCase()
+    (p) => p.name.toLowerCase() === input.name.toLowerCase(),
   );
 
   if (existingProject) {
@@ -161,7 +169,7 @@ export const createProject = async (input: BrainProjectCreateInput): Promise<Bra
 
 export const updateProject = async (
   projectId: number,
-  input: BrainProjectUpdateInput
+  input: BrainProjectUpdateInput,
 ): Promise<BrainProject> => {
   await initialize();
 
@@ -205,7 +213,9 @@ export const deleteProject = async (projectId: number): Promise<boolean> => {
   return true;
 };
 
-export const switchProject = async (projectId: number): Promise<BrainProjectSwitchResult> => {
+export const switchProject = async (
+  projectId: number,
+): Promise<BrainProjectSwitchResult> => {
   await initialize();
 
   const newProject = state.projects.get(projectId);
@@ -219,7 +229,10 @@ export const switchProject = async (projectId: number): Promise<BrainProjectSwit
 
   // Update active status
   if (previousProject) {
-    state.projects.set(previousProject.id, { ...previousProject, isActive: false });
+    state.projects.set(previousProject.id, {
+      ...previousProject,
+      isActive: false,
+    });
   }
 
   state.projects.set(projectId, { ...newProject, isActive: true });
@@ -235,35 +248,45 @@ export const switchProject = async (projectId: number): Promise<BrainProjectSwit
   };
 };
 
-export const getProject = async (projectId: number): Promise<BrainProject | undefined> => {
+export const getProject = async (
+  projectId: number,
+): Promise<BrainProject | undefined> => {
   await initialize();
   return state.projects.get(projectId);
 };
 
 export const getActiveProject = async (): Promise<BrainProject | undefined> => {
   await initialize();
-  return state.activeProjectId ? state.projects.get(state.activeProjectId) : undefined;
+  return state.activeProjectId
+    ? state.projects.get(state.activeProjectId)
+    : undefined;
 };
 
 export const listProjects = async (): Promise<BrainProjectListResult> => {
   await initialize();
 
   return {
-    projects: Array.from(state.projects.values()).sort((a, b) => b.updatedAt - a.updatedAt),
+    projects: Array.from(state.projects.values()).sort(
+      (a, b) => b.updatedAt - a.updatedAt,
+    ),
     activeProjectId: state.activeProjectId ?? undefined,
     total: state.projects.size,
   };
 };
 
-export const findProjectByPath = async (rootPath: string): Promise<BrainProject | undefined> => {
+export const findProjectByPath = async (
+  rootPath: string,
+): Promise<BrainProject | undefined> => {
   await initialize();
 
-  return Array.from(state.projects.values()).find((p) => p.rootPath === rootPath);
+  return Array.from(state.projects.values()).find(
+    (p) => p.rootPath === rootPath,
+  );
 };
 
 export const updateProjectStats = async (
   projectId: number,
-  stats: Partial<BrainProjectStats>
+  stats: Partial<BrainProjectStats>,
 ): Promise<void> => {
   await initialize();
 
@@ -280,7 +303,9 @@ export const updateProjectStats = async (
   await saveProjectsToConfig();
 };
 
-export const exportProject = async (projectId: number): Promise<BrainProjectExport> => {
+export const exportProject = async (
+  projectId: number,
+): Promise<BrainProjectExport> => {
   await initialize();
 
   const project = state.projects.get(projectId);
@@ -307,7 +332,7 @@ export const exportProject = async (projectId: number): Promise<BrainProjectExpo
     "codetyper",
     "brain",
     "exports",
-    `${project.name}-${Date.now()}${BRAIN_PROJECT_STORAGE.EXPORT_EXTENSION}`
+    `${project.name}-${Date.now()}${BRAIN_PROJECT_STORAGE.EXPORT_EXTENSION}`,
   );
 
   await writeFile(exportPath, JSON.stringify(exportData, null, 2));
@@ -316,7 +341,7 @@ export const exportProject = async (projectId: number): Promise<BrainProjectExpo
 };
 
 export const importProject = async (
-  exportData: BrainProjectExport
+  exportData: BrainProjectExport,
 ): Promise<BrainProjectImportResult> => {
   await initialize();
 
@@ -352,7 +377,9 @@ export const importProject = async (
   }
 };
 
-export const getProjectSettings = async (projectId: number): Promise<BrainProjectSettings | undefined> => {
+export const getProjectSettings = async (
+  projectId: number,
+): Promise<BrainProjectSettings | undefined> => {
   await initialize();
 
   const project = state.projects.get(projectId);
@@ -361,13 +388,15 @@ export const getProjectSettings = async (projectId: number): Promise<BrainProjec
 
 export const updateProjectSettings = async (
   projectId: number,
-  settings: Partial<BrainProjectSettings>
+  settings: Partial<BrainProjectSettings>,
 ): Promise<BrainProjectSettings> => {
   const project = await updateProject(projectId, { settings });
   return project.settings;
 };
 
-export const setActiveProjectByPath = async (rootPath: string): Promise<BrainProject | undefined> => {
+export const setActiveProjectByPath = async (
+  rootPath: string,
+): Promise<BrainProject | undefined> => {
   const project = await findProjectByPath(rootPath);
 
   if (project) {

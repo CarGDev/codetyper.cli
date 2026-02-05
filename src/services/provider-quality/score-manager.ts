@@ -11,7 +11,12 @@ import {
   calculateOverallScore,
 } from "./persistence";
 
-export type Outcome = "approved" | "corrected" | "rejected" | "minor_issue" | "major_issue";
+export type Outcome =
+  | "approved"
+  | "corrected"
+  | "rejected"
+  | "minor_issue"
+  | "major_issue";
 
 export interface ScoreUpdate {
   providerId: string;
@@ -19,7 +24,9 @@ export interface ScoreUpdate {
   outcome: Outcome;
 }
 
-export const updateQualityScore = async (update: ScoreUpdate): Promise<void> => {
+export const updateQualityScore = async (
+  update: ScoreUpdate,
+): Promise<void> => {
   const { providerId, taskType, outcome } = update;
   const data = await getProviderQuality(providerId);
   const score = data.scores[taskType];

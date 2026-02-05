@@ -5,7 +5,7 @@ import {
   errorMessage,
 } from "@utils/core/terminal";
 import { getConfig } from "@services/core/config";
-import { getProvider } from "@providers/index";
+import { getProvider } from "@providers/core/registry";
 import { showModels } from "./show-models";
 import type { ChatState } from "../state";
 

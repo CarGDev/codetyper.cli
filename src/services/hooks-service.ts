@@ -46,7 +46,9 @@ const hooksCache: HooksCache = {
 /**
  * Load hooks configuration from a file
  */
-const loadHooksFromFile = async (filePath: string): Promise<HookDefinition[]> => {
+const loadHooksFromFile = async (
+  filePath: string,
+): Promise<HookDefinition[]> => {
   try {
     await access(filePath, constants.R_OK);
     const content = await readFile(filePath, "utf-8");
@@ -57,7 +59,7 @@ const loadHooksFromFile = async (filePath: string): Promise<HookDefinition[]> =>
     }
 
     return config.hooks.filter(
-      (hook) => hook.enabled !== false && hook.event && hook.script
+      (hook) => hook.enabled !== false && hook.event && hook.script,
     );
   } catch {
     return [];
@@ -117,7 +119,7 @@ const resolveScriptPath = (script: string, workingDir: string): string => {
 const executeHookScript = async (
   hook: HookDefinition,
   input: HookInput,
-  workingDir: string
+  workingDir: string,
 ): Promise<HookResult> => {
   const scriptPath = resolveScriptPath(hook.script, workingDir);
   const timeout = hook.timeout ?? DEFAULT_HOOK_TIMEOUT;
@@ -201,7 +203,8 @@ const executeHookScript = async (
       } else if (exitCode === HOOK_EXIT_CODES.BLOCK) {
         resolvePromise({
           action: "block",
-          message: stderr.trim() || `Blocked by hook: ${hook.name || hook.script}`,
+          message:
+            stderr.trim() || `Blocked by hook: ${hook.name || hook.script}`,
         });
       } else {
         resolvePromise({
@@ -231,7 +234,7 @@ const executeHookScript = async (
 const executeHooks = async (
   event: HookEventType,
   input: HookInput,
-  workingDir: string
+  workingDir: string,
 ): Promise<HookResult> => {
   const hooks = getHooksForEvent(event);
 
@@ -288,7 +291,7 @@ export const executePreToolUseHooks = async (
   sessionId: string,
   toolName: string,
   toolArgs: Record<string, unknown>,
-  workingDir: string
+  workingDir: string,
 ): Promise<HookResult> => {
   if (!hooksCache.loaded) {
     await loadHooks(workingDir);
@@ -312,7 +315,7 @@ export const executePostToolUseHooks = async (
   toolName: string,
   toolArgs: Record<string, unknown>,
   result: ToolResult,
-  workingDir: string
+  workingDir: string,
 ): Promise<void> => {
   if (!hooksCache.loaded) {
     await loadHooks(workingDir);
@@ -341,7 +344,7 @@ export const executeSessionStartHooks = async (
   sessionId: string,
   workingDir: string,
   provider: string,
-  model: string
+  model: string,
 ): Promise<void> => {
   if (!hooksCache.loaded) {
     await loadHooks(workingDir);
@@ -364,7 +367,7 @@ export const executeSessionEndHooks = async (
   sessionId: string,
   workingDir: string,
   duration: number,
-  messageCount: number
+  messageCount: number,
 ): Promise<void> => {
   if (!hooksCache.loaded) {
     await loadHooks(workingDir);
@@ -386,7 +389,7 @@ export const executeSessionEndHooks = async (
 export const executeUserPromptSubmitHooks = async (
   sessionId: string,
   prompt: string,
-  workingDir: string
+  workingDir: string,
 ): Promise<HookResult> => {
   if (!hooksCache.loaded) {
     await loadHooks(workingDir);
@@ -407,7 +410,7 @@ export const executeUserPromptSubmitHooks = async (
 export const executeStopHooks = async (
   sessionId: string,
   workingDir: string,
-  reason: "interrupt" | "complete" | "error"
+  reason: "interrupt" | "complete" | "error",
 ): Promise<void> => {
   if (!hooksCache.loaded) {
     await loadHooks(workingDir);
