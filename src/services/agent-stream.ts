@@ -373,10 +373,12 @@ const executeTool = async (
   const rollbackType = ROLLBACK_CAPABLE_TOOLS[toolCall.name];
   let originalState: { filePath: string; content: string } | null = null;
 
+  // Extract file path - tools use filePath (camelCase), not file_path
+  const toolFilePath = (toolCall.arguments.filePath ?? toolCall.arguments.file_path) as string | undefined;
+
   if (rollbackType && (rollbackType === "file_edit" || rollbackType === "file_delete")) {
-    const filePath = toolCall.arguments.file_path as string | undefined;
-    if (filePath) {
-      originalState = await captureFileState(filePath);
+    if (toolFilePath) {
+      originalState = await captureFileState(toolFilePath);
     }
   }
 
@@ -386,11 +388,10 @@ const executeTool = async (
 
     // Record action for rollback if successful and modifying
     if (result.success && rollbackType) {
-      const filePath = toolCall.arguments.file_path as string | undefined;
       state.executionControl.recordAction({
         type: rollbackType,
-        description: `${toolCall.name}: ${filePath ?? "unknown file"}`,
-        originalState: originalState ?? (filePath ? { filePath, content: "" } : undefined),
+        description: `${toolCall.name}: ${toolFilePath ?? "unknown file"}`,
+        originalState: originalState ?? (toolFilePath ? { filePath: toolFilePath, content: "" } : undefined),
       });
     }
 
