@@ -458,5 +458,3 @@ export function tui(options: TuiRenderOptions): Promise<TuiOutput> {
     });
   });
 }
-
-export { appStore } from "@tui-solid/context/app";

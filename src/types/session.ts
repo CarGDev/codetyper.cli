@@ -1,8 +1,4 @@
-/**
- * Session Types
- */
-
-import type { AgentType } from "@/types/index";
+import type { AgentType } from "@/types/common";
 
 export interface SessionInfo {
   id: string;

@@ -1,22 +1,9 @@
-/**
- * Apply Patch Types
- *
- * Types for unified diff parsing and application.
- * Supports fuzzy matching and rollback on failure.
- */
-
-/**
- * Patch line type
- */
 export type PatchLineType =
-  | "context"     // Unchanged line (starts with space)
-  | "addition"    // Added line (starts with +)
-  | "deletion"    // Removed line (starts with -)
-  | "header";     // Hunk header
+  | "context" // Unchanged line (starts with space)
+  | "addition" // Added line (starts with +)
+  | "deletion" // Removed line (starts with -)
+  | "header"; // Hunk header
 
-/**
- * Single line in a patch
- */
 export interface PatchLine {
   type: PatchLineType;
   content: string;
@@ -24,9 +11,6 @@ export interface PatchLine {
   newLineNumber?: number;
 }
 
-/**
- * Patch hunk (a contiguous block of changes)
- */
 export interface PatchHunk {
   oldStart: number;
   oldLines: number;
@@ -36,9 +20,6 @@ export interface PatchHunk {
   header: string;
 }
 
-/**
- * Parsed patch file for a single file
- */
 export interface ParsedFilePatch {
   oldPath: string;
   newPath: string;
@@ -49,17 +30,11 @@ export interface ParsedFilePatch {
   isRenamed: boolean;
 }
 
-/**
- * Complete parsed patch (may contain multiple files)
- */
 export interface ParsedPatch {
   files: ParsedFilePatch[];
   rawPatch: string;
 }
 
-/**
- * Fuzzy match result
- */
 export interface FuzzyMatchResult {
   found: boolean;
   lineNumber: number;
@@ -67,9 +42,6 @@ export interface FuzzyMatchResult {
   confidence: number;
 }
 
-/**
- * Hunk application result
- */
 export interface HunkApplicationResult {
   success: boolean;
   hunkIndex: number;
@@ -78,9 +50,6 @@ export interface HunkApplicationResult {
   fuzzyOffset?: number;
 }
 
-/**
- * File patch result
- */
 export interface FilePatchResult {
   success: boolean;
   filePath: string;
@@ -91,9 +60,6 @@ export interface FilePatchResult {
   error?: string;
 }
 
-/**
- * Overall patch application result
- */
 export interface ApplyPatchResult {
   success: boolean;
   filesPatched: number;
@@ -103,9 +69,6 @@ export interface ApplyPatchResult {
   error?: string;
 }
 
-/**
- * Apply patch parameters
- */
 export interface ApplyPatchParams {
   patch: string;
   targetFile?: string;
@@ -114,9 +77,6 @@ export interface ApplyPatchParams {
   reverse?: boolean;
 }
 
-/**
- * Rollback information
- */
 export interface PatchRollback {
   filePath: string;
   originalContent: string;
@@ -124,9 +84,6 @@ export interface PatchRollback {
   timestamp: number;
 }
 
-/**
- * Patch validation result
- */
 export interface PatchValidationResult {
   valid: boolean;
   errors: string[];
@@ -135,9 +92,6 @@ export interface PatchValidationResult {
   hunkCount: number;
 }
 
-/**
- * Context line match options
- */
 export interface ContextMatchOptions {
   fuzz: number;
   ignoreWhitespace: boolean;

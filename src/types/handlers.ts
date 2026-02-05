@@ -1,8 +1,4 @@
-/**
- * Handler types for command routing
- */
-
-import type { CommandOptions } from "@/types/index";
+import type { CommandOptions } from "@/types/common";
 
 export type CommandName =
   | "chat"

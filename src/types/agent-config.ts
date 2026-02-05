@@ -1,7 +1,3 @@
-/**
- * Agent configuration types
- */
-
 export interface AgentFrontmatter {
   name?: string;
   description?: string;

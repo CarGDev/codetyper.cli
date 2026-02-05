@@ -1,8 +1,5 @@
-/**
- * Runner types for task execution
- */
-
-import type { AgentType, ExecutionPlan, PlanStep } from "@/types/index";
+import type { AgentType } from "@/types/common";
+import { ExecutionPlan, PlanStep } from "@interfaces/index";
 
 export interface RunnerOptions {
   task: string;

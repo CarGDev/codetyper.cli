@@ -1,9 +1,3 @@
-/**
- * Agent markdown definition types
- * Agents are defined in markdown files with YAML frontmatter
- * Location: .codetyper/agents/*.md
- */
-
 export type AgentTier = "fast" | "balanced" | "thorough";
 
 export type AgentColor =
@@ -87,5 +81,13 @@ export const AGENT_TIER_MODELS: Record<AgentTier, string> = {
 
 export const AGENT_DEFINITION_SCHEMA = {
   required: ["name", "description", "tools"],
-  optional: ["tier", "color", "maxTurns", "triggerPhrases", "capabilities", "allowedPaths", "deniedPaths"],
+  optional: [
+    "tier",
+    "color",
+    "maxTurns",
+    "triggerPhrases",
+    "capabilities",
+    "allowedPaths",
+    "deniedPaths",
+  ],
 };

@@ -2,6 +2,28 @@
  * Background task constants
  */
 
+import { BackgroundTaskPriority } from "@/types/background-task";
+
+import { BackgroundTaskConfig } from "@interfaces/BackgroundTask";
+
+export const DEFAULT_BACKGROUND_TASK_CONFIG: BackgroundTaskConfig = {
+  maxConcurrent: 3,
+  defaultTimeout: 300000, // 5 minutes
+  retryOnFailure: false,
+  maxRetries: 1,
+  notifyOnComplete: true,
+  persistTasks: true,
+};
+
+export const BACKGROUND_TASK_PRIORITIES: Record<
+  BackgroundTaskPriority,
+  number
+> = {
+  low: 1,
+  normal: 5,
+  high: 10,
+};
+
 export const BACKGROUND_TASK = {
   MAX_CONCURRENT: 3,
   DEFAULT_TIMEOUT: 300000, // 5 minutes

@@ -1,5 +1,5 @@
 import type { ChatSession } from "@/types/index";
-import type { Message } from "@providers/index.ts";
+import type { Message } from "@providers/index";
 
 export const restoreMessagesFromSession = (
   session: ChatSession,

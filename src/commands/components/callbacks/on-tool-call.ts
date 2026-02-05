@@ -1,6 +1,6 @@
-import { appStore } from "@tui/index.ts";
+import { appStore } from "@tui/index";
 import { isQuietTool } from "@utils/core/tools";
-import type { ToolCallParams } from "@interfaces/ToolCallParams.ts";
+import type { ToolCallParams } from "@interfaces/ToolCallParams";
 
 export const onToolCall = (call: ToolCallParams): void => {
   appStore.setCurrentToolCall({

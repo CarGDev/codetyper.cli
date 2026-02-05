@@ -1,5 +1,9 @@
 import chalk from "chalk";
-import { infoMessage, errorMessage, warningMessage } from "@utils/core/terminal";
+import {
+  infoMessage,
+  errorMessage,
+  warningMessage,
+} from "@utils/core/terminal";
 import {
   createSession,
   loadSession,
@@ -9,7 +13,7 @@ import {
 } from "@services/core/session";
 import { getConfig } from "@services/core/config";
 import type { Provider as ProviderName, ChatSession } from "@/types/index";
-import { getProvider, getProviderStatus } from "@providers/index.ts";
+import { getProvider, getProviderStatus } from "@providers/index";
 import {
   printWelcome,
   formatTipLine,
@@ -20,16 +24,16 @@ import {
 import {
   DEFAULT_SYSTEM_PROMPT,
   buildSystemPromptWithRules,
-} from "@prompts/index.ts";
-import type { ChatOptions } from "@interfaces/ChatOptions.ts";
+} from "@prompts/index";
+import type { ChatOptions } from "@interfaces/ChatOptions";
 
-import { createInitialState, type ChatState } from "./state.ts";
-import { restoreMessagesFromSession } from "./session/restore-messages.ts";
-import { addContextFile } from "./context/add-context-file.ts";
-import { handleCommand } from "./commands/handle-command.ts";
-import { handleInput } from "./messages/handle-input.ts";
-import { executePrintMode } from "./print-mode.ts";
-import { createCleanup } from "./cleanup.ts";
+import { createInitialState, type ChatState } from "./state";
+import { restoreMessagesFromSession } from "./session/restore-messages";
+import { addContextFile } from "./context/add-context-file";
+import { handleCommand } from "./commands/handle-command";
+import { handleInput } from "./messages/handle-input";
+import { executePrintMode } from "./print-mode";
+import { createCleanup } from "./cleanup";
 
 export const execute = async (options: ChatOptions): Promise<void> => {
   const config = await getConfig();
@@ -221,4 +225,4 @@ export const execute = async (options: ChatOptions): Promise<void> => {
   }
 };
 
-export { createInitialState, type ChatState } from "./state.ts";
+export { createInitialState, type ChatState } from "./state";

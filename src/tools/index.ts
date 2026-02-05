@@ -1,22 +1,3 @@
-/**
- * Tool registry - exports all available tools
- */
-
-export * from "@tools/core/types";
-export { bashTool } from "@tools/bash";
-export { readTool } from "@tools/read";
-export { writeTool } from "@tools/write";
-export { editTool } from "@tools/edit";
-export { todoWriteTool } from "@tools/todo-write";
-export { todoReadTool } from "@tools/todo-read";
-export { globToolDefinition } from "@tools/glob/definition";
-export { grepToolDefinition } from "@tools/grep/definition";
-export { webSearchTool } from "@tools/web-search";
-export { webFetchTool } from "@tools/web-fetch";
-export { multiEditTool } from "@tools/multi-edit";
-export { lspTool } from "@tools/lsp";
-export { applyPatchTool } from "@tools/apply-patch";
-
 import type { ToolDefinition, FunctionDefinition } from "@tools/core/types";
 import { toolToFunction } from "@tools/core/types";
 import { bashTool } from "@tools/bash";
@@ -141,9 +122,7 @@ const filterToolsForMode = (
  * This includes both built-in tools and MCP tools
  * @param chatMode - If true, only return read-only tools (no file modifications)
  */
-export async function getToolsForApiAsync(
-  chatMode = false,
-): Promise<
+export async function getToolsForApiAsync(chatMode = false): Promise<
   {
     type: "function";
     function: FunctionDefinition;
@@ -176,9 +155,7 @@ export async function getToolsForApiAsync(
  * Get tools synchronously (uses cached MCP tools if available)
  * @param chatMode - If true, only return read-only tools (no file modifications)
  */
-export function getToolsForApi(
-  chatMode = false,
-): {
+export function getToolsForApi(chatMode = false): {
   type: "function";
   function: FunctionDefinition;
 }[] {

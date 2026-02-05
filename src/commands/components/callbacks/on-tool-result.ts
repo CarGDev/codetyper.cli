@@ -1,9 +1,6 @@
-import { appStore } from "@tui/index.ts";
-import {
-  truncateOutput,
-  detectDiffContent,
-} from "@services/chat-tui-service.ts";
-import { getThinkingMessage } from "@constants/status-messages.ts";
+import { appStore } from "@tui/index";
+import { truncateOutput, detectDiffContent } from "@services/chat-tui-service";
+import { getThinkingMessage } from "@constants/status-messages";
 
 export const onToolResult = (
   success: boolean,

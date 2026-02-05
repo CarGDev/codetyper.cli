@@ -4,22 +4,6 @@ import type { ProviderModel } from "@/types/providers";
 
 export type { ProviderModel };
 
-export interface TuiInput {
-  sessionId?: string;
-  initialPrompt?: string;
-  provider?: string;
-  model?: string;
-  theme?: string;
-  workingDirectory?: string;
-  availableModels?: ProviderModel[];
-  cascadeEnabled?: boolean;
-}
-
-export interface TuiOutput {
-  exitCode: number;
-  sessionId?: string;
-}
-
 export type Route = { type: "home" } | { type: "session"; sessionId: string };
 
 export type AppMode =

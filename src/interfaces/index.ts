@@ -1,22 +1,21 @@
-export type AgentType = "coder" | "tester" | "refactorer" | "documenter";
+import { AgentType, IntentType, Provider } from "@/types/index";
 
-export type IntentType =
-  | "ask"
-  | "code"
-  | "refactor"
-  | "fix"
-  | "document"
-  | "test"
-  | "explain";
+export interface TuiInput {
+  sessionId?: string;
+  initialPrompt?: string;
+  provider?: string;
+  model?: string;
+  theme?: string;
+  workingDirectory?: string;
+  availableModels?: ProviderModel[];
+  cascadeEnabled?: boolean;
+}
 
-/**
- * Available LLM providers
- */
-export type Provider = "copilot" | "ollama";
+export interface TuiOutput {
+  exitCode: number;
+  sessionId?: string;
+}
 
-/**
- * Application configuration
- */
 export interface Config {
   provider: Provider;
   model?: string;
@@ -28,18 +27,12 @@ export interface Config {
   cascadeEnabled?: boolean;
 }
 
-/**
- * Intent detection request
- */
 export interface IntentRequest {
   prompt: string;
   context?: string;
   files?: string[];
 }
 
-/**
- * Intent detection response
- */
 export interface IntentResponse {
   intent: IntentType;
   confidence: number;
@@ -48,9 +41,6 @@ export interface IntentResponse {
   clarificationQuestions?: string[];
 }
 
-/**
- * Plan step for execution
- */
 export interface PlanStep {
   id: string;
   type: "read" | "edit" | "create" | "delete" | "execute";
@@ -61,9 +51,6 @@ export interface PlanStep {
   args?: Record<string, unknown>;
 }
 
-/**
- * Execution plan
- */
 export interface ExecutionPlan {
   steps: PlanStep[];
   intent: IntentType;
@@ -71,9 +58,6 @@ export interface ExecutionPlan {
   estimatedTime?: number;
 }
 
-/**
- * Validation result
- */
 export interface ValidationResult {
   valid: boolean;
   errors: string[];
@@ -81,18 +65,12 @@ export interface ValidationResult {
   protectedPaths: string[];
 }
 
-/**
- * Chat message
- */
 export interface ChatMessage {
   role: "user" | "assistant" | "system";
   content: string;
   timestamp: number;
 }
 
-/**
- * Chat session
- */
 export interface ChatSession {
   id: string;
   agent: AgentType;
@@ -102,9 +80,6 @@ export interface ChatSession {
   updatedAt: number;
 }
 
-/**
- * Command options
- */
 export interface CommandOptions {
   agent?: AgentType;
   model?: string;
@@ -123,9 +98,6 @@ export interface CommandOptions {
   value?: string;
 }
 
-/**
- * Tool execution result
- */
 export interface ToolResult {
   success: boolean;
   output?: string;
@@ -133,9 +105,6 @@ export interface ToolResult {
   files?: string[];
 }
 
-/**
- * File edit operation
- */
 export interface FileEdit {
   file: string;
   search: string;
@@ -143,9 +112,6 @@ export interface FileEdit {
   description?: string;
 }
 
-/**
- * Terminal spinner interface
- */
 export interface TerminalSpinner {
   start(text: string): void;
   succeed(text: string): void;

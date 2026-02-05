@@ -1,10 +1,7 @@
-/**
- * Session management for persisting chat history
- */
-
 import fs from "fs/promises";
 import path from "path";
-import type { ChatSession, ChatMessage, AgentType } from "@/types/index";
+import type { AgentType } from "@/types/common";
+import { ChatSession, ChatMessage, AgentType } from "@interafaces/index";
 import type { SessionInfo } from "@/types/session";
 import { DIRS } from "@constants/paths";
 

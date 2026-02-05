@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import type { ChatState } from "./state.ts";
+import type { ChatState } from "./state";
 
 export const createCleanup = (state: ChatState) => (): void => {
   state.isRunning = false;

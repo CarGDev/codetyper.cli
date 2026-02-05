@@ -1,7 +1,3 @@
-/**
- * Agent Types
- */
-
 import type { Message } from "@/types/providers";
 
 export interface ToolCallMessage {

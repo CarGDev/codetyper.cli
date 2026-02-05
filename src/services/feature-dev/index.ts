@@ -4,12 +4,19 @@
  * Main orchestrator for the 7-phase feature development workflow.
  */
 
-import { PHASE_ORDER, FEATURE_DEV_CONFIG, FEATURE_DEV_ERRORS } from "@constants/feature-dev";
+import {
+  PHASE_ORDER,
+  FEATURE_DEV_CONFIG,
+  FEATURE_DEV_ERRORS,
+} from "@constants/feature-dev";
 import {
   executePhase,
   validateTransition,
 } from "@services/feature-dev/phase-executor";
-import { buildWorkflowSummary, extractKeyInfo } from "@services/feature-dev/context-builder";
+import {
+  buildWorkflowSummary,
+  extractKeyInfo,
+} from "@services/feature-dev/context-builder";
 import type {
   FeatureDevPhase,
   FeatureDevState,
@@ -17,11 +24,6 @@ import type {
   Checkpoint,
   CheckpointDecision,
 } from "@/types/feature-dev";
-
-// Re-export sub-modules
-export * from "@services/feature-dev/phase-executor";
-export * from "@services/feature-dev/checkpoint-handler";
-export * from "@services/feature-dev/context-builder";
 
 // Active workflows storage
 const activeWorkflows = new Map<string, FeatureDevState>();
@@ -179,10 +181,11 @@ export const runWorkflow = async (
         };
       }
 
-      state = updateWorkflow(workflowId, {
-        phase: result.nextPhase,
-        phaseStatus: "pending",
-      }) ?? state;
+      state =
+        updateWorkflow(workflowId, {
+          phase: result.nextPhase,
+          phaseStatus: "pending",
+        }) ?? state;
       ctx.state = state;
     } else {
       // No next phase, workflow complete
@@ -201,7 +204,9 @@ export const runWorkflow = async (
  */
 export const getWorkflowProgress = (
   workflowId: string,
-): { summary: string; keyInfo: Record<string, string | number> } | undefined => {
+):
+  | { summary: string; keyInfo: Record<string, string | number> }
+  | undefined => {
   const workflow = getWorkflow(workflowId);
   if (!workflow) return undefined;
 

@@ -1,4 +1,6 @@
-import { tui, appStore } from "@tui/index";
+import { tui, appStore } from "@tui/app";
+
+import { appStore } from "@tui-solid/context/app";
 import { getProviderInfo } from "@services/chat-tui-service";
 import { addServer, connectServer } from "@services/mcp/index";
 import * as brainService from "@services/brain";
@@ -121,7 +123,9 @@ const defaultHandleMCPAdd = async (data: MCPAddFormData): Promise<void> => {
   }
 };
 
-const defaultHandleBrainSetJwtToken = async (jwtToken: string): Promise<void> => {
+const defaultHandleBrainSetJwtToken = async (
+  jwtToken: string,
+): Promise<void> => {
   await brainService.setJwtToken(jwtToken);
   const connected = await brainService.connect();
   if (connected) {
@@ -187,7 +191,8 @@ export const renderApp = async (props: RenderAppProps): Promise<void> => {
     onMCPAdd: props.handleMCPAdd ?? defaultHandleMCPAdd,
     onPermissionResponse: props.handlePermissionResponse ?? (() => {}),
     onLearningResponse: props.handleLearningResponse ?? (() => {}),
-    onBrainSetJwtToken: props.handleBrainSetJwtToken ?? defaultHandleBrainSetJwtToken,
+    onBrainSetJwtToken:
+      props.handleBrainSetJwtToken ?? defaultHandleBrainSetJwtToken,
     onBrainSetApiKey: props.handleBrainSetApiKey ?? defaultHandleBrainSetApiKey,
     onBrainLogout: props.handleBrainLogout ?? defaultHandleBrainLogout,
     plan: props.plan,

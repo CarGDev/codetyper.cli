@@ -6,14 +6,14 @@
  * All business logic is delegated to chat-tui-service.ts
  */
 
-import type { ChatServiceCallbacks } from "@services/chat-tui-service.ts";
-import { onModeChange } from "@commands/components/callbacks/on-mode-change.ts";
-import { onLog } from "@commands/components/callbacks/on-log.ts";
-import { onToolCall } from "@commands/components/callbacks/on-tool-call.ts";
-import { onToolResult } from "@commands/components/callbacks/on-tool-result.ts";
-import { onPermissionRequest } from "@commands/components/callbacks/on-permission-request.ts";
-import { onLearningDetected } from "@commands/components/callbacks/on-learning-detected.ts";
-import executeCommand from "@commands/components/execute/index.ts";
+import type { ChatServiceCallbacks } from "@services/chat-tui-service";
+import { onModeChange } from "@commands/components/callbacks/on-mode-change";
+import { onLog } from "@commands/components/callbacks/on-log";
+import { onToolCall } from "@commands/components/callbacks/on-tool-call";
+import { onToolResult } from "@commands/components/callbacks/on-tool-result";
+import { onPermissionRequest } from "@commands/components/callbacks/on-permission-request";
+import { onLearningDetected } from "@commands/components/callbacks/on-learning-detected";
+import executeCommand from "@commands/components/execute/index";
 
 export const createCallbacks = (): ChatServiceCallbacks => ({
   onModeChange,

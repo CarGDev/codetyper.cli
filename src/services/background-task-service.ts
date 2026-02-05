@@ -10,24 +10,35 @@ import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 
 import type {
-  BackgroundTask,
   BackgroundTaskStatus,
   BackgroundTaskPriority,
+} from "@/types/background-task";
+
+import {
+  BackgroundTask,
   BackgroundTaskConfig,
   TaskProgress,
   TaskResult,
   TaskError,
   TaskMetadata,
   TaskNotification,
-} from "@/types/background-task";
-import { DEFAULT_BACKGROUND_TASK_CONFIG, BACKGROUND_TASK_PRIORITIES } from "@/types/background-task";
+} from "@interfaces/BackgroundTask";
+
+import {
+  DEFAULT_BACKGROUND_TASK_CONFIG,
+  BACKGROUND_TASK_PRIORITIES,
+} from "@constants/background-task";
+
 import {
   BACKGROUND_TASK_STORAGE,
   BACKGROUND_TASK_MESSAGES,
   BACKGROUND_TASK_STATUS_ICONS,
 } from "@constants/background-task";
 
-type TaskHandler = (task: BackgroundTask, updateProgress: (progress: Partial<TaskProgress>) => void) => Promise<TaskResult>;
+type TaskHandler = (
+  task: BackgroundTask,
+  updateProgress: (progress: Partial<TaskProgress>) => void,
+) => Promise<TaskResult>;
 type NotificationHandler = (notification: TaskNotification) => void;
 
 interface BackgroundTaskState {
@@ -64,12 +75,18 @@ const persistTask = async (task: BackgroundTask): Promise<void> => {
   if (!state.config.persistTasks) return;
 
   await ensureStorageDirectory();
-  const filePath = join(getStoragePath(), `${task.id}${BACKGROUND_TASK_STORAGE.FILE_EXTENSION}`);
+  const filePath = join(
+    getStoragePath(),
+    `${task.id}${BACKGROUND_TASK_STORAGE.FILE_EXTENSION}`,
+  );
   await writeFile(filePath, JSON.stringify(task, null, 2));
 };
 
 const removePersistedTask = async (taskId: string): Promise<void> => {
-  const filePath = join(getStoragePath(), `${taskId}${BACKGROUND_TASK_STORAGE.FILE_EXTENSION}`);
+  const filePath = join(
+    getStoragePath(),
+    `${taskId}${BACKGROUND_TASK_STORAGE.FILE_EXTENSION}`,
+  );
   if (existsSync(filePath)) {
     await unlink(filePath);
   }
@@ -80,7 +97,9 @@ const loadPersistedTasks = async (): Promise<void> => {
   if (!existsSync(storagePath)) return;
 
   const files = await readdir(storagePath);
-  const taskFiles = files.filter((f) => f.endsWith(BACKGROUND_TASK_STORAGE.FILE_EXTENSION));
+  const taskFiles = files.filter((f) =>
+    f.endsWith(BACKGROUND_TASK_STORAGE.FILE_EXTENSION),
+  );
 
   for (const file of taskFiles) {
     try {
@@ -104,7 +123,11 @@ const loadPersistedTasks = async (): Promise<void> => {
   }
 };
 
-const notify = (taskId: string, type: TaskNotification["type"], message: string): void => {
+const notify = (
+  taskId: string,
+  type: TaskNotification["type"],
+  message: string,
+): void => {
   const notification: TaskNotification = {
     taskId,
     type,
@@ -133,7 +156,10 @@ const processQueue = async (): Promise<void> => {
       const taskA = state.tasks.get(a);
       const taskB = state.tasks.get(b);
       if (!taskA || !taskB) return 0;
-      return BACKGROUND_TASK_PRIORITIES[taskB.priority] - BACKGROUND_TASK_PRIORITIES[taskA.priority];
+      return (
+        BACKGROUND_TASK_PRIORITIES[taskB.priority] -
+        BACKGROUND_TASK_PRIORITIES[taskA.priority]
+      );
     });
 
     const taskId = state.queue.shift();
@@ -176,9 +202,10 @@ const executeTask = async (task: BackgroundTask): Promise<void> => {
     const newProgress: TaskProgress = {
       ...currentTask.progress,
       ...partial,
-      percentage: partial.current !== undefined && partial.total !== undefined
-        ? Math.round((partial.current / partial.total) * 100)
-        : currentTask.progress.percentage,
+      percentage:
+        partial.current !== undefined && partial.total !== undefined
+          ? Math.round((partial.current / partial.total) * 100)
+          : currentTask.progress.percentage,
     };
 
     const progressTask: BackgroundTask = {
@@ -194,7 +221,10 @@ const executeTask = async (task: BackgroundTask): Promise<void> => {
     const result = await Promise.race([
       handler(updatedTask, updateProgress),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Task timeout")), state.config.defaultTimeout)
+        setTimeout(
+          () => reject(new Error("Task timeout")),
+          state.config.defaultTimeout,
+        ),
       ),
     ]);
 
@@ -214,7 +244,10 @@ const executeTask = async (task: BackgroundTask): Promise<void> => {
   }
 };
 
-const completeTask = async (taskId: string, result: TaskResult): Promise<void> => {
+const completeTask = async (
+  taskId: string,
+  result: TaskResult,
+): Promise<void> => {
   const task = state.tasks.get(taskId);
   if (!task) return;
 
@@ -240,7 +273,7 @@ const completeTask = async (taskId: string, result: TaskResult): Promise<void> =
 const updateTaskStatus = async (
   taskId: string,
   status: BackgroundTaskStatus,
-  error?: TaskError
+  error?: TaskError,
 ): Promise<void> => {
   const task = state.tasks.get(taskId);
   if (!task) return;
@@ -249,7 +282,9 @@ const updateTaskStatus = async (
     ...task,
     status,
     error,
-    completedAt: ["completed", "failed", "cancelled"].includes(status) ? Date.now() : undefined,
+    completedAt: ["completed", "failed", "cancelled"].includes(status)
+      ? Date.now()
+      : undefined,
   };
 
   state.tasks.set(taskId, updatedTask);
@@ -262,7 +297,9 @@ const updateTaskStatus = async (
 
 // Public API
 
-export const initialize = async (config?: Partial<BackgroundTaskConfig>): Promise<void> => {
+export const initialize = async (
+  config?: Partial<BackgroundTaskConfig>,
+): Promise<void> => {
   state.config = { ...DEFAULT_BACKGROUND_TASK_CONFIG, ...config };
   await loadPersistedTasks();
   processQueue();
@@ -272,10 +309,12 @@ export const registerHandler = (name: string, handler: TaskHandler): void => {
   state.handlers.set(name, handler);
 };
 
-export const onNotification = (handler: NotificationHandler): () => void => {
+export const onNotification = (handler: NotificationHandler): (() => void) => {
   state.notificationHandlers.push(handler);
   return () => {
-    state.notificationHandlers = state.notificationHandlers.filter((h) => h !== handler);
+    state.notificationHandlers = state.notificationHandlers.filter(
+      (h) => h !== handler,
+    );
   };
 };
 
@@ -283,7 +322,7 @@ export const createTask = async (
   name: string,
   description: string,
   metadata: TaskMetadata,
-  priority: BackgroundTaskPriority = "normal"
+  priority: BackgroundTaskPriority = "normal",
 ): Promise<BackgroundTask> => {
   const task: BackgroundTask = {
     id: randomUUID(),
@@ -349,7 +388,9 @@ export const resumeTask = async (taskId: string): Promise<boolean> => {
 export const getTask = (taskId: string): BackgroundTask | undefined =>
   state.tasks.get(taskId);
 
-export const listTasks = (filter?: { status?: BackgroundTaskStatus }): ReadonlyArray<BackgroundTask> => {
+export const listTasks = (filter?: {
+  status?: BackgroundTaskStatus;
+}): ReadonlyArray<BackgroundTask> => {
   let tasks = Array.from(state.tasks.values());
 
   if (filter?.status) {
@@ -361,7 +402,10 @@ export const listTasks = (filter?: { status?: BackgroundTaskStatus }): ReadonlyA
 
 export const clearCompletedTasks = async (): Promise<number> => {
   const completed = Array.from(state.tasks.values()).filter(
-    (t) => t.status === "completed" || t.status === "failed" || t.status === "cancelled"
+    (t) =>
+      t.status === "completed" ||
+      t.status === "failed" ||
+      t.status === "cancelled",
   );
 
   for (const task of completed) {
@@ -377,7 +421,8 @@ export const getTaskStatusIcon = (status: BackgroundTaskStatus): string =>
 
 export const formatTaskSummary = (task: BackgroundTask): string => {
   const icon = getTaskStatusIcon(task.status);
-  const progress = task.status === "running" ? ` (${task.progress.percentage}%)` : "";
+  const progress =
+    task.status === "running" ? ` (${task.progress.percentage}%)` : "";
   return `${icon} ${task.name}${progress} - ${task.description}`;
 };
 

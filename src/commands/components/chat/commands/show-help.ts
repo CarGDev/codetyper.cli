@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { HELP_COMMANDS } from "@constants/help-commands.ts";
+import { HELP_COMMANDS } from "@constants/help-commands";
 
 export const showHelp = (): void => {
   console.log("\n" + chalk.bold.underline("Commands") + "\n");

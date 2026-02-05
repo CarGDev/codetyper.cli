@@ -10,8 +10,8 @@ import {
   getProvider,
   getProviderStatus,
   getDefaultModel,
-} from "@providers/index.ts";
-import type { ChatState } from "../state.ts";
+} from "@providers/index";
+import type { ChatState } from "../state";
 
 export const switchProvider = async (
   providerName: string,

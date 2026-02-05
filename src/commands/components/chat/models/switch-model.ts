@@ -5,9 +5,9 @@ import {
   errorMessage,
 } from "@utils/core/terminal";
 import { getConfig } from "@services/core/config";
-import { getProvider } from "@providers/index.ts";
-import { showModels } from "./show-models.ts";
-import type { ChatState } from "../state.ts";
+import { getProvider } from "@providers/index";
+import { showModels } from "./show-models";
+import type { ChatState } from "../state";
 
 export const switchModel = async (
   modelName: string,

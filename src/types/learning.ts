@@ -1,7 +1,3 @@
-/**
- * Learning Service types
- */
-
 export type LearningCategory =
   | "preference"
   | "convention"
