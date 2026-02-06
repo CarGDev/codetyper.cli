@@ -2,11 +2,12 @@
  * Terminal UI helpers for formatting and display
  */
 
+import { writeSync } from "fs";
 import chalk from "chalk";
 import ora, { Ora } from "ora";
 import boxen from "boxen";
 import { TERMINAL_SEQUENCES } from "@constants/ui";
-import { DISABLE_MOUSE_TRACKING } from "@constants/terminal";
+import { TERMINAL_RESET } from "@constants/terminal";
 
 /**
  * Spinner state
@@ -20,28 +21,27 @@ let exitHandlersRegistered = false;
 
 /**
  * Emergency cleanup for terminal state on process exit
+ * Uses writeSync to fd 1 (stdout) to guarantee bytes are flushed
+ * before the process terminates
  */
 const emergencyTerminalCleanup = (): void => {
   try {
-    process.stdout.write(
-      DISABLE_MOUSE_TRACKING +
-        TERMINAL_SEQUENCES.SHOW_CURSOR +
-        TERMINAL_SEQUENCES.LEAVE_ALTERNATE_SCREEN,
-    );
+    writeSync(1, TERMINAL_RESET);
   } catch {
-    // TODO: Create a catch with a logger to log errors
-    // Ignore errors during cleanup
+    // Ignore errors during cleanup - stdout may already be closed
   }
 };
 
 /**
  * Register process exit handlers to ensure terminal cleanup
+ * Covers all exit paths: normal exit, signals, crashes, and unhandled rejections
  */
 export const registerExitHandlers = (): void => {
   if (exitHandlersRegistered) return;
   exitHandlersRegistered = true;
 
   process.on("exit", emergencyTerminalCleanup);
+  process.on("beforeExit", emergencyTerminalCleanup);
   process.on("SIGINT", () => {
     emergencyTerminalCleanup();
     process.exit(130);
@@ -49,6 +49,18 @@ export const registerExitHandlers = (): void => {
   process.on("SIGTERM", () => {
     emergencyTerminalCleanup();
     process.exit(143);
+  });
+  process.on("SIGHUP", () => {
+    emergencyTerminalCleanup();
+    process.exit(128);
+  });
+  process.on("uncaughtException", () => {
+    emergencyTerminalCleanup();
+    process.exit(1);
+  });
+  process.on("unhandledRejection", () => {
+    emergencyTerminalCleanup();
+    process.exit(1);
   });
 };
 
@@ -250,14 +262,14 @@ export const enterFullscreen = (): void => {
 
 /**
  * Exit fullscreen mode (restore main screen buffer)
- * Disables all mouse tracking modes that might have been enabled
+ * Disables all mouse tracking modes and restores terminal state
  */
 export const exitFullscreen = (): void => {
-  process.stdout.write(
-    DISABLE_MOUSE_TRACKING +
-      TERMINAL_SEQUENCES.SHOW_CURSOR +
-      TERMINAL_SEQUENCES.LEAVE_ALTERNATE_SCREEN,
-  );
+  try {
+    writeSync(1, TERMINAL_RESET);
+  } catch {
+    // Ignore errors - stdout may already be closed
+  }
 };
 
 /**

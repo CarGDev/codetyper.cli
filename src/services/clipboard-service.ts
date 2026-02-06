@@ -7,12 +7,12 @@
  * - Windows: Uses PowerShell
  */
 
-import { spawn } from "child_process";
 import { tmpdir } from "os";
 import { join } from "path";
 import { readFile, unlink } from "fs/promises";
 import { v4 as uuidv4 } from "uuid";
 import type { ImageMediaType, PastedImage } from "@/types/image";
+import { runCommand } from "@services/clipboard/run-command";
 
 /** Supported image formats for clipboard operations */
 export const SUPPORTED_IMAGE_FORMATS: ImageMediaType[] = [
@@ -28,32 +28,6 @@ const detectPlatform = (): "darwin" | "linux" | "win32" | "unsupported" => {
     return platform;
   }
   return "unsupported";
-};
-
-const runCommand = (
-  command: string,
-  args: string[],
-): Promise<{ stdout: Buffer; stderr: string }> => {
-  return new Promise((resolve, reject) => {
-    const proc = spawn(command, args);
-    const stdout: Buffer[] = [];
-    let stderr = "";
-
-    proc.stdout.on("data", (data) => stdout.push(data));
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-    });
-
-    proc.on("close", (code) => {
-      if (code === 0) {
-        resolve({ stdout: Buffer.concat(stdout), stderr });
-      } else {
-        reject(new Error(`Command failed with code ${code}: ${stderr}`));
-      }
-    });
-
-    proc.on("error", reject);
-  });
 };
 
 const detectImageType = (buffer: Buffer): ImageMediaType | null => {

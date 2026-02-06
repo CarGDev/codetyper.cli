@@ -1,4 +1,4 @@
-import { render, useKeyboard } from "@opentui/solid";
+import { render, useKeyboard, useRenderer } from "@opentui/solid";
 import { TextAttributes } from "@opentui/core";
 import {
   ErrorBoundary,
@@ -16,7 +16,8 @@ import {
   advanceStep,
   getExecutionState,
 } from "@services/chat-tui-service";
-import { DISABLE_MOUSE_TRACKING } from "@constants/terminal";
+import { TERMINAL_RESET } from "@constants/terminal";
+import { copyToClipboard } from "@services/clipboard/text-clipboard";
 import versionData from "@/version.json";
 import { ExitProvider, useExit } from "@tui-solid/context/exit";
 import { RouteProvider, useRoute } from "@tui-solid/context/route";
@@ -33,7 +34,11 @@ import { Home } from "@tui-solid/routes/home";
 import { Session } from "@tui-solid/routes/session";
 import type { TuiInput, TuiOutput } from "@interfaces/index";
 import type { MCPServerDisplay } from "@/types/tui";
-import type { PermissionScope, LearningScope } from "@/types/tui";
+import type {
+  PermissionScope,
+  LearningScope,
+  PlanApprovalPromptResponse,
+} from "@/types/tui";
 import type { MCPAddFormData } from "@/types/mcp";
 
 interface AgentOption {
@@ -55,6 +60,7 @@ interface AppProps extends TuiInput {
   onProviderSelect?: (providerId: string) => Promise<void>;
   onCascadeToggle?: (enabled: boolean) => Promise<void>;
   onPermissionResponse: (allowed: boolean, scope?: PermissionScope) => void;
+  onPlanApprovalResponse: (response: PlanApprovalPromptResponse) => void;
   onLearningResponse: (
     save: boolean,
     scope?: LearningScope,
@@ -104,9 +110,21 @@ function AppContent(props: AppProps) {
   const exit = useExit();
   const toast = useToast();
   const theme = useTheme();
+  const renderer = useRenderer();
   const [fileList, setFileList] = createSignal<string[]>([]);
 
   setAppStoreRef(app);
+
+  /** Copy selected text to clipboard and clear selection */
+  const copySelectionToClipboard = async (): Promise<void> => {
+    const text = renderer.getSelection()?.getSelectedText();
+    if (text && text.length > 0) {
+      await copyToClipboard(text)
+        .then(() => toast.info("Copied to clipboard"))
+        .catch(() => toast.error("Failed to copy to clipboard"));
+      renderer.clearSelection();
+    }
+  };
 
   // Load files when file_picker mode is activated
   createEffect(() => {
@@ -164,6 +182,13 @@ function AppContent(props: AppProps) {
   }
 
   useKeyboard((evt) => {
+    // Ctrl+Y copies selected text to clipboard
+    if (evt.ctrl && evt.name === "y") {
+      copySelectionToClipboard();
+      evt.preventDefault();
+      return;
+    }
+
     // ESC aborts current operation
     if (evt.name === "escape") {
       abortCurrentOperation(false).then((aborted) => {
@@ -347,6 +372,14 @@ function AppContent(props: AppProps) {
     props.onPermissionResponse(allowed, scope);
   };
 
+  const handlePlanApprovalResponse = (
+    response: PlanApprovalPromptResponse,
+  ): void => {
+    // Don't set mode here - the resolve callback in plan-approval.ts
+    // handles the mode transition
+    props.onPlanApprovalResponse(response);
+  };
+
   const handleLearningResponse = (
     save: boolean,
     scope?: LearningScope,
@@ -421,6 +454,7 @@ function AppContent(props: AppProps) {
       flexDirection="column"
       flexGrow={1}
       backgroundColor={theme.colors.background}
+      onMouseUp={() => copySelectionToClipboard()}
     >
       <Switch>
         <Match when={route.isHome()}>
@@ -446,6 +480,7 @@ function AppContent(props: AppProps) {
             onProviderSelect={handleProviderSelect}
             onCascadeToggle={handleCascadeToggle}
             onPermissionResponse={handlePermissionResponse}
+            onPlanApprovalResponse={handlePlanApprovalResponse}
             onLearningResponse={handleLearningResponse}
             onBrainSetJwtToken={props.onBrainSetJwtToken}
             onBrainSetApiKey={props.onBrainSetApiKey}
@@ -499,6 +534,7 @@ export interface TuiRenderOptions extends TuiInput {
   onProviderSelect?: (providerId: string) => Promise<void>;
   onCascadeToggle?: (enabled: boolean) => Promise<void>;
   onPermissionResponse: (allowed: boolean, scope?: PermissionScope) => void;
+  onPlanApprovalResponse: (response: PlanApprovalPromptResponse) => void;
   onLearningResponse: (
     save: boolean,
     scope?: LearningScope,
@@ -520,8 +556,14 @@ export interface TuiRenderOptions extends TuiInput {
 
 export function tui(options: TuiRenderOptions): Promise<TuiOutput> {
   return new Promise<TuiOutput>((resolve) => {
+    const { writeSync } = require("fs");
+
     const handleExit = (output: TuiOutput): void => {
-      process.stdout.write(DISABLE_MOUSE_TRACKING);
+      try {
+        writeSync(1, TERMINAL_RESET);
+      } catch {
+        // Ignore - stdout may already be closed
+      }
       resolve(output);
     };
 

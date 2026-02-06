@@ -8,6 +8,7 @@ import type {
   LogEntry,
   ToolCall,
   PermissionRequest,
+  PlanApprovalPrompt,
   LearningPrompt,
   SessionStats,
   SuggestionPrompt,
@@ -29,6 +30,7 @@ interface AppStore {
   logs: LogEntry[];
   currentToolCall: ToolCall | null;
   permissionRequest: PermissionRequest | null;
+  planApprovalPrompt: PlanApprovalPrompt | null;
   learningPrompt: LearningPrompt | null;
   thinkingMessage: string | null;
   sessionId: string | null;
@@ -71,6 +73,7 @@ interface AppContextValue {
   logs: Accessor<LogEntry[]>;
   currentToolCall: Accessor<ToolCall | null>;
   permissionRequest: Accessor<PermissionRequest | null>;
+  planApprovalPrompt: Accessor<PlanApprovalPrompt | null>;
   learningPrompt: Accessor<LearningPrompt | null>;
   thinkingMessage: Accessor<string | null>;
   sessionId: Accessor<string | null>;
@@ -124,6 +127,9 @@ interface AppContextValue {
 
   // Permission actions
   setPermissionRequest: (request: PermissionRequest | null) => void;
+
+  // Plan approval actions
+  setPlanApprovalPrompt: (prompt: PlanApprovalPrompt | null) => void;
 
   // Learning prompt actions
   setLearningPrompt: (prompt: LearningPrompt | null) => void;
@@ -243,6 +249,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         logs: [],
         currentToolCall: null,
         permissionRequest: null,
+        planApprovalPrompt: null,
         learningPrompt: null,
         thinkingMessage: null,
         sessionId: null,
@@ -294,6 +301,8 @@ export const { provider: AppStoreProvider, use: useAppStore } =
       const currentToolCall = (): ToolCall | null => store.currentToolCall;
       const permissionRequest = (): PermissionRequest | null =>
         store.permissionRequest;
+      const planApprovalPrompt = (): PlanApprovalPrompt | null =>
+        store.planApprovalPrompt;
       const learningPrompt = (): LearningPrompt | null => store.learningPrompt;
       const thinkingMessage = (): string | null => store.thinkingMessage;
       const sessionId = (): string | null => store.sessionId;
@@ -417,6 +426,13 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         request: PermissionRequest | null,
       ): void => {
         setStore("permissionRequest", request);
+      };
+
+      // Plan approval actions
+      const setPlanApprovalPrompt = (
+        prompt: PlanApprovalPrompt | null,
+      ): void => {
+        setStore("planApprovalPrompt", prompt);
       };
 
       // Learning prompt actions
@@ -775,7 +791,8 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         return (
           store.mode === "thinking" ||
           store.mode === "tool_execution" ||
-          store.mode === "permission_prompt"
+          store.mode === "permission_prompt" ||
+          store.mode === "plan_approval"
         );
       };
 
@@ -790,6 +807,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         logs,
         currentToolCall,
         permissionRequest,
+        planApprovalPrompt,
         learningPrompt,
         thinkingMessage,
         sessionId,
@@ -839,6 +857,9 @@ export const { provider: AppStoreProvider, use: useAppStore } =
 
         // Permission actions
         setPermissionRequest,
+
+        // Plan approval actions
+        setPlanApprovalPrompt,
 
         // Learning prompt actions
         setLearningPrompt,
@@ -930,6 +951,7 @@ const defaultAppState = {
   logs: [] as LogEntry[],
   currentToolCall: null,
   permissionRequest: null,
+  planApprovalPrompt: null,
   learningPrompt: null,
   thinkingMessage: null,
   sessionId: null,
@@ -970,6 +992,7 @@ export const appStore = {
       logs: storeRef.logs(),
       currentToolCall: storeRef.currentToolCall(),
       permissionRequest: storeRef.permissionRequest(),
+      planApprovalPrompt: storeRef.planApprovalPrompt(),
       learningPrompt: storeRef.learningPrompt(),
       thinkingMessage: storeRef.thinkingMessage(),
       sessionId: storeRef.sessionId(),
@@ -1033,6 +1056,11 @@ export const appStore = {
   setPermissionRequest: (request: PermissionRequest | null): void => {
     if (!storeRef) return;
     storeRef.setPermissionRequest(request);
+  },
+
+  setPlanApprovalPrompt: (prompt: PlanApprovalPrompt | null): void => {
+    if (!storeRef) return;
+    storeRef.setPlanApprovalPrompt(prompt);
   },
 
   setLearningPrompt: (prompt: LearningPrompt | null): void => {

@@ -26,10 +26,37 @@ export const PARTIAL_X10_REGEX = /\x1b\[M.{0,2}$/;
 // Mouse tracking escape sequences
 export const MOUSE_TRACKING_SEQUENCES = {
   ENABLE_BUTTON: "\x1b[?1000h",
+  ENABLE_BUTTON_EVENT: "\x1b[?1002h",
   ENABLE_SGR: "\x1b[?1006h",
   DISABLE_SGR: "\x1b[?1006l",
+  DISABLE_BUTTON_EVENT: "\x1b[?1002l",
   DISABLE_BUTTON: "\x1b[?1000l",
 } as const;
+
+// Enable button-event tracking + SGR encoding (for scroll + drag selection)
+export const MOUSE_TRACKING_ENABLE =
+  MOUSE_TRACKING_SEQUENCES.ENABLE_BUTTON_EVENT +
+  MOUSE_TRACKING_SEQUENCES.ENABLE_SGR;
+
+// Mouse button action codes (SGR encoding)
+export const MOUSE_BUTTON = {
+  LEFT_PRESS: 0,
+  MIDDLE_PRESS: 1,
+  RIGHT_PRESS: 2,
+  LEFT_DRAG: 32,
+  MIDDLE_DRAG: 33,
+  RIGHT_DRAG: 34,
+  SCROLL_UP: 64,
+  SCROLL_DOWN: 65,
+} as const;
+
+// Disable button-event tracking + SGR encoding
+export const MOUSE_TRACKING_DISABLE =
+  MOUSE_TRACKING_SEQUENCES.DISABLE_BUTTON_EVENT +
+  MOUSE_TRACKING_SEQUENCES.DISABLE_SGR;
+
+// Time in ms to re-enable mouse tracking after selection ends
+export const MOUSE_SELECTION_REENABLE_MS = 2000;
 
 // Scroll direction type
 export type MouseScrollDirection = "up" | "down";

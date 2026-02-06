@@ -15,6 +15,7 @@ import type {
 } from "@/types/streaming";
 import type { ToolCall, ToolResult } from "@/types/tools";
 import { createStreamingAgent } from "@services/agent-stream";
+import { createThinkingParser } from "@services/reasoning/thinking-parser";
 import { appStore } from "@tui-solid/context/app";
 
 // Re-export for convenience
@@ -26,48 +27,72 @@ export type { StreamingChatOptions } from "@interfaces/StreamingChatOptions";
 
 const createTUIStreamCallbacks = (
   options?: Partial<StreamingChatOptions>,
-): StreamCallbacks => ({
-  onContentChunk: (content: string) => {
-    appStore.appendStreamContent(content);
-  },
+): { callbacks: StreamCallbacks; resetParser: () => void } => {
+  const parser = createThinkingParser();
 
-  onToolCallStart: (toolCall: PartialToolCall) => {
-    appStore.setCurrentToolCall({
-      id: toolCall.id,
-      name: toolCall.name,
-      description: `Calling ${toolCall.name}...`,
-      status: "pending",
-    });
-  },
-
-  onToolCallComplete: (toolCall: ToolCall) => {
-    appStore.updateToolCall({
-      id: toolCall.id,
-      name: toolCall.name,
-      status: "running",
-    });
-  },
-
-  onModelSwitch: (info: ModelSwitchInfo) => {
+  const emitThinking = (thinking: string | null): void => {
+    if (!thinking) return;
     appStore.addLog({
-      type: "system",
-      content: `Model switched: ${info.from} → ${info.to} (${info.reason})`,
+      type: "thinking",
+      content: thinking,
     });
-    options?.onModelSwitch?.(info);
-  },
+  };
 
-  onComplete: () => {
-    appStore.completeStreaming();
-  },
+  const callbacks: StreamCallbacks = {
+    onContentChunk: (content: string) => {
+      const result = parser.feed(content);
+      if (result.visible) {
+        appStore.appendStreamContent(result.visible);
+      }
+      emitThinking(result.thinking);
+    },
 
-  onError: (error: string) => {
-    appStore.cancelStreaming();
-    appStore.addLog({
-      type: "error",
-      content: error,
-    });
-  },
-});
+    onToolCallStart: (toolCall: PartialToolCall) => {
+      appStore.setCurrentToolCall({
+        id: toolCall.id,
+        name: toolCall.name,
+        description: `Calling ${toolCall.name}...`,
+        status: "pending",
+      });
+    },
+
+    onToolCallComplete: (toolCall: ToolCall) => {
+      appStore.updateToolCall({
+        id: toolCall.id,
+        name: toolCall.name,
+        status: "running",
+      });
+    },
+
+    onModelSwitch: (info: ModelSwitchInfo) => {
+      appStore.addLog({
+        type: "system",
+        content: `Model switched: ${info.from} → ${info.to} (${info.reason})`,
+      });
+      options?.onModelSwitch?.(info);
+    },
+
+    onComplete: () => {
+      const flushed = parser.flush();
+      if (flushed.visible) {
+        appStore.appendStreamContent(flushed.visible);
+      }
+      emitThinking(flushed.thinking);
+      appStore.completeStreaming();
+    },
+
+    onError: (error: string) => {
+      parser.reset();
+      appStore.cancelStreaming();
+      appStore.addLog({
+        type: "error",
+        content: error,
+      });
+    },
+  };
+
+  return { callbacks, resetParser: () => parser.reset() };
+};
 
 // =============================================================================
 // Agent Options with TUI Integration
@@ -164,8 +189,12 @@ export const runStreamingChat = async (
   appStore.startStreaming();
 
   // Create callbacks that update the TUI
-  const streamCallbacks = createTUIStreamCallbacks(options);
+  const { callbacks: streamCallbacks, resetParser } =
+    createTUIStreamCallbacks(options);
   const agentOptions = createAgentOptionsWithTUI(options);
+
+  // Reset parser for fresh session
+  resetParser();
 
   // Create and run the streaming agent
   const agent = createStreamingAgent(
@@ -210,7 +239,8 @@ export const createStreamingChat = (
   run: (messages: Message[]) => Promise<AgentResult>;
   stop: () => void;
 } => {
-  const streamCallbacks = createTUIStreamCallbacks(options);
+  const { callbacks: streamCallbacks, resetParser } =
+    createTUIStreamCallbacks(options);
   const agentOptions = createAgentOptionsWithTUI(options);
 
   const agent = createStreamingAgent(
@@ -221,6 +251,7 @@ export const createStreamingChat = (
 
   return {
     run: async (messages: Message[]) => {
+      resetParser();
       appStore.setMode("thinking");
       appStore.startThinking();
       appStore.startStreaming();

@@ -17,6 +17,7 @@ export type AppMode =
   | "thinking"
   | "tool_execution"
   | "permission_prompt"
+  | "plan_approval"
   | "command_menu"
   | "model_select"
   | "agent_select"
@@ -201,6 +202,24 @@ export interface PermissionRequest {
 export interface PermissionResponse {
   allowed: boolean;
   scope?: PermissionScope;
+}
+
+// ============================================================================
+// Plan Approval Types
+// ============================================================================
+
+export interface PlanApprovalPrompt {
+  id: string;
+  planTitle: string;
+  planSummary: string;
+  planFilePath?: string;
+  resolve: (response: PlanApprovalPromptResponse) => void;
+}
+
+export interface PlanApprovalPromptResponse {
+  approved: boolean;
+  editMode: "auto_accept_clear" | "auto_accept" | "manual_approve" | "feedback";
+  feedback?: string;
 }
 
 // ============================================================================
