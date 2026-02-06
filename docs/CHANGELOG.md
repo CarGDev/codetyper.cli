@@ -9,17 +9,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Planned
 
-- **Plan Approval Gate**: Require user confirmation before agent executes plans ([#111](https://github.com/CarGDev/codetyper.cli/issues/111))
 - **Diff Preview**: Show file changes before writing ([#112](https://github.com/CarGDev/codetyper.cli/issues/112))
-- **Execution Control**: Pause, resume, and abort agent execution ([#113](https://github.com/CarGDev/codetyper.cli/issues/113))
 - **Model Consistency**: Ensure consistent behavior across LLM providers ([#114](https://github.com/CarGDev/codetyper.cli/issues/114))
 - **Quality Gates**: Run TypeScript, lint, and tests before task completion ([#115](https://github.com/CarGDev/codetyper.cli/issues/115))
 
-### Known Issues
+---
 
-- Agent mode executes without waiting for user plan approval
-- Different LLM models behave inconsistently during agent execution
-- No diff preview before file modifications
+## [0.4.0] - 2026-02-06
+
+### Added
+
+- **Text Clipboard Copy/Read**: Cross-platform text clipboard operations
+  - macOS (`osascript`/`pbpaste`), Linux (`wl-copy`/`xclip`/`xsel`), Windows (PowerShell)
+  - OSC 52 escape sequence support for SSH/tmux environments
+  - Mouse selection auto-copies to system clipboard via `onMouseUp`
+  - `Ctrl+Y` keyboard shortcut for copy-selection
+  - Unified `readClipboard()` returning text or image with MIME type
+  - Shared `runCommand` helpers extracted from clipboard-service
+
+- **Plan Approval Gate**: User confirmation before agent executes plans
+  - Plan approval modal with keyboard navigation
+  - Multiple approval modes: auto-accept, manual approve, feedback
+  - Inline permission prompt for plan execution
+
+- **Execution Control**: Pause, resume, and abort agent execution
+  - `Ctrl+P` to toggle pause/resume during execution
+  - `Ctrl+Z` to abort with rollback
+  - `Ctrl+Shift+S` to toggle step-by-step mode
+  - Enter to advance step when waiting for confirmation
+
+- **Parallel Agent Execution**: Unified agent registry with concurrent task support
+
+- **Thinking Tag Parser**: Parse and display reasoning/thinking tags from LLM responses
+
+### Changed
+
+- **Inline Permission Prompt**: Improved TUI layout for permission prompts
+- **Clipboard Service Refactored**: Extracted shared `runCommand` into `@services/clipboard/run-command`
+
+### Security
+
+- **Sensitive File Protection**: Auto-backup before modifying sensitive files (`.env`, credentials, etc.)
+- **Dangerous Command Blocking**: Block destructive bash commands (`rm -rf`, `sudo`, etc.)
+
+### Fixed
+
+- Rollback now correctly extracts file path from tool arguments
+- Permission handling improvements
 
 ---
 
@@ -258,13 +294,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 0.4.0 | 2026-02-06 | Clipboard copy/read, plan approval, execution control, safety features |
 | 0.3.0 | 2025-02-04 | System prompt builder, module restructure, legacy TUI removal |
 | 0.2.x | 2025-01-28 - 02-01 | Hooks, plugins, session forks, vim motions, MCP browser |
 | 0.1.x | 2025-01-16 - 01-27 | Initial release, TUI, agent system, providers, permissions |
 
 ---
 
-[Unreleased]: https://github.com/CarGDev/codetyper.cli/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/CarGDev/codetyper.cli/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/CarGDev/codetyper.cli/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/CarGDev/codetyper.cli/compare/v0.2.4...v0.3.0
 [0.2.4]: https://github.com/CarGDev/codetyper.cli/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/CarGDev/codetyper.cli/compare/v0.2.2...v0.2.3
