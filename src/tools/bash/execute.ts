@@ -9,7 +9,9 @@ import {
   BASH_MESSAGES,
   BASH_DESCRIPTION,
 } from "@constants/bash";
+import { BLOCKED_COMMAND_MESSAGES } from "@constants/dangerous-commands";
 import { promptPermission } from "@services/core/permissions";
+import { checkDangerousCommand } from "@services/dangerous-command-blocker";
 import { bashParams } from "@tools/bash/params";
 import {
   truncateOutput,
@@ -34,6 +36,17 @@ const createDeniedResult = (description: string): ToolResult => ({
   title: description,
   output: "",
   error: BASH_MESSAGES.PERMISSION_DENIED,
+});
+
+const createBlockedResult = (description: string, message: string): ToolResult => ({
+  success: false,
+  title: BLOCKED_COMMAND_MESSAGES.BLOCKED_TITLE,
+  output: "",
+  error: message,
+  metadata: {
+    blocked: true,
+    reason: description,
+  },
 });
 
 const createTimeoutResult = (
@@ -178,6 +191,16 @@ export const executeBash = async (
   // Provide default description if not specified
   const description =
     args.description ?? `Running: ${command.substring(0, 50)}`;
+
+  // SAFETY: Check for dangerous commands BEFORE permission check
+  // This block cannot be bypassed, even with auto-approve
+  const dangerCheck = checkDangerousCommand(command);
+  if (dangerCheck.blocked) {
+    return createBlockedResult(
+      dangerCheck.pattern?.description ?? "Dangerous command",
+      dangerCheck.message ?? "Command blocked for safety",
+    );
+  }
 
   const allowed = await checkPermission(
     command,
