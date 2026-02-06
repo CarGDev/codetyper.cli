@@ -16,6 +16,7 @@ import {
   advanceStep,
   getExecutionState,
 } from "@services/chat-tui-service";
+import { DISABLE_MOUSE_TRACKING } from "@constants/terminal";
 import versionData from "@/version.json";
 import { ExitProvider, useExit } from "@tui-solid/context/exit";
 import { RouteProvider, useRoute } from "@tui-solid/context/route";
@@ -179,7 +180,11 @@ function AppContent(props: AppProps) {
       const toggled = togglePauseResume();
       if (toggled) {
         const state = getExecutionState();
-        toast.info(state.state === "paused" ? "⏸ Execution paused" : "▶ Execution resumed");
+        toast.info(
+          state.state === "paused"
+            ? "⏸ Execution paused"
+            : "▶ Execution resumed",
+        );
         evt.preventDefault();
         return;
       }
@@ -191,7 +196,9 @@ function AppContent(props: AppProps) {
       if (state.state !== "idle") {
         abortCurrentOperation(true).then((aborted) => {
           if (aborted) {
-            toast.info(`Aborted with rollback of ${state.rollbackCount} action(s)`);
+            toast.info(
+              `Aborted with rollback of ${state.rollbackCount} action(s)`,
+            );
           }
         });
         evt.preventDefault();
@@ -205,7 +212,9 @@ function AppContent(props: AppProps) {
       if (state.state !== "idle") {
         const isStepMode = state.state === "stepping";
         setStepMode(!isStepMode);
-        toast.info(isStepMode ? "🏃 Step mode disabled" : "🚶 Step mode enabled");
+        toast.info(
+          isStepMode ? "🏃 Step mode disabled" : "🚶 Step mode enabled",
+        );
         evt.preventDefault();
         return;
       }
@@ -511,11 +520,16 @@ export interface TuiRenderOptions extends TuiInput {
 
 export function tui(options: TuiRenderOptions): Promise<TuiOutput> {
   return new Promise<TuiOutput>((resolve) => {
-    render(() => <App {...options} onExit={resolve} />, {
+    const handleExit = (output: TuiOutput): void => {
+      process.stdout.write(DISABLE_MOUSE_TRACKING);
+      resolve(output);
+    };
+
+    render(() => <App {...options} onExit={handleExit} />, {
       targetFps: 60,
       exitOnCtrlC: false,
       useKittyKeyboard: {},
-      useMouse: false,
+      useMouse: true,
     });
   });
 }

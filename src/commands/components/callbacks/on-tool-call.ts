@@ -19,6 +19,7 @@ export const onToolCall = (call: ToolCallParams): void => {
       toolName: call.name,
       toolStatus: "running",
       toolDescription: call.description,
+      toolArgs: call.args,
       quiet: isQuiet,
     },
   });

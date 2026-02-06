@@ -261,3 +261,4 @@ npm-debug.log*
 # Other
 .vscode-test/
 coverage-final.json
+.codetyper-backup

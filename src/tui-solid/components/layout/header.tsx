@@ -139,8 +139,10 @@ export function Header(props: HeaderProps) {
         justifyContent="space-between"
         paddingLeft={1}
         paddingRight={1}
+        marginBottom={1}
         borderColor={theme.colors.border}
         border={["bottom"]}
+        backgroundColor={theme.colors.background}
       >
         <box flexDirection="row" gap={1}>
           <Show when={showBanner()}>

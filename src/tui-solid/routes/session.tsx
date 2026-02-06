@@ -287,8 +287,20 @@ export function Session(props: SessionProps) {
         </Show>
       </box>
 
+      <Show
+        when={app.mode() === "permission_prompt" && app.permissionRequest()}
+      >
+        <PermissionModal
+          request={app.permissionRequest()!}
+          onRespond={props.onPermissionResponse}
+          isActive={app.mode() === "permission_prompt"}
+        />
+      </Show>
+
       <StatusBar />
-      <InputArea onSubmit={props.onSubmit} />
+      <Show when={app.mode() !== "permission_prompt"}>
+        <InputArea onSubmit={props.onSubmit} />
+      </Show>
 
       <Switch>
         <Match when={app.mode() === "command_menu"}>
@@ -389,18 +401,6 @@ export function Session(props: SessionProps) {
               onSelect={props.onFileSelect}
               onClose={handleFilePickerClose}
               isActive={app.mode() === "file_picker"}
-            />
-          </CenteredModal>
-        </Match>
-
-        <Match
-          when={app.mode() === "permission_prompt" && app.permissionRequest()}
-        >
-          <CenteredModal>
-            <PermissionModal
-              request={app.permissionRequest()!}
-              onRespond={props.onPermissionResponse}
-              isActive={app.mode() === "permission_prompt"}
             />
           </CenteredModal>
         </Match>

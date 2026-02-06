@@ -11,6 +11,8 @@
     "dev": "bun src/index.ts",
     "dev:nobump": "bun scripts/build.ts && npm link",
     "dev:watch": "bun scripts/dev-watch.ts",
+    "dev:debug": "bun --inspect=localhost:6499 src/index.ts",
+    "dev:debug-brk": "bun --inspect-brk=localhost:6499 src/index.ts",
     "build": "bun scripts/build.ts",
     "sync-version": "bun scripts/sync-version.ts",
     "start": "bun src/index.ts",

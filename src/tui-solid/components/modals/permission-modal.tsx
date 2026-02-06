@@ -100,12 +100,15 @@ export function PermissionModal(props: PermissionModalProps) {
     <box
       flexDirection="column"
       borderColor={theme.colors.borderWarning}
-      border={["top", "bottom", "left", "right"]}
+      border={["top"]}
       backgroundColor={theme.colors.background}
       paddingLeft={2}
       paddingRight={2}
       paddingTop={1}
       paddingBottom={1}
+      width="100%"
+      height="auto"
+      flexShrink={0}
     >
       <box marginBottom={1}>
         <text fg={theme.colors.warning} attributes={TextAttributes.BOLD}>

@@ -98,7 +98,8 @@ const createAgentOptionsWithTUI = (
       metadata: {
         toolName: toolCall.name,
         toolStatus: "running",
-        toolDescription: JSON.stringify(toolCall.arguments),
+        toolDescription: `Executing ${toolCall.name}`,
+        toolArgs: toolCall.arguments,
       },
     });
 
