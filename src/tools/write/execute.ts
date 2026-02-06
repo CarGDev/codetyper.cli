@@ -10,10 +10,13 @@ import {
   WRITE_TITLES,
   WRITE_DESCRIPTION,
 } from "@constants/write";
+import { SENSITIVE_FILE_MESSAGES } from "@constants/sensitive-files";
 import {
   isFileOpAllowed,
   promptFilePermission,
 } from "@services/core/permissions";
+import { checkSensitiveFile } from "@services/sensitive-file-guard";
+import { createBackup } from "@services/file-backup";
 import { formatDiff } from "@utils/diff/format";
 import { generateDiff } from "@utils/diff/generate";
 import { writeParams } from "@tools/write/params";
@@ -29,6 +32,18 @@ const createDeniedResult = (relativePath: string): ToolResult => ({
   title: WRITE_TITLES.CANCELLED(relativePath),
   output: "",
   error: WRITE_MESSAGES.PERMISSION_DENIED,
+});
+
+const createBlockedResult = (relativePath: string, message: string): ToolResult => ({
+  success: false,
+  title: SENSITIVE_FILE_MESSAGES.BLOCKED_WRITE_TITLE,
+  output: "",
+  error: message,
+  metadata: {
+    filepath: relativePath,
+    blocked: true,
+    reason: "sensitive_file",
+  },
 });
 
 const createErrorResult = (relativePath: string, error: Error): ToolResult => ({
@@ -129,6 +144,15 @@ export const executeWrite = async (
   const { filePath, content } = args;
   const { fullPath, relativePath } = resolvePaths(filePath, ctx.workingDir);
 
+  // SAFETY: Check for sensitive files BEFORE any other operation
+  const sensitiveCheck = checkSensitiveFile(fullPath, "write");
+  if (sensitiveCheck.blocked) {
+    return createBlockedResult(
+      relativePath,
+      sensitiveCheck.message ?? "Cannot write to sensitive file",
+    );
+  }
+
   const { exists, content: oldContent } = await readExistingContent(fullPath);
 
   const allowed = await checkPermission(
@@ -146,6 +170,11 @@ export const executeWrite = async (
 
   try {
     await ensureDirectory(fullPath);
+
+    // Create backup before overwriting (only if file exists)
+    if (exists) {
+      await createBackup(fullPath, ctx.workingDir);
+    }
 
     const diff = generateDiff(oldContent, content);
     const diffOutput = formatDiff(diff, relativePath);

@@ -6,10 +6,13 @@ import fs from "fs/promises";
 import path from "path";
 
 import { EDIT_MESSAGES, EDIT_TITLES, EDIT_DESCRIPTION } from "@constants/edit";
+import { SENSITIVE_FILE_MESSAGES } from "@constants/sensitive-files";
 import {
   isFileOpAllowed,
   promptFilePermission,
 } from "@services/core/permissions";
+import { checkSensitiveFile } from "@services/sensitive-file-guard";
+import { createBackup } from "@services/file-backup";
 import { formatDiff } from "@utils/diff/format";
 import { generateDiff } from "@utils/diff/generate";
 import { editParams } from "@tools/edit/params";
@@ -30,6 +33,18 @@ const createDeniedResult = (relativePath: string): ToolResult => ({
   title: EDIT_TITLES.CANCELLED(relativePath),
   output: "",
   error: EDIT_MESSAGES.PERMISSION_DENIED,
+});
+
+const createBlockedResult = (relativePath: string, message: string): ToolResult => ({
+  success: false,
+  title: SENSITIVE_FILE_MESSAGES.BLOCKED_WRITE_TITLE,
+  output: "",
+  error: message,
+  metadata: {
+    filepath: relativePath,
+    blocked: true,
+    reason: "sensitive_file",
+  },
 });
 
 const createErrorResult = (relativePath: string, error: Error): ToolResult => ({
@@ -103,6 +118,15 @@ export const executeEdit = async (
   const { filePath, oldString, newString, replaceAll = false } = args;
   const { fullPath, relativePath } = resolvePath(filePath, ctx.workingDir);
 
+  // SAFETY: Check for sensitive files BEFORE any other operation
+  const sensitiveCheck = checkSensitiveFile(fullPath, "edit");
+  if (sensitiveCheck.blocked) {
+    return createBlockedResult(
+      relativePath,
+      sensitiveCheck.message ?? "Cannot edit sensitive file",
+    );
+  }
+
   try {
     const content = await fs.readFile(fullPath, "utf-8");
 
@@ -128,6 +152,9 @@ export const executeEdit = async (
       title: EDIT_TITLES.EDITING(path.basename(filePath)),
       status: "running",
     });
+
+    // Create backup before editing
+    await createBackup(fullPath, ctx.workingDir);
 
     const newContent = applyEdit(content, oldString, newString, replaceAll);
     const diff = generateDiff(content, newContent);
