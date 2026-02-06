@@ -19,6 +19,8 @@ export interface AgentOptions {
   autoApprove?: boolean;
   /** Chat mode - only read-only tools, no file modifications */
   chatMode?: boolean;
+  /** Enforce plan approval for multi-file modifications (default: true) */
+  enforcePlanApproval?: boolean;
   /** Model-specific parameters from tier detection */
   modelParams?: {
     temperature?: number;

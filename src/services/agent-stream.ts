@@ -31,6 +31,22 @@ import {
   createExecutionControl,
   captureFileState,
 } from "@services/execution-control";
+import { getActivePlans } from "@services/plan-mode/plan-service";
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+/**
+ * Number of file modifications allowed before plan approval is required
+ * After this threshold, agents must use plan_approval tool
+ */
+const PLAN_APPROVAL_FILE_THRESHOLD = 2;
+
+/**
+ * Tools that modify files and require plan approval tracking
+ */
+const FILE_MODIFYING_TOOLS = new Set(["write", "edit", "delete", "multi_edit", "apply_patch"]);
 
 // =============================================================================
 // Types
@@ -43,6 +59,10 @@ interface StreamAgentState {
   options: AgentOptions;
   callbacks: Partial<StreamCallbacks>;
   executionControl: ReturnType<typeof createExecutionControl>;
+  /** Track files modified in this session for plan approval enforcement */
+  modifiedFiles: Set<string>;
+  /** Whether plan approval enforcement is enabled */
+  enforcePlanApproval: boolean;
 }
 
 /**
@@ -92,6 +112,8 @@ const createStreamAgentState = (
     options,
     callbacks,
     executionControl: createExecutionControl(executionControlEvents),
+    modifiedFiles: new Set<string>(),
+    enforcePlanApproval: options.enforcePlanApproval ?? true,
   };
 };
 
@@ -330,6 +352,37 @@ const executeTool = async (
       output: "",
       error: "Execution was aborted",
     };
+  }
+
+  // Check for plan approval enforcement on file-modifying tools
+  if (state.enforcePlanApproval && FILE_MODIFYING_TOOLS.has(toolCall.name)) {
+    const toolFilePath = (toolCall.arguments.filePath ?? toolCall.arguments.file_path) as string | undefined;
+
+    // Track this file modification
+    if (toolFilePath) {
+      state.modifiedFiles.add(toolFilePath);
+    }
+
+    // Check if we've exceeded the threshold and need plan approval
+    if (state.modifiedFiles.size > PLAN_APPROVAL_FILE_THRESHOLD) {
+      // Check if there's an approved plan
+      const activePlans = getActivePlans();
+      const hasApprovedPlan = activePlans.some(
+        p => p.status === "approved" || p.status === "executing"
+      );
+
+      if (!hasApprovedPlan) {
+        return {
+          success: false,
+          title: "Plan approval required",
+          output: "",
+          error: `You have modified ${state.modifiedFiles.size} files which exceeds the threshold of ${PLAN_APPROVAL_FILE_THRESHOLD}. ` +
+            `Before continuing, you MUST use the plan_approval tool to create and submit an implementation plan for user approval. ` +
+            `Use plan_approval action="create" to start, then add steps, context, and risks, finally submit with action="submit". ` +
+            `Wait for the user to approve the plan before proceeding with more file modifications.`,
+        };
+      }
+    }
   }
 
   // Check for debug error markers from truncated/malformed JSON
