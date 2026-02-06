@@ -2,7 +2,11 @@ import { tui } from "@tui-solid/app";
 import { getProviderInfo } from "@services/chat-tui-service";
 import type { ChatServiceState } from "@services/chat-tui-service";
 import type { AgentConfig } from "@/types/agent-config";
-import type { PermissionScope, LearningScope } from "@/types/tui";
+import type {
+  PermissionScope,
+  LearningScope,
+  PlanApprovalPromptResponse,
+} from "@/types/tui";
 
 export interface RenderAppSolidProps {
   sessionId: string;
@@ -15,6 +19,7 @@ export interface RenderAppSolidProps {
     allowed: boolean,
     scope?: PermissionScope,
   ) => void;
+  handlePlanApprovalResponse?: (response: PlanApprovalPromptResponse) => void;
   handleLearningResponse?: (
     save: boolean,
     scope?: LearningScope,
@@ -47,6 +52,7 @@ export const renderAppSolid = async (
     onModelSelect: props.handleModelSelect,
     onThemeSelect: props.handleThemeSelect,
     onPermissionResponse: props.handlePermissionResponse ?? (() => {}),
+    onPlanApprovalResponse: props.handlePlanApprovalResponse ?? (() => {}),
     onLearningResponse: props.handleLearningResponse ?? (() => {}),
     plan: props.plan,
   });

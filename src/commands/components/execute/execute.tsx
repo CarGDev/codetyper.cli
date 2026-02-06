@@ -5,7 +5,11 @@ import { addServer, connectServer } from "@services/mcp/manager";
 import * as brainService from "@services/brain";
 import type { ChatServiceState } from "@services/chat-tui-service";
 import type { AgentConfig } from "@/types/agent-config";
-import type { PermissionScope, LearningScope } from "@/types/tui";
+import type {
+  PermissionScope,
+  LearningScope,
+  PlanApprovalPromptResponse,
+} from "@/types/tui";
 import type { ProviderModel } from "@/types/providers";
 import type { MCPAddFormData } from "@/types/mcp";
 
@@ -29,6 +33,7 @@ export interface RenderAppProps {
     allowed: boolean,
     scope?: PermissionScope,
   ) => void;
+  handlePlanApprovalResponse?: (response: PlanApprovalPromptResponse) => void;
   handleLearningResponse?: (
     save: boolean,
     scope?: LearningScope,
@@ -189,6 +194,7 @@ export const renderApp = async (props: RenderAppProps): Promise<void> => {
     },
     onMCPAdd: props.handleMCPAdd ?? defaultHandleMCPAdd,
     onPermissionResponse: props.handlePermissionResponse ?? (() => {}),
+    onPlanApprovalResponse: props.handlePlanApprovalResponse ?? (() => {}),
     onLearningResponse: props.handleLearningResponse ?? (() => {}),
     onBrainSetJwtToken:
       props.handleBrainSetJwtToken ?? defaultHandleBrainSetJwtToken,

@@ -22,6 +22,7 @@ import { ModeSelect } from "@tui-solid/components/submenu/mode-select";
 import { ProviderSelect } from "@tui-solid/components/submenu/provider-select";
 import { FilePicker } from "@tui-solid/components/inputs/file-picker";
 import { PermissionModal } from "@tui-solid/components/modals/permission-modal";
+import { PlanApprovalModal } from "@tui-solid/components/modals/plan-approval-modal";
 import { LearningModal } from "@tui-solid/components/modals/learning-modal";
 import { HelpMenu } from "@tui-solid/components/menu/help-menu";
 import { HelpDetail } from "@tui-solid/components/panels/help-detail";
@@ -36,6 +37,7 @@ import type {
   LearningScope,
   InteractionMode,
   MCPServerDisplay,
+  PlanApprovalPromptResponse,
 } from "@/types/tui";
 import type { MCPAddFormData } from "@/types/mcp";
 
@@ -63,6 +65,7 @@ interface SessionProps {
   onProviderSelect?: (providerId: string) => void;
   onCascadeToggle?: () => void;
   onPermissionResponse: (allowed: boolean, scope?: PermissionScope) => void;
+  onPlanApprovalResponse: (response: PlanApprovalPromptResponse) => void;
   onLearningResponse: (
     save: boolean,
     scope?: LearningScope,
@@ -297,8 +300,18 @@ export function Session(props: SessionProps) {
         />
       </Show>
 
+      <Show
+        when={app.mode() === "plan_approval" && app.planApprovalPrompt()}
+      >
+        <PlanApprovalModal
+          prompt={app.planApprovalPrompt()!}
+          onRespond={props.onPlanApprovalResponse}
+          isActive={app.mode() === "plan_approval"}
+        />
+      </Show>
+
       <StatusBar />
-      <Show when={app.mode() !== "permission_prompt"}>
+      <Show when={app.mode() !== "permission_prompt" && app.mode() !== "plan_approval"}>
         <InputArea onSubmit={props.onSubmit} />
       </Show>
 
