@@ -17,6 +17,7 @@ import {
   getExecutionState,
 } from "@services/chat-tui-service";
 import { TERMINAL_RESET } from "@constants/terminal";
+import { formatExitMessage } from "@services/exit-message";
 import { copyToClipboard } from "@services/clipboard/text-clipboard";
 import versionData from "@/version.json";
 import { ExitProvider, useExit } from "@tui-solid/context/exit";
@@ -25,6 +26,7 @@ import {
   AppStoreProvider,
   useAppStore,
   setAppStoreRef,
+  appStore,
 } from "@tui-solid/context/app";
 import { ThemeProvider, useTheme } from "@tui-solid/context/theme";
 import { KeybindProvider } from "@tui-solid/context/keybind";
@@ -111,6 +113,7 @@ function AppContent(props: AppProps) {
   const toast = useToast();
   const theme = useTheme();
   const renderer = useRenderer();
+  renderer.disableStdoutInterception();
   const [fileList, setFileList] = createSignal<string[]>([]);
 
   setAppStoreRef(app);
@@ -561,6 +564,16 @@ export function tui(options: TuiRenderOptions): Promise<TuiOutput> {
     const handleExit = (output: TuiOutput): void => {
       try {
         writeSync(1, TERMINAL_RESET);
+
+        const state = appStore.getState();
+        const firstUserLog = state?.logs?.find(
+          (log: { type: string }) => log.type === "user",
+        );
+        const sessionTitle = firstUserLog?.content;
+        const exitMsg = formatExitMessage(output.sessionId, sessionTitle);
+        if (exitMsg) {
+          writeSync(1, exitMsg);
+        }
       } catch {
         // Ignore - stdout may already be closed
       }
@@ -571,7 +584,6 @@ export function tui(options: TuiRenderOptions): Promise<TuiOutput> {
       targetFps: 60,
       exitOnCtrlC: false,
       useKittyKeyboard: {},
-      useMouse: true,
     });
   });
 }

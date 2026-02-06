@@ -15,6 +15,7 @@ export interface TuiInput {
 export interface TuiOutput {
   exitCode: number;
   sessionId?: string;
+  sessionTitle?: string;
 }
 
 export interface Config {
