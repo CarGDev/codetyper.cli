@@ -16,6 +16,7 @@ import {
   advanceStep,
   getExecutionState,
 } from "@services/chat-tui-service";
+import { matchesAction } from "@services/keybind-resolver";
 import { TERMINAL_RESET } from "@constants/terminal";
 import { formatExitMessage } from "@services/exit-message";
 import { copyToClipboard } from "@services/clipboard/text-clipboard";
@@ -185,15 +186,15 @@ function AppContent(props: AppProps) {
   }
 
   useKeyboard((evt) => {
-    // Ctrl+Y copies selected text to clipboard
-    if (evt.ctrl && evt.name === "y") {
+    // Clipboard: copy selected text
+    if (matchesAction(evt, "clipboard_copy")) {
       copySelectionToClipboard();
       evt.preventDefault();
       return;
     }
 
-    // ESC aborts current operation
-    if (evt.name === "escape") {
+    // Session interrupt (ESC) — abort current operation
+    if (matchesAction(evt, "session_interrupt")) {
       abortCurrentOperation(false).then((aborted) => {
         if (aborted) {
           toast.info("Operation cancelled");
@@ -203,8 +204,8 @@ function AppContent(props: AppProps) {
       return;
     }
 
-    // Ctrl+P toggles pause/resume during execution
-    if (evt.ctrl && evt.name === "p") {
+    // Pause/resume execution
+    if (matchesAction(evt, "session_pause_resume")) {
       const toggled = togglePauseResume();
       if (toggled) {
         const state = getExecutionState();
@@ -218,8 +219,8 @@ function AppContent(props: AppProps) {
       }
     }
 
-    // Ctrl+Z aborts with rollback
-    if (evt.ctrl && evt.name === "z") {
+    // Abort with rollback
+    if (matchesAction(evt, "session_abort_rollback")) {
       const state = getExecutionState();
       if (state.state !== "idle") {
         abortCurrentOperation(true).then((aborted) => {
@@ -234,8 +235,8 @@ function AppContent(props: AppProps) {
       }
     }
 
-    // Ctrl+Shift+S toggles step mode
-    if (evt.ctrl && evt.shift && evt.name === "s") {
+    // Toggle step mode
+    if (matchesAction(evt, "session_step_toggle")) {
       const state = getExecutionState();
       if (state.state !== "idle") {
         const isStepMode = state.state === "stepping";
@@ -248,8 +249,8 @@ function AppContent(props: AppProps) {
       }
     }
 
-    // Enter advances step when waiting for step confirmation
-    if (evt.name === "return" && !evt.ctrl && !evt.shift) {
+    // Advance one step when waiting for step confirmation
+    if (matchesAction(evt, "session_step_advance")) {
       const state = getExecutionState();
       if (state.waitingForStep) {
         advanceStep();
@@ -258,8 +259,8 @@ function AppContent(props: AppProps) {
       }
     }
 
-    // Ctrl+C exits the application (with confirmation)
-    if (evt.ctrl && evt.name === "c") {
+    // App exit (Ctrl+C with confirmation)
+    if (matchesAction(evt, "app_exit")) {
       // First try to abort current operation
       const state = getExecutionState();
       if (state.state !== "idle") {
@@ -285,7 +286,8 @@ function AppContent(props: AppProps) {
       return;
     }
 
-    if (evt.name === "/" && app.mode() === "idle" && !app.inputBuffer()) {
+    // Command menu trigger from "/" when input is empty
+    if (matchesAction(evt, "command_menu") && app.mode() === "idle" && !app.inputBuffer()) {
       app.openCommandMenu();
       evt.preventDefault();
       return;
@@ -378,8 +380,11 @@ function AppContent(props: AppProps) {
   const handlePlanApprovalResponse = (
     response: PlanApprovalPromptResponse,
   ): void => {
-    // Don't set mode here - the resolve callback in plan-approval.ts
-    // handles the mode transition
+    // Resolve the blocking promise stored on the prompt
+    const prompt = app.planApprovalPrompt();
+    if (prompt?.resolve) {
+      prompt.resolve(response);
+    }
     props.onPlanApprovalResponse(response);
   };
 

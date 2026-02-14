@@ -3,6 +3,8 @@
  *
  * Types for the progressive disclosure skill system.
  * Skills are loaded in 3 levels: metadata → body → external references.
+ * Supports built-in skills, project skills, and external agents
+ * from .claude/, .github/, .codetyper/ directories.
  */
 
 /**
@@ -18,6 +20,17 @@ export type SkillTriggerType =
   | "pattern" // "commit changes", "review PR"
   | "auto" // Automatically triggered based on context
   | "explicit"; // Only when explicitly invoked
+
+/**
+ * Source of a skill definition
+ */
+export type SkillSource =
+  | "builtin" // Ships with codetyper (src/skills/)
+  | "user" // User-level (~/.config/codetyper/skills/)
+  | "project" // Project-level (.codetyper/skills/)
+  | "external-claude" // External from .claude/
+  | "external-github" // External from .github/
+  | "external-codetyper"; // External from .codetyper/ root agents
 
 /**
  * Example for a skill
@@ -41,6 +54,7 @@ export interface SkillMetadata {
   autoTrigger: boolean;
   requiredTools: string[];
   tags?: string[];
+  source?: SkillSource;
 }
 
 /**
@@ -72,6 +86,18 @@ export interface SkillMatch {
 }
 
 /**
+ * Auto-detected skill match (from prompt analysis)
+ */
+export interface AutoDetectedSkill {
+  skill: SkillDefinition;
+  confidence: number;
+  /** Keywords in the prompt that triggered detection */
+  matchedKeywords: string[];
+  /** Category of the match (e.g., "language", "tool", "domain") */
+  category: string;
+}
+
+/**
  * Skill execution context
  */
 export interface SkillContext {
@@ -97,6 +123,7 @@ export interface SkillExecutionResult {
  */
 export interface SkillRegistryState {
   skills: Map<string, SkillDefinition>;
+  externalAgents: Map<string, SkillDefinition>;
   lastLoadedAt: number | null;
   loadErrors: string[];
 }
@@ -123,5 +150,37 @@ export interface ParsedSkillFile {
   frontmatter: SkillFrontmatter;
   body: string;
   examples?: SkillExample[];
+  filePath: string;
+}
+
+/**
+ * External agent file (from .claude/, .github/, .codetyper/)
+ */
+export interface ExternalAgentFile {
+  /** Relative path within the source directory */
+  relativePath: string;
+  /** Absolute path to the file */
+  absolutePath: string;
+  /** Source directory type */
+  source: SkillSource;
+  /** Raw file content */
+  content: string;
+}
+
+/**
+ * Parsed external agent definition
+ */
+export interface ParsedExternalAgent {
+  /** Derived ID from filename/path */
+  id: string;
+  /** Description from frontmatter */
+  description: string;
+  /** Tools specified in frontmatter */
+  tools: string[];
+  /** Body content (instructions) */
+  body: string;
+  /** Source of this agent */
+  source: SkillSource;
+  /** Original file path */
   filePath: string;
 }

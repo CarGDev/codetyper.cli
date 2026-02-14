@@ -20,16 +20,6 @@ Before using ANY tools, think through:
 - What files might be involved?
 - What's my initial approach?
 
-Output your thinking in a <thinking> block:
-\`\`\`
-<thinking>
-Task: [what the user wants]
-Need to find: [what information I need]
-Likely files: [patterns to search for]
-Approach: [my plan]
-</thinking>
-\`\`\`
-
 ## Step 2: EXPLORE - Gather Context
 Use tools to understand the codebase:
 - **glob** - Find relevant files by pattern

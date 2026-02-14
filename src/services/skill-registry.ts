@@ -3,16 +3,24 @@
  *
  * Manages skill registration, matching, and invocation.
  * Uses progressive disclosure to load skills on demand.
+ * Merges built-in skills with external agents from .claude/, .github/, .codetyper/.
  */
 
 import { SKILL_MATCHING, SKILL_LOADING, SKILL_ERRORS } from "@constants/skills";
 import { loadAllSkills, loadSkillById } from "@services/skill-loader";
+import { loadExternalAgents } from "@services/external-agent-loader";
+import {
+  detectSkillsForPrompt,
+  buildSkillInjection,
+  formatDetectedSkills,
+} from "@services/skill-detector";
 import type {
   SkillDefinition,
   SkillMatch,
   SkillContext,
   SkillExecutionResult,
   SkillRegistryState,
+  AutoDetectedSkill,
 } from "@/types/skills";
 
 // ============================================================================
@@ -21,6 +29,7 @@ import type {
 
 let registryState: SkillRegistryState = {
   skills: new Map(),
+  externalAgents: new Map(),
   lastLoadedAt: null,
   loadErrors: [],
 };
@@ -30,6 +39,7 @@ let registryState: SkillRegistryState = {
  */
 export const getRegistryState = (): SkillRegistryState => ({
   skills: new Map(registryState.skills),
+  externalAgents: new Map(registryState.externalAgents),
   lastLoadedAt: registryState.lastLoadedAt,
   loadErrors: [...registryState.loadErrors],
 });
@@ -48,15 +58,31 @@ const isCacheStale = (): boolean => {
 
 /**
  * Initialize skill registry with all available skills
+ * (built-in + user + project + external agents)
  */
 export const initializeRegistry = async (): Promise<void> => {
   try {
-    const skills = await loadAllSkills("metadata");
+    // Load built-in and user/project skills
+    const skills = await loadAllSkills("full");
     registryState.skills.clear();
+    registryState.externalAgents.clear();
     registryState.loadErrors = [];
 
     for (const skill of skills) {
       registryState.skills.set(skill.id, skill);
+    }
+
+    // Load external agents from .claude/, .github/, .codetyper/
+    try {
+      const externalAgents = await loadExternalAgents();
+      for (const agent of externalAgents) {
+        registryState.externalAgents.set(agent.id, agent);
+        // Also register external agents as regular skills for unified matching
+        registryState.skills.set(agent.id, agent);
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      registryState.loadErrors.push(`External agents: ${msg}`);
     }
 
     registryState.lastLoadedAt = Date.now();
@@ -360,6 +386,67 @@ export const executeFromInput = async (
     ...context,
     userInput: input,
   });
+};
+
+// ============================================================================
+// Auto-Detection
+// ============================================================================
+
+/**
+ * Auto-detect skills relevant to a user prompt.
+ * Analyzes the prompt content and returns matching skills
+ * sorted by confidence.
+ */
+export const autoDetectSkills = async (
+  prompt: string,
+): Promise<AutoDetectedSkill[]> => {
+  await refreshIfNeeded();
+  const allSkills = getAllSkills();
+  return detectSkillsForPrompt(prompt, allSkills);
+};
+
+/**
+ * Build a skill injection prompt for detected skills.
+ * This should be appended to the system prompt or inserted
+ * as a system message before the agent processes the prompt.
+ */
+export const buildSkillInjectionForPrompt = async (
+  prompt: string,
+): Promise<{ injection: string; detected: AutoDetectedSkill[] }> => {
+  const detected = await autoDetectSkills(prompt);
+  const injection = buildSkillInjection(detected);
+  return { injection, detected };
+};
+
+/**
+ * Get a human-readable summary of detected skills for logging
+ */
+export const getDetectedSkillsSummary = (
+  detected: AutoDetectedSkill[],
+): string => {
+  return formatDetectedSkills(detected);
+};
+
+// ============================================================================
+// External Agent Access
+// ============================================================================
+
+/**
+ * Get all loaded external agents
+ */
+export const getExternalAgents = (): SkillDefinition[] => {
+  return Array.from(registryState.externalAgents.values());
+};
+
+/**
+ * Get external agents by source
+ */
+export const getExternalAgentsBySource = (
+  source: string,
+): SkillDefinition[] => {
+  return Array.from(registryState.externalAgents.values()).filter(
+    (agent) => agent.source === source,
+  );
 };
 
 // ============================================================================

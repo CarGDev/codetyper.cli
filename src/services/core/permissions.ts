@@ -204,47 +204,86 @@ export const matchesPathPattern = (
 };
 
 /**
- * Check if a Bash command is allowed
+ * Split a shell command into individual sub-commands on chaining operators.
+ * Handles &&, ||, ;, and | (pipe).
+ * This prevents a pattern like Bash(cd:*) from silently approving
+ * "cd /safe && rm -rf /dangerous".
+ */
+const splitChainedCommands = (command: string): string[] => {
+  // Split on shell chaining operators, but not inside quoted strings.
+  // Simple heuristic: split on &&, ||, ;, | (not ||) that are not inside quotes.
+  const parts: string[] = [];
+  let current = "";
+  let inSingle = false;
+  let inDouble = false;
+
+  for (let i = 0; i < command.length; i++) {
+    const ch = command[i];
+    const next = command[i + 1];
+
+    // Track quoting
+    if (ch === "'" && !inDouble) { inSingle = !inSingle; current += ch; continue; }
+    if (ch === '"' && !inSingle) { inDouble = !inDouble; current += ch; continue; }
+    if (inSingle || inDouble) { current += ch; continue; }
+
+    // Check for operators
+    if (ch === "&" && next === "&") { parts.push(current); current = ""; i++; continue; }
+    if (ch === "|" && next === "|") { parts.push(current); current = ""; i++; continue; }
+    if (ch === ";") { parts.push(current); current = ""; continue; }
+    if (ch === "|") { parts.push(current); current = ""; continue; }
+
+    current += ch;
+  }
+
+  if (current.trim()) parts.push(current);
+  return parts.map((p) => p.trim()).filter(Boolean);
+};
+
+/**
+ * Check if a Bash command is allowed.
+ * For chained commands (&&, ||, ;, |), EVERY sub-command must be allowed.
  */
 export const isBashAllowed = (command: string): boolean => {
+  const subCommands = splitChainedCommands(command);
+
   const allPatterns = [
     ...sessionAllowPatterns,
     ...localAllowPatterns,
     ...globalAllowPatterns,
   ];
 
-  for (const patternStr of allPatterns) {
-    const pattern = parsePattern(patternStr);
-    if (
-      pattern &&
-      pattern.tool === "Bash" &&
-      matchesBashPattern(command, pattern)
-    ) {
-      return true;
-    }
-  }
-
-  return false;
+  // Every sub-command must match at least one allow pattern
+  return subCommands.every((subCmd) =>
+    allPatterns.some((patternStr) => {
+      const pattern = parsePattern(patternStr);
+      return (
+        pattern &&
+        pattern.tool === "Bash" &&
+        matchesBashPattern(subCmd, pattern)
+      );
+    }),
+  );
 };
 
 /**
- * Check if a Bash command is denied
+ * Check if a Bash command is denied.
+ * For chained commands, if ANY sub-command is denied, the whole command is denied.
  */
 export const isBashDenied = (command: string): boolean => {
+  const subCommands = splitChainedCommands(command);
   const denyPatterns = [...localDenyPatterns, ...globalDenyPatterns];
 
-  for (const patternStr of denyPatterns) {
-    const pattern = parsePattern(patternStr);
-    if (
-      pattern &&
-      pattern.tool === "Bash" &&
-      matchesBashPattern(command, pattern)
-    ) {
-      return true;
-    }
-  }
-
-  return false;
+  // If any sub-command matches a deny pattern, deny the whole command
+  return subCommands.some((subCmd) =>
+    denyPatterns.some((patternStr) => {
+      const pattern = parsePattern(patternStr);
+      return (
+        pattern &&
+        pattern.tool === "Bash" &&
+        matchesBashPattern(subCmd, pattern)
+      );
+    }),
+  );
 };
 
 /**
@@ -273,9 +312,9 @@ export const isFileOpAllowed = (
 };
 
 /**
- * Generate a pattern for the given command
+ * Generate a pattern for a single (non-chained) command
  */
-export const generateBashPattern = (command: string): string => {
+const generateSingleBashPattern = (command: string): string => {
   const parts = command.trim().split(/\s+/);
 
   if (parts.length === 0) return `Bash(${command}:*)`;
@@ -288,6 +327,33 @@ export const generateBashPattern = (command: string): string => {
   }
 
   return `Bash(${firstWord}:*)`;
+};
+
+/**
+ * Generate patterns for the given command.
+ * For chained commands (&&, ||, ;, |), returns one pattern per sub-command.
+ * This prevents "Bash(cd:*)" from blanket-approving everything chained after cd.
+ */
+export const generateBashPattern = (command: string): string => {
+  const subCommands = splitChainedCommands(command);
+
+  if (subCommands.length <= 1) {
+    return generateSingleBashPattern(command);
+  }
+
+  // For chained commands, return all unique patterns joined so the user can see them
+  const patterns = [
+    ...new Set(subCommands.map(generateSingleBashPattern)),
+  ];
+  return patterns.join(", ");
+};
+
+/**
+ * Generate individual patterns for a command (used for storing)
+ */
+export const generateBashPatterns = (command: string): string[] => {
+  const subCommands = splitChainedCommands(command);
+  return [...new Set(subCommands.map(generateSingleBashPattern))];
 };
 
 /**
@@ -385,21 +451,23 @@ export const clearSessionPatterns = (): void => {
 };
 
 /**
- * Handle permission scope
+ * Handle permission scope — stores one or more patterns
  */
 const handlePermissionScope = async (
   scope: string,
-  pattern: string,
+  patterns: string[],
 ): Promise<void> => {
-  const scopeHandlers: Record<string, () => Promise<void> | void> = {
-    session: () => addSessionPattern(pattern),
-    local: () => addLocalPattern(pattern),
-    global: () => addGlobalPattern(pattern),
-  };
+  for (const pattern of patterns) {
+    const scopeHandlers: Record<string, () => Promise<void> | void> = {
+      session: () => addSessionPattern(pattern),
+      local: () => addLocalPattern(pattern),
+      global: () => addGlobalPattern(pattern),
+    };
 
-  const handler = scopeHandlers[scope];
-  if (handler) {
-    await handler();
+    const handler = scopeHandlers[scope];
+    if (handler) {
+      await handler();
+    }
   }
 };
 
@@ -419,6 +487,7 @@ export const promptBashPermission = async (
   }
 
   const suggestedPattern = generateBashPattern(command);
+  const patterns = generateBashPatterns(command);
 
   // Use custom handler if set (TUI mode)
   if (permissionHandler) {
@@ -430,7 +499,7 @@ export const promptBashPermission = async (
     });
 
     if (response.allowed && response.scope) {
-      await handlePermissionScope(response.scope, suggestedPattern);
+      await handlePermissionScope(response.scope, patterns);
     }
 
     return {
@@ -468,55 +537,61 @@ export const promptBashPermission = async (
       process.stdin.removeListener("data", handleInput);
       process.stdin.setRawMode?.(false);
 
+      const addAllPatterns = async (
+        addFn: (p: string) => void | Promise<void>,
+      ): Promise<void> => {
+        for (const p of patterns) await addFn(p);
+      };
+
       const responseMap: Record<string, () => Promise<void>> = {
         y: async () => resolve({ allowed: true }),
         yes: async () => resolve({ allowed: true }),
         s: async () => {
-          addSessionPattern(suggestedPattern);
+          await addAllPatterns(addSessionPattern);
           console.log(
-            chalk.blue(`\n✓ Added session pattern: ${suggestedPattern}`),
+            chalk.blue(`\n✓ Added session patterns: ${suggestedPattern}`),
           );
           resolve({ allowed: true, remember: "session" });
         },
         session: async () => {
-          addSessionPattern(suggestedPattern);
+          await addAllPatterns(addSessionPattern);
           console.log(
-            chalk.blue(`\n✓ Added session pattern: ${suggestedPattern}`),
+            chalk.blue(`\n✓ Added session patterns: ${suggestedPattern}`),
           );
           resolve({ allowed: true, remember: "session" });
         },
         l: async () => {
-          await addLocalPattern(suggestedPattern);
+          await addAllPatterns(addLocalPattern);
           console.log(
-            chalk.cyan(`\n✓ Added project pattern: ${suggestedPattern}`),
+            chalk.cyan(`\n✓ Added project patterns: ${suggestedPattern}`),
           );
           resolve({ allowed: true, remember: "local" });
         },
         local: async () => {
-          await addLocalPattern(suggestedPattern);
+          await addAllPatterns(addLocalPattern);
           console.log(
-            chalk.cyan(`\n✓ Added project pattern: ${suggestedPattern}`),
+            chalk.cyan(`\n✓ Added project patterns: ${suggestedPattern}`),
           );
           resolve({ allowed: true, remember: "local" });
         },
         project: async () => {
-          await addLocalPattern(suggestedPattern);
+          await addAllPatterns(addLocalPattern);
           console.log(
-            chalk.cyan(`\n✓ Added project pattern: ${suggestedPattern}`),
+            chalk.cyan(`\n✓ Added project patterns: ${suggestedPattern}`),
           );
           resolve({ allowed: true, remember: "local" });
         },
         g: async () => {
-          await addGlobalPattern(suggestedPattern);
+          await addAllPatterns(addGlobalPattern);
           console.log(
-            chalk.magenta(`\n✓ Added global pattern: ${suggestedPattern}`),
+            chalk.magenta(`\n✓ Added global patterns: ${suggestedPattern}`),
           );
           resolve({ allowed: true, remember: "global" });
         },
         global: async () => {
-          await addGlobalPattern(suggestedPattern);
+          await addAllPatterns(addGlobalPattern);
           console.log(
-            chalk.magenta(`\n✓ Added global pattern: ${suggestedPattern}`),
+            chalk.magenta(`\n✓ Added global patterns: ${suggestedPattern}`),
           );
           resolve({ allowed: true, remember: "global" });
         },
@@ -562,7 +637,7 @@ export const promptFilePermission = async (
     });
 
     if (response.allowed && response.scope) {
-      await handlePermissionScope(response.scope, suggestedPattern);
+      await handlePermissionScope(response.scope, [suggestedPattern]);
     }
 
     return {

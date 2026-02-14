@@ -1,4 +1,5 @@
 import chalk from "chalk";
+import { getMessageText } from "@/types/providers";
 import type { ChatState } from "@commands/components/chat/state";
 
 export const showHistory = (state: ChatState): void => {
@@ -8,9 +9,10 @@ export const showHistory = (state: ChatState): void => {
     const msg = state.messages[i];
     const role =
       msg.role === "user" ? chalk.cyan("You") : chalk.green("Assistant");
-    const preview = msg.content.slice(0, 100).replace(/\n/g, " ");
+    const text = getMessageText(msg.content);
+    const preview = text.slice(0, 100).replace(/\n/g, " ");
     console.log(
-      `  ${i}. ${role}: ${preview}${msg.content.length > 100 ? "..." : ""}`,
+      `  ${i}. ${role}: ${preview}${text.length > 100 ? "..." : ""}`,
     );
   }
 

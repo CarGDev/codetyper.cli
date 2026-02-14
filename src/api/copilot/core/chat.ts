@@ -1,48 +1,17 @@
-/**
- * Copilot Chat API
- *
- * Low-level API calls for chat completions
- */
-
 import got from "got";
 import type { CopilotToken } from "@/types/copilot";
 import type {
   Message,
   ChatCompletionOptions,
   ChatCompletionResponse,
-  StreamChunk,
 } from "@/types/providers";
+
 import { buildCopilotHeaders } from "@api/copilot/auth/token";
-
-interface FormattedMessage {
-  role: string;
-  content: string;
-  tool_call_id?: string;
-  tool_calls?: Message["tool_calls"];
-}
-
-interface ChatRequestBody {
-  model: string;
-  messages: FormattedMessage[];
-  max_tokens: number;
-  temperature: number;
-  stream: boolean;
-  tools?: ChatCompletionOptions["tools"];
-  tool_choice?: string;
-}
-
-interface ChatApiResponse {
-  error?: { message?: string };
-  choices?: Array<{
-    message?: { content?: string; tool_calls?: Message["tool_calls"] };
-    finish_reason?: ChatCompletionResponse["finishReason"];
-  }>;
-  usage?: {
-    prompt_tokens?: number;
-    completion_tokens?: number;
-    total_tokens?: number;
-  };
-}
+import {
+  FormattedMessage,
+  ChatRequestBody,
+  ChatApiResponse,
+} from "@/interfaces/api/copilot/core";
 
 const formatMessages = (messages: Message[]): FormattedMessage[] =>
   messages.map((msg) => {
@@ -137,61 +106,3 @@ export const executeChatRequest = async (
 
   return result;
 };
-
-/**
- * Execute streaming chat request
- */
-export const executeStreamRequest = (
-  endpoint: string,
-  token: CopilotToken,
-  body: ChatRequestBody,
-  onChunk: (chunk: StreamChunk) => void,
-): Promise<void> =>
-  new Promise((resolve, reject) => {
-    const stream = got.stream.post(endpoint, {
-      headers: buildCopilotHeaders(token),
-      json: body,
-    });
-
-    let buffer = "";
-
-    stream.on("data", (data: Buffer) => {
-      buffer += data.toString();
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
-
-      for (const line of lines) {
-        if (line.startsWith("data: ")) {
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") {
-            onChunk({ type: "done" });
-            return;
-          }
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const delta = parsed.choices?.[0]?.delta;
-
-            if (delta?.content) {
-              onChunk({ type: "content", content: delta.content });
-            }
-
-            if (delta?.tool_calls) {
-              for (const tc of delta.tool_calls) {
-                onChunk({ type: "tool_call", toolCall: tc });
-              }
-            }
-          } catch {
-            // Ignore parse errors in stream
-          }
-        }
-      }
-    });
-
-    stream.on("error", (error: Error) => {
-      onChunk({ type: "error", error: error.message });
-      reject(error);
-    });
-
-    stream.on("end", resolve);
-  });

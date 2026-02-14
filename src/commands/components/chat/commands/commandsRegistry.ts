@@ -107,6 +107,17 @@ const COMMAND_REGISTRY: Map<string, CommandHandler> = new Map<
   ],
   ["mcp", async (ctx: CommandContext) => handleMCP(ctx.args)],
   [
+    "mode",
+    () => {
+      appStore.toggleInteractionMode();
+      const { interactionMode } = appStore.getState();
+      appStore.addLog({
+        type: "system",
+        content: `Switched to ${interactionMode} mode`,
+      });
+    },
+  ],
+  [
     "logs",
     () => {
       appStore.toggleDebugLog();

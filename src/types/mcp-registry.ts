@@ -21,6 +21,8 @@ export interface MCPRegistryServer {
   package: string;
   command: string;
   args: string[];
+  /** Server URL for http / sse transport */
+  url?: string;
   category: MCPServerCategory;
   tags: string[];
   transport: MCPRegistryTransport;

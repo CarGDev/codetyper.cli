@@ -20,6 +20,21 @@ export const COPILOT_MODELS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 export const COPILOT_MAX_RETRIES = 3;
 export const COPILOT_INITIAL_RETRY_DELAY = 1000; // 1 second
 
+// Streaming timeout and connection retry
+export const COPILOT_STREAM_TIMEOUT = 120_000; // 2 minutes
+export const COPILOT_CONNECTION_RETRY_DELAY = 2000; // 2 seconds
+
+// Connection error patterns for retry logic
+export const CONNECTION_ERROR_PATTERNS = [
+  /socket.*closed/i,
+  /ECONNRESET/i,
+  /ECONNREFUSED/i,
+  /ETIMEDOUT/i,
+  /network.*error/i,
+  /fetch.*failed/i,
+  /aborted/i,
+] as const;
+
 // Default model
 export const COPILOT_DEFAULT_MODEL = "gpt-5-mini";
 

@@ -7,6 +7,7 @@ import {
   LEARNING_CONFIDENCE_THRESHOLD,
   MAX_LEARNINGS_DISPLAY,
 } from "@constants/chat-service";
+import { getMessageText } from "@/types/providers";
 import {
   detectLearnings,
   saveLearning,
@@ -35,8 +36,8 @@ export const handleRememberCommand = async (
   }
 
   const candidates = detectLearnings(
-    lastUserMsg.content,
-    lastAssistantMsg.content,
+    getMessageText(lastUserMsg.content),
+    getMessageText(lastAssistantMsg.content),
   );
 
   if (candidates.length === 0) {

@@ -90,9 +90,11 @@ Full-screen terminal interface with real-time streaming responses.
 ![CodeTyper Status View](assets/CodetyperView.png)
 
 **Key bindings:**
+
 - `Enter` - Send message
 - `Shift+Enter` - New line
-- `/` - Open command menu
+- `@` - Open file picker (works anywhere in input)
+- `/` - Open command menu (works anywhere in input)
 - `Ctrl+M` - Toggle interaction mode
 - `Ctrl+T` - Toggle todo panel
 - `Shift+Up/Down` - Scroll log panel
@@ -103,6 +105,7 @@ Full-screen terminal interface with real-time streaming responses.
 Optional vim-style keyboard navigation for power users. Enable in settings.
 
 **Normal Mode:**
+
 - `j/k` - Scroll down/up
 - `gg/G` - Jump to top/bottom
 - `Ctrl+d/u` - Half page scroll
@@ -111,6 +114,7 @@ Optional vim-style keyboard navigation for power users. Enable in settings.
 - `:` - Command mode (`:q` quit, `:w` save)
 
 **Configuration:**
+
 ```json
 {
   "vim": {
@@ -128,26 +132,26 @@ Press `/` to access all commands organized by category.
 
 **Available Commands:**
 
-| Category | Command | Description |
-|----------|---------|-------------|
-| General | `/help` | Show available commands |
-| General | `/clear` | Clear conversation history |
-| General | `/exit` | Exit the chat |
-| Session | `/save` | Save current session |
-| Session | `/context` | Show context information |
-| Session | `/usage` | Show token usage statistics |
-| Session | `/remember` | Save a learning about the project |
-| Session | `/learnings` | Show saved learnings |
-| Settings | `/model` | Select AI model |
-| Settings | `/agent` | Select agent |
-| Settings | `/mode` | Switch interaction mode |
-| Settings | `/provider` | Switch LLM provider |
-| Settings | `/status` | Show provider status |
-| Settings | `/theme` | Change color theme |
-| Settings | `/mcp` | Manage MCP servers |
-| Account | `/whoami` | Show logged in account |
-| Account | `/login` | Authenticate with provider |
-| Account | `/logout` | Sign out from provider |
+| Category | Command      | Description                       |
+| -------- | ------------ | --------------------------------- |
+| General  | `/help`      | Show available commands           |
+| General  | `/clear`     | Clear conversation history        |
+| General  | `/exit`      | Exit the chat                     |
+| Session  | `/save`      | Save current session              |
+| Session  | `/context`   | Show context information          |
+| Session  | `/usage`     | Show token usage statistics       |
+| Session  | `/remember`  | Save a learning about the project |
+| Session  | `/learnings` | Show saved learnings              |
+| Settings | `/model`     | Select AI model                   |
+| Settings | `/agent`     | Select agent                      |
+| Settings | `/mode`      | Switch interaction mode           |
+| Settings | `/provider`  | Switch LLM provider               |
+| Settings | `/status`    | Show provider status              |
+| Settings | `/theme`     | Change color theme                |
+| Settings | `/mcp`       | Manage MCP servers                |
+| Account  | `/whoami`    | Show logged in account            |
+| Account  | `/login`     | Authenticate with provider        |
+| Account  | `/logout`    | Sign out from provider            |
 
 ### Agent Mode with Diff View
 
@@ -156,6 +160,7 @@ When CodeTyper modifies files, you see a clear diff view of changes.
 ![Agent Mode with Diffs](assets/CodetyperAgentMode.png)
 
 **Interaction Modes:**
+
 - **Agent** - Full access, can modify files
 - **Ask** - Read-only, answers questions
 - **Code Review** - Review PRs and diffs
@@ -167,6 +172,7 @@ Granular control over what CodeTyper can do. Every file operation requires appro
 ![Permission Modal](assets/CodetyperPermissionView.png)
 
 **Permission Scopes:**
+
 - `[y]` Yes, this once
 - `[s]` Yes, for this session
 - `[a]` Always allow for this project
@@ -180,6 +186,7 @@ Access to multiple AI models through GitHub Copilot.
 ![Model Selection](assets/CodetyperCopilotModels.png)
 
 **Available Models:**
+
 - GPT-5, GPT-5-mini (Unlimited)
 - GPT-5.2-codex, GPT-5.1-codex
 - Grok-code-fast-1
@@ -187,19 +194,19 @@ Access to multiple AI models through GitHub Copilot.
 
 ### Theme System
 
-14+ built-in themes to customize your experience.
+15+ built-in themes to customize your experience.
 
 ![Theme Selection](assets/CodetyperThemes.png)
 
 **Available Themes:**
-default, dracula, nord, tokyo-night, gruvbox, monokai, catppuccin, one-dark, solarized-dark, github-dark, rose-pine, kanagawa, ayu-dark, cargdev-cyberpunk
+default, dracula, nord, tokyo-night, gruvbox, monokai, catppuccin, one-dark, solarized-dark, github-dark, rose-pine, kanagawa, ayu-dark, cargdev-cyberpunk, pink-purple
 
 ## Providers
 
-| Provider | Models | Auth Method | Use Case |
-|----------|--------|-------------|----------|
-| **GitHub Copilot** | GPT-5, Claude, Gemini | OAuth (device flow) | Cloud-based, high quality |
-| **Ollama** | Llama, DeepSeek, Qwen, etc. | Local server | Private, offline, zero-cost |
+| Provider           | Models                      | Auth Method         | Use Case                    |
+| ------------------ | --------------------------- | ------------------- | --------------------------- |
+| **GitHub Copilot** | GPT-5, Claude, Gemini       | OAuth (device flow) | Cloud-based, high quality   |
+| **Ollama**         | Llama, DeepSeek, Qwen, etc. | Local server        | Private, offline, zero-cost |
 
 ### Cascade Mode
 
@@ -244,6 +251,7 @@ Settings are stored in `~/.config/codetyper/config.json`:
 ### Project Context
 
 CodeTyper reads project-specific context from:
+
 - `.github/` - GitHub workflows and templates
 - `.codetyper/` - Project-specific rules and learnings
 - `rules.md` - Custom instructions for the AI
@@ -274,18 +282,18 @@ codetyper --print "Explain this codebase"
 
 CodeTyper has access to these built-in tools:
 
-| Tool | Description |
-|------|-------------|
-| `bash` | Execute shell commands |
-| `read` | Read file contents |
-| `write` | Create or overwrite files |
-| `edit` | Find and replace in files |
-| `glob` | Find files by pattern |
-| `grep` | Search file contents |
-| `lsp` | Language Server Protocol operations |
-| `web_search` | Search the web |
-| `todo-read` | Read current todo list |
-| `todo-write` | Update todo list |
+| Tool         | Description                         |
+| ------------ | ----------------------------------- |
+| `bash`       | Execute shell commands              |
+| `read`       | Read file contents                  |
+| `write`      | Create or overwrite files           |
+| `edit`       | Find and replace in files           |
+| `glob`       | Find files by pattern               |
+| `grep`       | Search file contents                |
+| `lsp`        | Language Server Protocol operations |
+| `web_search` | Search the web                      |
+| `todo-read`  | Read current todo list              |
+| `todo-write` | Update todo list                    |
 
 ### MCP Integration
 
@@ -311,6 +319,7 @@ Connect external MCP (Model Context Protocol) servers for extended capabilities:
 ```
 
 **MCP Browser Features:**
+
 - Search by name, description, or tags
 - Filter by category (database, web, AI, etc.)
 - View server details and required environment variables
@@ -324,6 +333,7 @@ Connect external MCP (Model Context Protocol) servers for extended capabilities:
 Lifecycle hooks for intercepting tool execution and session events.
 
 **Hook Events:**
+
 - `PreToolUse` - Validate/modify before tool execution
 - `PostToolUse` - Side effects after tool execution
 - `SessionStart` - At session initialization
@@ -332,16 +342,22 @@ Lifecycle hooks for intercepting tool execution and session events.
 - `Stop` - When execution stops
 
 **Configuration** (`.codetyper/hooks.json`):
+
 ```json
 {
   "hooks": [
-    { "event": "PreToolUse", "script": ".codetyper/hooks/validate.sh", "timeout": 5000 },
+    {
+      "event": "PreToolUse",
+      "script": ".codetyper/hooks/validate.sh",
+      "timeout": 5000
+    },
     { "event": "PostToolUse", "script": ".codetyper/hooks/notify.sh" }
   ]
 }
 ```
 
 **Exit Codes:**
+
 - `0` - Allow (optionally output `{"updatedInput": {...}}` to modify args)
 - `1` - Warn but continue
 - `2` - Block execution
@@ -351,6 +367,7 @@ Lifecycle hooks for intercepting tool execution and session events.
 Extend CodeTyper with custom tools, commands, and hooks.
 
 **Plugin Structure:**
+
 ```
 .codetyper/plugins/{name}/
 ├── plugin.json          # Manifest
@@ -363,6 +380,7 @@ Extend CodeTyper with custom tools, commands, and hooks.
 ```
 
 **Manifest** (`plugin.json`):
+
 ```json
 {
   "name": "my-plugin",
@@ -373,13 +391,18 @@ Extend CodeTyper with custom tools, commands, and hooks.
 ```
 
 **Custom Tool Definition:**
+
 ```typescript
 import { z } from "zod";
 export default {
   name: "custom_tool",
   description: "Does something",
   parameters: z.object({ input: z.string() }),
-  execute: async (args, ctx) => ({ success: true, title: "Done", output: "..." }),
+  execute: async (args, ctx) => ({
+    success: true,
+    title: "Done",
+    output: "...",
+  }),
 };
 ```
 
@@ -404,12 +427,12 @@ Sessions are stored in `.codetyper/sessions/` with automatic commit message sugg
 
 The next major release focuses on production-ready autonomous agent execution:
 
-| Feature | Issue | Status |
-|---------|-------|--------|
-| Plan Approval Gate | [#111](https://github.com/CarGDev/codetyper.cli/issues/111) | Planned |
-| Diff Preview Before Write | [#112](https://github.com/CarGDev/codetyper.cli/issues/112) | Planned |
-| Execution Control (Pause/Resume/Abort) | [#113](https://github.com/CarGDev/codetyper.cli/issues/113) | Planned |
-| Consistent Model Behavior | [#114](https://github.com/CarGDev/codetyper.cli/issues/114) | Planned |
+| Feature                                 | Issue                                                       | Status  |
+| --------------------------------------- | ----------------------------------------------------------- | ------- |
+| Plan Approval Gate                      | [#111](https://github.com/CarGDev/codetyper.cli/issues/111) | Planned |
+| Diff Preview Before Write               | [#112](https://github.com/CarGDev/codetyper.cli/issues/112) | Planned |
+| Execution Control (Pause/Resume/Abort)  | [#113](https://github.com/CarGDev/codetyper.cli/issues/113) | Planned |
+| Consistent Model Behavior               | [#114](https://github.com/CarGDev/codetyper.cli/issues/114) | Planned |
 | Quality Gates (TypeScript, Lint, Tests) | [#115](https://github.com/CarGDev/codetyper.cli/issues/115) | Planned |
 
 ### Known Issues
@@ -439,11 +462,14 @@ bun test
 bun run lint
 ```
 
-## Recent Changes (v0.3.0)
+## Recent Changes (v0.4.2)
 
-- **System Prompt Builder**: New modular prompt system with modes, tiers, and providers
-- **Module Restructure**: Consistent internal organization with improved imports
-- **Solid.js TUI**: Fully migrated to Solid.js + OpenTUI (removed legacy React/Ink)
+- **Pink Purple Theme**: New built-in color theme
+- **Image Paste Fix**: Fixed race condition where pasted images were silently dropped
+- **@ and / Anywhere**: File picker and command menu now work at any cursor position
+- **Plan Approval Gate**: User confirmation before agent executes plans
+- **Execution Control**: Pause, resume, and abort agent execution
+- **Text Clipboard Copy/Read**: Cross-platform clipboard operations with mouse selection
 
 See [CHANGELOG](docs/CHANGELOG.md) for complete version history.
 

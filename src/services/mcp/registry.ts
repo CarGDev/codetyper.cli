@@ -309,7 +309,7 @@ export const isServerInstalled = (serverId: string): boolean => {
   return Array.from(instances.values()).some(
     (instance) =>
       instance.config.name === serverId ||
-      instance.config.name.toLowerCase() === serverId.toLowerCase(),
+      (instance.config.name ?? "").toLowerCase() === serverId.toLowerCase(),
   );
 };
 
@@ -338,16 +338,22 @@ export const installServer = async (
 
   try {
     // Add server to configuration
-    await addServer(
-      server.id,
-      {
-        command: server.command,
-        args: customArgs || server.args,
-        transport: server.transport,
-        enabled: true,
-      },
-      global,
-    );
+    const serverType = server.transport ?? "stdio";
+    const config: Omit<import("@/types/mcp").MCPServerConfig, "name"> =
+      serverType === "stdio"
+        ? {
+            type: "stdio",
+            command: server.command,
+            args: customArgs || server.args,
+            enabled: true,
+          }
+        : {
+            type: serverType,
+            url: server.url,
+            enabled: true,
+          };
+
+    await addServer(server.id, config, global);
 
     let connected = false;
 

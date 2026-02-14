@@ -16,6 +16,7 @@ import type {
   ChatCompletionOptions,
   ChatCompletionResponse,
   ToolCall,
+  ContentPart,
 } from "@/types/providers";
 import type {
   OllamaChatRequest,
@@ -26,15 +27,51 @@ import type {
 } from "@/types/ollama";
 
 /**
+ * Extract text and images from multimodal content.
+ * Ollama uses a separate `images` array of base64 strings rather than
+ * inline content parts.
+ */
+const extractContentParts = (
+  content: string | ContentPart[],
+): { text: string; images: string[] } => {
+  if (typeof content === "string") {
+    return { text: content, images: [] };
+  }
+
+  const textParts: string[] = [];
+  const images: string[] = [];
+
+  for (const part of content) {
+    if (part.type === "text") {
+      textParts.push(part.text);
+    } else if (part.type === "image_url") {
+      // Strip the data:image/xxx;base64, prefix if present
+      const url = part.image_url.url;
+      const base64Match = url.match(/^data:[^;]+;base64,(.+)$/);
+      images.push(base64Match ? base64Match[1] : url);
+    }
+  }
+
+  return { text: textParts.join("\n"), images };
+};
+
+/**
  * Format messages for Ollama API
- * Handles regular messages, assistant messages with tool_calls, and tool response messages
+ * Handles regular messages, assistant messages with tool_calls, and tool response messages.
+ * Multimodal content (images) is converted to Ollama's `images` array format.
  */
 const formatMessages = (messages: Message[]): OllamaMessage[] =>
   messages.map((msg) => {
+    const { text, images } = extractContentParts(msg.content);
+
     const formatted: OllamaMessage = {
       role: msg.role,
-      content: msg.content,
+      content: text,
     };
+
+    if (images.length > 0) {
+      formatted.images = images;
+    }
 
     // Include tool_calls for assistant messages that made tool calls
     if (msg.tool_calls && msg.tool_calls.length > 0) {

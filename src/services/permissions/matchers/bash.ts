@@ -51,25 +51,58 @@ export const matchesBashPattern = (
 };
 
 // =============================================================================
+// Command Chaining
+// =============================================================================
+
+/**
+ * Split a shell command on chaining operators (&&, ||, ;, |).
+ * Respects quoted strings. Prevents pattern bypass via
+ * "cd /safe && rm -rf /dangerous".
+ */
+const splitChainedCommands = (command: string): string[] => {
+  const parts: string[] = [];
+  let current = "";
+  let inSingle = false;
+  let inDouble = false;
+
+  for (let i = 0; i < command.length; i++) {
+    const ch = command[i];
+    const next = command[i + 1];
+
+    if (ch === "'" && !inDouble) { inSingle = !inSingle; current += ch; continue; }
+    if (ch === '"' && !inSingle) { inDouble = !inDouble; current += ch; continue; }
+    if (inSingle || inDouble) { current += ch; continue; }
+
+    if (ch === "&" && next === "&") { parts.push(current); current = ""; i++; continue; }
+    if (ch === "|" && next === "|") { parts.push(current); current = ""; i++; continue; }
+    if (ch === ";") { parts.push(current); current = ""; continue; }
+    if (ch === "|") { parts.push(current); current = ""; continue; }
+
+    current += ch;
+  }
+
+  if (current.trim()) parts.push(current);
+  return parts.map((p) => p.trim()).filter(Boolean);
+};
+
+// =============================================================================
 // Index-Based Matching
 // =============================================================================
 
 /**
- * Check if a command is allowed by any pattern in the index
+ * Check if a command is allowed by any pattern in the index.
+ * For chained commands (&&, ||, ;, |), EVERY sub-command must be allowed.
  */
 export const isBashAllowedByIndex = (
   command: string,
   index: PatternIndex,
 ): boolean => {
+  const subCommands = splitChainedCommands(command);
   const bashPatterns = getPatternsForTool(index, "Bash");
 
-  for (const entry of bashPatterns) {
-    if (matchesBashPattern(command, entry.parsed)) {
-      return true;
-    }
-  }
-
-  return false;
+  return subCommands.every((subCmd) =>
+    bashPatterns.some((entry) => matchesBashPattern(subCmd, entry.parsed)),
+  );
 };
 
 /**

@@ -1,10 +1,11 @@
 import chalk from "chalk";
+import { getMessageText } from "@/types/providers";
 import type { ChatState } from "@commands/components/chat/state";
 
 export const showContext = (state: ChatState): void => {
   const messageCount = state.messages.length - 1;
   const totalChars = state.messages.reduce(
-    (acc, m) => acc + m.content.length,
+    (acc, m) => acc + getMessageText(m.content).length,
     0,
   );
   const estimatedTokens = Math.round(totalChars / 4);

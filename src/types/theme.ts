@@ -93,4 +93,5 @@ export type ThemeName =
   | "kanagawa"
   | "ayu-dark"
   | "cargdev-cyberpunk"
+  | "pink-purple"
   | "custom";

@@ -14,6 +14,7 @@
 
 import { v4 as uuidv4 } from "uuid";
 import type { Message } from "@/types/providers";
+import { getMessageText } from "@/types/providers";
 import type { AgentOptions } from "@interfaces/AgentOptions";
 import type { AgentResult } from "@interfaces/AgentResult";
 import type {
@@ -245,13 +246,13 @@ const convertToCompressibleMessages = (
 
     if ("tool_calls" in msg) {
       role = "assistant";
-      content = msg.content || JSON.stringify(msg.tool_calls);
+      content = (typeof msg.content === "string" ? msg.content : getMessageText(msg.content ?? "")) || JSON.stringify(msg.tool_calls);
     } else if ("tool_call_id" in msg) {
       role = "tool";
-      content = msg.content;
+      content = typeof msg.content === "string" ? msg.content : getMessageText(msg.content);
     } else {
       role = msg.role as "user" | "assistant" | "system";
-      content = msg.content;
+      content = typeof msg.content === "string" ? msg.content : getMessageText(msg.content);
     }
 
     return {
@@ -322,7 +323,8 @@ export const runReasoningAgentLoop = async (
   await refreshMCPTools();
 
   let agentMessages: AgentMessage[] = [...messages];
-  const originalQuery = messages.find((m) => m.role === "user")?.content || "";
+  const originalQueryContent = messages.find((m) => m.role === "user")?.content;
+  const originalQuery = originalQueryContent ? getMessageText(originalQueryContent) : "";
   const previousAttempts: AttemptRecord[] = [];
 
   while (iterations < maxIterations) {

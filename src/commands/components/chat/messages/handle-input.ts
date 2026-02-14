@@ -7,7 +7,10 @@ export const handleInput = async (
   state: ChatState,
   handleCommand: (command: string, state: ChatState) => Promise<void>,
 ): Promise<void> => {
-  if (input.startsWith("/")) {
+  // Only treat as a slash-command when it looks like one (e.g. /help, /model-gpt4)
+  // This prevents pasting/debugging content that starts with "/" from invoking command parsing.
+  const slashCommandMatch = input.match(/^\/([\w-]+)(?:\s|$)/);
+  if (slashCommandMatch) {
     await handleCommand(input, state);
     return;
   }

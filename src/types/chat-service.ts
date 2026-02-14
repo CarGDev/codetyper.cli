@@ -58,6 +58,8 @@ export interface DiffResult {
 export interface ToolCallInfo {
   name: string;
   path?: string;
+  /** Additional paths for multi-file tools (e.g. multi_edit) */
+  paths?: string[];
 }
 
 export interface ProviderDisplayInfo {

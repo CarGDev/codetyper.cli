@@ -1,4 +1,4 @@
-import { createSignal, createMemo, For, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 import { useKeyboard } from "@opentui/solid";
 import { TextAttributes } from "@opentui/core";
 import { useTheme } from "@tui-solid/context/theme";
@@ -7,7 +7,7 @@ import {
   PLAN_APPROVAL_OPTIONS,
   PLAN_APPROVAL_FOOTER_TEXT,
 } from "@constants/plan-approval";
-import type { PlanApprovalOption, PlanEditMode } from "@constants/plan-approval";
+import type { PlanApprovalOption } from "@constants/plan-approval";
 
 interface PlanApprovalModalProps {
   prompt: PlanApprovalPrompt;
@@ -63,33 +63,54 @@ export function PlanApprovalModal(props: PlanApprovalModalProps) {
   useKeyboard((evt) => {
     if (!isActive()) return;
 
-    evt.stopPropagation();
-
     // Feedback mode: handle text input
     if (feedbackMode()) {
       if (evt.name === "return") {
         handleFeedbackSubmit();
         evt.preventDefault();
+        evt.stopPropagation();
         return;
       }
       if (evt.name === "escape") {
         handleCancel();
         evt.preventDefault();
+        evt.stopPropagation();
         return;
       }
-      if (evt.name === "backspace") {
+      if (evt.name === "backspace" || evt.name === "delete") {
         setFeedbackText((prev) => prev.slice(0, -1));
         evt.preventDefault();
         return;
       }
+      // Handle space key (name is "space", not " ")
+      if (evt.name === "space") {
+        setFeedbackText((prev) => prev + " ");
+        evt.preventDefault();
+        return;
+      }
+      // Handle regular character input
       if (evt.name.length === 1 && !evt.ctrl && !evt.meta) {
         setFeedbackText((prev) => prev + evt.name);
         evt.preventDefault();
+        return;
+      }
+      // Handle multi-character input (e.g., pasted text)
+      if (evt.sequence && evt.sequence.length > 1 && !evt.ctrl && !evt.meta) {
+        setFeedbackText((prev) => prev + evt.sequence);
+        evt.preventDefault();
+        return;
       }
       return;
     }
 
     // Normal mode: navigate options
+    if (evt.name === "escape") {
+      handleCancel();
+      evt.preventDefault();
+      evt.stopPropagation();
+      return;
+    }
+
     if (evt.name === "up") {
       setSelectedIndex((prev) =>
         prev > 0 ? prev - 1 : optionCount - 1,
@@ -108,12 +129,6 @@ export function PlanApprovalModal(props: PlanApprovalModalProps) {
 
     if (evt.name === "return") {
       handleApproval(PLAN_APPROVAL_OPTIONS[selectedIndex()]);
-      evt.preventDefault();
-      return;
-    }
-
-    if (evt.name === "escape") {
-      handleCancel();
       evt.preventDefault();
       return;
     }
@@ -139,23 +154,23 @@ export function PlanApprovalModal(props: PlanApprovalModalProps) {
     <box
       flexDirection="column"
       borderColor={theme.colors.borderModal}
-      border={["top", "bottom", "left", "right"]}
+      border={["top"]}
       backgroundColor={theme.colors.background}
       paddingLeft={2}
       paddingRight={2}
       paddingTop={1}
       paddingBottom={1}
+      width="100%"
     >
-      {/* Header */}
-      <box marginBottom={1}>
-        <text fg={theme.colors.primary} attributes={TextAttributes.BOLD}>
-          CodeTyper has written up a plan and is ready to execute. Would you
-          like to proceed?
-        </text>
-      </box>
+      {/* Plan content (shrinkable to fit available space) */}
+      <Show when={props.prompt.planContent}>
+        <box marginBottom={1} flexDirection="column" flexShrink={1} overflow="hidden">
+          <text fg={theme.colors.text}>{props.prompt.planContent}</text>
+        </box>
+      </Show>
 
-      {/* Plan info */}
-      <Show when={props.prompt.planTitle}>
+      {/* Fallback: title + summary when no full content */}
+      <Show when={!props.prompt.planContent && props.prompt.planTitle}>
         <box marginBottom={1}>
           <text fg={theme.colors.text} attributes={TextAttributes.BOLD}>
             {props.prompt.planTitle}
@@ -163,15 +178,22 @@ export function PlanApprovalModal(props: PlanApprovalModalProps) {
         </box>
       </Show>
 
-      <Show when={props.prompt.planSummary}>
+      <Show when={!props.prompt.planContent && props.prompt.planSummary}>
         <box marginBottom={1}>
           <text fg={theme.colors.textDim}>{props.prompt.planSummary}</text>
         </box>
       </Show>
 
+      {/* Approval prompt */}
+      <box marginBottom={1} flexShrink={0}>
+        <text fg={theme.colors.primary} attributes={TextAttributes.BOLD}>
+          Would you like to proceed with this plan?
+        </text>
+      </box>
+
       {/* Options */}
       <Show when={!feedbackMode()}>
-        <box flexDirection="column" marginTop={1}>
+        <box flexDirection="column" marginTop={1} flexShrink={0}>
           <For each={PLAN_APPROVAL_OPTIONS}>
             {(option, index) => {
               const isSelected = () => index() === selectedIndex();
@@ -205,7 +227,7 @@ export function PlanApprovalModal(props: PlanApprovalModalProps) {
 
       {/* Feedback input mode */}
       <Show when={feedbackMode()}>
-        <box flexDirection="column" marginTop={1}>
+        <box flexDirection="column" marginTop={1} flexShrink={0}>
           <text fg={theme.colors.text}>
             Tell CodeTyper what to change:
           </text>
@@ -228,7 +250,7 @@ export function PlanApprovalModal(props: PlanApprovalModalProps) {
 
       {/* Footer */}
       <Show when={!feedbackMode()}>
-        <box marginTop={1} flexDirection="row">
+        <box marginTop={1} flexDirection="row" flexShrink={0}>
           <Show when={props.prompt.planFilePath}>
             <text fg={theme.colors.textDim}>
               {PLAN_APPROVAL_FOOTER_TEXT} - {props.prompt.planFilePath}

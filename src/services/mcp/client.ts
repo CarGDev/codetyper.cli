@@ -39,6 +39,10 @@ interface JsonRpcResponse {
 export class MCPClient {
   private config: MCPServerConfig;
   private process: ChildProcess | null = null;
+  /** Base URL for http / sse transport */
+  private httpUrl: string | null = null;
+  /** Session URL returned by the server after SSE handshake (if any) */
+  private httpSessionUrl: string | null = null;
   private state: MCPConnectionState = "disconnected";
   private tools: MCPToolDefinition[] = [];
   private resources: MCPResourceDefinition[] = [];
@@ -72,6 +76,13 @@ export class MCPClient {
   }
 
   /**
+   * Resolve effective transport: `type` takes precedence over legacy `transport`
+   */
+  private get transport(): "stdio" | "sse" | "http" {
+    return this.config.type ?? "stdio";
+  }
+
+  /**
    * Connect to the MCP server
    */
   async connect(): Promise<void> {
@@ -83,12 +94,13 @@ export class MCPClient {
     this.error = undefined;
 
     try {
-      if (this.config.transport === "stdio" || !this.config.transport) {
+      const t = this.transport;
+      if (t === "stdio") {
         await this.connectStdio();
+      } else if (t === "http" || t === "sse") {
+        await this.connectHttp();
       } else {
-        throw new Error(
-          `Transport type '${this.config.transport}' not yet supported`,
-        );
+        throw new Error(`Transport type '${t}' is not supported`);
       }
 
       // Initialize the connection
@@ -109,13 +121,17 @@ export class MCPClient {
    * Connect via stdio transport
    */
   private async connectStdio(): Promise<void> {
+    if (!this.config.command) {
+      throw new Error("Command is required for stdio transport");
+    }
+
     return new Promise((resolve, reject) => {
       const env = {
         ...process.env,
         ...this.config.env,
       };
 
-      this.process = spawn(this.config.command, this.config.args || [], {
+      this.process = spawn(this.config.command!, this.config.args || [], {
         stdio: ["pipe", "pipe", "pipe"],
         env,
       });
@@ -146,9 +162,36 @@ export class MCPClient {
         }
       });
 
-      // Give the process a moment to start
+      // Give the stdio process a moment to start
       setTimeout(resolve, 100);
     });
+  }
+
+  /**
+   * Connect via HTTP (Streamable HTTP) transport.
+   * The server URL is used directly for JSON-RPC over HTTP POST.
+   */
+  private async connectHttp(): Promise<void> {
+    const url = this.config.url;
+    if (!url) {
+      throw new Error("URL is required for http/sse transport");
+    }
+    this.httpUrl = url;
+
+    // Verify the server is reachable with a simple OPTIONS/HEAD check
+    try {
+      const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 0, method: "ping" }) });
+      // Even a 4xx/5xx means the server is reachable; we'll handle errors in initialize()
+      if (!res.ok && res.status >= 500) {
+        throw new Error(`Server returned ${res.status}: ${res.statusText}`);
+      }
+    } catch (err) {
+      if (err instanceof TypeError) {
+        // Network/fetch error
+        throw new Error(`Cannot reach MCP server at ${url}: ${(err as Error).message}`);
+      }
+      // Other errors (like 400) are OK — the server is reachable
+    }
   }
 
   /**
@@ -189,9 +232,22 @@ export class MCPClient {
   }
 
   /**
-   * Send a JSON-RPC request
+   * Send a JSON-RPC request (dispatches to stdio or http)
    */
   private async sendRequest(
+    method: string,
+    params?: unknown,
+  ): Promise<unknown> {
+    if (this.httpUrl) {
+      return this.sendHttpRequest(method, params);
+    }
+    return this.sendStdioRequest(method, params);
+  }
+
+  /**
+   * Send a JSON-RPC request via stdio
+   */
+  private async sendStdioRequest(
     method: string,
     params?: unknown,
   ): Promise<unknown> {
@@ -226,6 +282,72 @@ export class MCPClient {
   }
 
   /**
+   * Send a JSON-RPC request via HTTP POST
+   */
+  private async sendHttpRequest(
+    method: string,
+    params?: unknown,
+  ): Promise<unknown> {
+    const url = this.httpSessionUrl ?? this.httpUrl!;
+    const id = ++this.requestId;
+    const body: JsonRpcRequest = { jsonrpc: "2.0", id, method, params };
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json, text/event-stream",
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`MCP HTTP error ${res.status}: ${text || res.statusText}`);
+    }
+
+    // Capture session URL from Mcp-Session header if present
+    const sessionHeader = res.headers.get("mcp-session");
+    if (sessionHeader && !this.httpSessionUrl) {
+      // If it's a full URL use it; otherwise it's a session id
+      this.httpSessionUrl = sessionHeader.startsWith("http")
+        ? sessionHeader
+        : this.httpUrl!;
+    }
+
+    const contentType = res.headers.get("content-type") ?? "";
+
+    // Handle SSE responses (text/event-stream) — collect the last JSON-RPC result
+    if (contentType.includes("text/event-stream")) {
+      const text = await res.text();
+      let lastResult: unknown = undefined;
+      for (const line of text.split("\n")) {
+        if (line.startsWith("data: ")) {
+          const json = line.slice(6).trim();
+          if (json && json !== "[DONE]") {
+            try {
+              const parsed = JSON.parse(json) as JsonRpcResponse;
+              if (parsed.error) throw new Error(parsed.error.message);
+              lastResult = parsed.result;
+            } catch {
+              // skip unparseable lines
+            }
+          }
+        }
+      }
+      return lastResult;
+    }
+
+    // Standard JSON response
+    const json = (await res.json()) as JsonRpcResponse;
+    if (json.error) {
+      throw new Error(json.error.message);
+    }
+    return json.result;
+  }
+
+  /**
    * Initialize the MCP connection
    */
   private async initialize(): Promise<void> {
@@ -242,7 +364,18 @@ export class MCPClient {
     });
 
     // Send initialized notification
-    if (this.process?.stdin) {
+    if (this.httpUrl) {
+      // For HTTP transport, send as a JSON-RPC notification (no id)
+      const url = this.httpSessionUrl ?? this.httpUrl;
+      await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "notifications/initialized",
+        }),
+      }).catch(() => { /* ignore notification failures */ });
+    } else if (this.process?.stdin) {
       this.process.stdin.write(
         JSON.stringify({
           jsonrpc: "2.0",
@@ -344,6 +477,8 @@ export class MCPClient {
       this.process.kill();
       this.process = null;
     }
+    this.httpUrl = null;
+    this.httpSessionUrl = null;
     this.state = "disconnected";
     this.tools = [];
     this.resources = [];

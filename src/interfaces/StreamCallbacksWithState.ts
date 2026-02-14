@@ -7,4 +7,5 @@ import type { StreamCallbacks } from "@/types/streaming";
 export interface StreamCallbacksWithState {
   callbacks: StreamCallbacks;
   hasReceivedContent: () => boolean;
+  hasReceivedUsage: () => boolean;
 }

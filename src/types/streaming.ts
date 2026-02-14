@@ -65,6 +65,7 @@ export interface StreamCallbacks {
   onToolCallStart: (toolCall: PartialToolCall) => void;
   onToolCallComplete: (toolCall: ToolCall) => void;
   onModelSwitch: (info: ModelSwitchInfo) => void;
+  onUsage: (usage: { promptTokens: number; completionTokens: number }) => void;
   onComplete: () => void;
   onError: (error: string) => void;
 }

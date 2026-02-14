@@ -2,8 +2,6 @@
  * Ollama provider streaming
  */
 
-import got from "got";
-
 import { OLLAMA_ENDPOINTS, OLLAMA_TIMEOUTS } from "@constants/ollama";
 import { getOllamaBaseUrl } from "@providers/ollama/state";
 import { buildChatRequest, mapToolCall } from "@providers/ollama/core/chat";
@@ -37,28 +35,23 @@ const parseStreamLine = (
       }
     }
 
+    // Capture token usage from Ollama response (sent with done=true)
+    if (parsed.done && (parsed.prompt_eval_count || parsed.eval_count)) {
+      onChunk({
+        type: "usage",
+        usage: {
+          promptTokens: parsed.prompt_eval_count ?? 0,
+          completionTokens: parsed.eval_count ?? 0,
+        },
+      });
+    }
+
     if (parsed.done) {
       onChunk({ type: "done" });
     }
   } catch {
     // Ignore parse errors
   }
-};
-
-const processStreamData = (
-  data: Buffer,
-  buffer: string,
-  onChunk: (chunk: StreamChunk) => void,
-): string => {
-  const combined = buffer + data.toString();
-  const lines = combined.split("\n");
-  const remaining = lines.pop() || "";
-
-  for (const line of lines) {
-    parseStreamLine(line, onChunk);
-  }
-
-  return remaining;
 };
 
 export const ollamaChatStream = async (
@@ -73,50 +66,65 @@ export const ollamaChatStream = async (
     `Ollama stream request: ${messages.length} msgs, model=${body.model}`,
   );
 
-  const stream = got.stream.post(`${baseUrl}${OLLAMA_ENDPOINTS.CHAT}`, {
-    json: body,
-    timeout: { request: OLLAMA_TIMEOUTS.CHAT },
+  const response = await fetch(`${baseUrl}${OLLAMA_ENDPOINTS.CHAT}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(OLLAMA_TIMEOUTS.CHAT),
   });
 
+  if (!response.ok) {
+    throw new Error(
+      `Ollama API error: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  if (!response.body) {
+    throw new Error("No response body from Ollama stream");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
   let buffer = "";
   let doneReceived = false;
 
-  stream.on("data", (data: Buffer) => {
-    buffer = processStreamData(data, buffer, (chunk) => {
-      if (chunk.type === "done") {
-        doneReceived = true;
-      }
-      onChunk(chunk);
-    });
-  });
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-  stream.on("error", (error: Error) => {
-    onChunk({ type: "error", error: error.message });
-  });
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
 
-  return new Promise((resolve, reject) => {
-    stream.on("end", () => {
-      // Process any remaining data in buffer that didn't have trailing newline
-      if (buffer.trim()) {
-        parseStreamLine(buffer, (chunk) => {
+      for (const line of lines) {
+        parseStreamLine(line, (chunk) => {
           if (chunk.type === "done") {
             doneReceived = true;
           }
           onChunk(chunk);
         });
       }
+    }
+  } finally {
+    reader.releaseLock();
+  }
 
-      // Ensure done is sent even if stream ended without done message
-      if (!doneReceived) {
-        addDebugLog(
-          "api",
-          "Ollama stream ended without done, sending done chunk",
-        );
-        onChunk({ type: "done" });
+  // Process remaining buffer
+  if (buffer.trim()) {
+    parseStreamLine(buffer, (chunk) => {
+      if (chunk.type === "done") {
+        doneReceived = true;
       }
-
-      resolve();
+      onChunk(chunk);
     });
-    stream.on("error", reject);
-  });
+  }
+
+  if (!doneReceived) {
+    addDebugLog(
+      "api",
+      "Ollama stream ended without done, sending done chunk",
+    );
+    onChunk({ type: "done" });
+  }
 };

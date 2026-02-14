@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 import type { PlanApprovalPromptResponse } from "@/types/tui";
 import type { ImplementationPlan } from "@/types/plan-mode";
 import { appStore } from "@tui-solid/context/app";
+import { formatPlanForDisplay } from "@services/plan-mode/plan-service";
 
 export interface PlanApprovalHandlerRequest {
   plan: ImplementationPlan;
@@ -43,6 +44,7 @@ export const createPlanApprovalHandler = (): PlanApprovalHandler => {
         id: uuidv4(),
         planTitle: request.plan.title,
         planSummary: request.plan.summary,
+        planContent: formatPlanForDisplay(request.plan),
         planFilePath: request.planFilePath,
         resolve: (response) => {
           appStore.setPlanApprovalPrompt(null);

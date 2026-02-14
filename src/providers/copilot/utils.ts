@@ -2,10 +2,18 @@
  * Copilot provider utility functions
  */
 
-import { COPILOT_INITIAL_RETRY_DELAY } from "@constants/copilot";
+import {
+  COPILOT_INITIAL_RETRY_DELAY,
+  CONNECTION_ERROR_PATTERNS,
+} from "@constants/copilot";
 
 export const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
+
+export const isConnectionError = (error: unknown): boolean => {
+  const message = error instanceof Error ? error.message : String(error);
+  return CONNECTION_ERROR_PATTERNS.some((pattern) => pattern.test(message));
+};
 
 export const isRateLimitError = (error: unknown): boolean => {
   if (error && typeof error === "object" && "response" in error) {

@@ -1,14 +1,3 @@
-/**
- * Brain API Constants
- *
- * Configuration constants for the CodeTyper Brain service
- */
-
-/**
- * Feature flag to disable all Brain functionality.
- * Set to true to hide Brain menu, disable Brain API calls,
- * and remove Brain-related UI elements.
- */
 export const BRAIN_DISABLED = true;
 
 export const BRAIN_PROVIDER_NAME = "brain" as const;

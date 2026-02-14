@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Pink Purple Theme**: New built-in theme with hot pink primary, purple secondary, and deep magenta accent on a dark plum background
+
+### Fixed
+
+- **Image Paste Race Condition**: Fixed images being silently dropped when pasting via Ctrl+V. The `clearPastedImages()` call in the input area was racing with the async message handler, clearing images before they could be read and attached to the message
+- **@ File Picker**: Now works at any cursor position in the input, not just when the input is empty
+- **/ Command Menu**: Now works at any cursor position in the input, not just when the input is empty
+
 ### Planned
 
 - **Diff Preview**: Show file changes before writing ([#112](https://github.com/CarGDev/codetyper.cli/issues/112))
@@ -292,12 +302,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
-| Version | Date | Highlights |
-|---------|------|------------|
-| 0.4.0 | 2026-02-06 | Clipboard copy/read, plan approval, execution control, safety features |
-| 0.3.0 | 2025-02-04 | System prompt builder, module restructure, legacy TUI removal |
-| 0.2.x | 2025-01-28 - 02-01 | Hooks, plugins, session forks, vim motions, MCP browser |
-| 0.1.x | 2025-01-16 - 01-27 | Initial release, TUI, agent system, providers, permissions |
+| Version | Date               | Highlights                                                             |
+| ------- | ------------------ | ---------------------------------------------------------------------- |
+| 0.4.0   | 2026-02-06         | Clipboard copy/read, plan approval, execution control, safety features |
+| 0.3.0   | 2025-02-04         | System prompt builder, module restructure, legacy TUI removal          |
+| 0.2.x   | 2025-01-28 - 02-01 | Hooks, plugins, session forks, vim motions, MCP browser                |
+| 0.1.x   | 2025-01-16 - 01-27 | Initial release, TUI, agent system, providers, permissions             |
 
 ---
 

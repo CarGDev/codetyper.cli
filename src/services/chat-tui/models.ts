@@ -3,6 +3,7 @@
  */
 
 import { MODEL_MESSAGES } from "@constants/chat-service";
+import { getModelContextSize } from "@constants/copilot";
 import { getConfig } from "@services/core/config";
 import { getProvider } from "@providers/core/registry";
 import {
@@ -35,6 +36,19 @@ export const loadModels = async (
   }
 };
 
+/**
+ * Resolve the context window size for a given provider + model.
+ * Uses the Copilot context-size table when available, otherwise
+ * falls back to DEFAULT_CONTEXT_SIZE.
+ */
+const resolveContextMaxTokens = (
+  provider: ProviderName,
+  modelId: string | undefined,
+): number => {
+  const effectiveModel = modelId ?? getDefaultModel(provider);
+  return getModelContextSize(effectiveModel).input;
+};
+
 export const handleModelSelect = async (
   state: ChatServiceState,
   model: string,
@@ -48,6 +62,12 @@ export const handleModelSelect = async (
     callbacks.onLog("system", MODEL_MESSAGES.MODEL_CHANGED(model));
   }
   appStore.setModel(model);
+
+  // Update context max tokens for the newly selected model
+  const effectiveModel = model === "auto" ? undefined : model;
+  appStore.setContextMaxTokens(
+    resolveContextMaxTokens(state.provider, effectiveModel),
+  );
 
   const config = await getConfig();
   config.set("model", model === "auto" ? undefined : model);

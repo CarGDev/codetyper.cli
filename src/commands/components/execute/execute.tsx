@@ -99,24 +99,32 @@ const parseArgs = (argsString: string): string[] | undefined => {
 };
 
 const defaultHandleMCPAdd = async (data: MCPAddFormData): Promise<void> => {
-  const serverArgs = parseArgs(data.args);
+  // Build config based on transport type
+  const config: Omit<import("@/types/mcp").MCPServerConfig, "name"> =
+    data.type === "stdio"
+      ? {
+          type: "stdio",
+          command: data.command!,
+          args: parseArgs(data.args ?? "") ?? undefined,
+          enabled: true,
+        }
+      : {
+          type: data.type,
+          url: data.url!,
+          enabled: true,
+        };
 
-  await addServer(
-    data.name,
-    {
-      command: data.command,
-      args: serverArgs,
-      enabled: true,
-    },
-    data.isGlobal,
-  );
+  await addServer(data.name, config, data.isGlobal);
 
-  // Add to store with "connecting" status
+  const description =
+    data.type === "stdio" ? data.command! : data.url!;
+
+  // Add to store with "disconnected" status
   appStore.addMcpServer({
     id: data.name,
     name: data.name,
     status: "disconnected",
-    description: data.command,
+    description,
   });
 
   try {

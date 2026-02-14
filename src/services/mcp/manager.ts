@@ -37,7 +37,7 @@ interface MCPManagerState {
  */
 const state: MCPManagerState = {
   clients: new Map(),
-  config: { servers: {} },
+  config: { inputs: [], servers: {} },
   initialized: false,
 };
 
@@ -54,16 +54,48 @@ const loadConfigFile = async (filePath: string): Promise<MCPConfig | null> => {
 };
 
 /**
+ * Inject the runtime `name` field from the config key into each server entry.
+ * Also normalises legacy `transport` field → `type`.
+ */
+const hydrateServerNames = (
+  servers: Record<string, MCPServerConfig>,
+): Record<string, MCPServerConfig> => {
+  const hydrated: Record<string, MCPServerConfig> = {};
+  for (const [key, cfg] of Object.entries(servers)) {
+    // Normalise legacy `transport` → `type`
+    const type = cfg.type ?? (cfg as Record<string, unknown>).transport as MCPServerConfig["type"];
+    hydrated[key] = { ...cfg, name: key, type };
+  }
+  return hydrated;
+};
+
+/**
+ * Build a clean server config object for disk persistence.
+ * Strips the runtime-only `name` field so the JSON matches:
+ *   { "servers": { "<name>": { "type": "http", "url": "..." } } }
+ */
+const toStorableConfig = (config: MCPServerConfig): Omit<MCPServerConfig, "name"> => {
+  const { name: _name, ...rest } = config;
+  // Remove undefined fields to keep JSON clean
+  return Object.fromEntries(
+    Object.entries(rest).filter(([, v]) => v !== undefined),
+  ) as Omit<MCPServerConfig, "name">;
+};
+
+/**
  * Load MCP configuration (merges global + local)
  */
 export const loadMCPConfig = async (): Promise<MCPConfig> => {
-  const globalConfig = await loadConfigFile(CONFIG_LOCATIONS.global);
-  const localConfig = await loadConfigFile(CONFIG_LOCATIONS.local);
+  const globalConfig =
+    (await loadConfigFile(CONFIG_LOCATIONS.global)) || { inputs: [], servers: {} };
+  const localConfig =
+    (await loadConfigFile(CONFIG_LOCATIONS.local)) || { inputs: [], servers: {} };
 
   const merged: MCPConfig = {
+    inputs: [...(globalConfig?.inputs || []), ...(localConfig?.inputs || [])],
     servers: {
-      ...(globalConfig?.servers || {}),
-      ...(localConfig?.servers || {}),
+      ...hydrateServerNames(globalConfig?.servers || {}),
+      ...hydrateServerNames(localConfig?.servers || {}),
     },
   };
 
@@ -71,7 +103,8 @@ export const loadMCPConfig = async (): Promise<MCPConfig> => {
 };
 
 /**
- * Save MCP configuration
+ * Save MCP configuration.
+ * Strips runtime-only `name` fields from server entries before writing.
  */
 export const saveMCPConfig = async (
   config: MCPConfig,
@@ -80,8 +113,19 @@ export const saveMCPConfig = async (
   const filePath = global ? CONFIG_LOCATIONS.global : CONFIG_LOCATIONS.local;
   const dir = path.dirname(filePath);
 
+  // Strip runtime `name` from each server entry before persisting
+  const cleanServers: Record<string, Omit<MCPServerConfig, "name">> = {};
+  for (const [key, srv] of Object.entries(config.servers)) {
+    cleanServers[key] = toStorableConfig(srv);
+  }
+
+  const output: MCPConfig = {
+    inputs: config.inputs ?? [],
+    servers: cleanServers as Record<string, MCPServerConfig>,
+  };
+
   await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(filePath, JSON.stringify(config, null, 2), "utf-8");
+  await fs.writeFile(filePath, JSON.stringify(output, null, 2), "utf-8");
 };
 
 /**
@@ -250,14 +294,24 @@ export const addServer = async (
   await initializeMCP();
 
   const targetConfig = global
-    ? (await loadConfigFile(CONFIG_LOCATIONS.global)) || { servers: {} }
-    : (await loadConfigFile(CONFIG_LOCATIONS.local)) || { servers: {} };
+    ? (await loadConfigFile(CONFIG_LOCATIONS.global)) || { inputs: [], servers: {} }
+    : (await loadConfigFile(CONFIG_LOCATIONS.local)) || { inputs: [], servers: {} };
 
-  targetConfig.servers[name] = { ...config, name };
+  if (targetConfig.servers[name]) {
+    throw new Error(`Server '${name}' already exists`);
+  }
+
+  // Also check in-memory merged config for duplicates across scopes
+  if (state.config.servers[name]) {
+    throw new Error(`Server '${name}' already exists`);
+  }
+
+  // Store without the `name` field — the key is the name
+  targetConfig.servers[name] = toStorableConfig(config as MCPServerConfig);
 
   await saveMCPConfig(targetConfig, global);
 
-  // Update in-memory config
+  // Update in-memory config with runtime name injected
   state.config.servers[name] = { ...config, name };
 };
 
@@ -275,6 +329,7 @@ export const removeServer = async (
 
   if (config?.servers[name]) {
     delete config.servers[name];
+    config.inputs = config.inputs || [];
     await saveMCPConfig(config, global);
   }
 

@@ -405,67 +405,77 @@ export const getActivePlans = (): ImplementationPlan[] => {
 };
 
 /**
- * Format a plan for display
+ * Risk level display icons
+ */
+const RISK_ICONS: Record<string, string> = {
+  high: "!",
+  medium: "~",
+  low: " ",
+};
+
+/**
+ * Format a plan for display (terminal-friendly, no markdown)
  */
 export const formatPlanForDisplay = (plan: ImplementationPlan): string => {
   const lines: string[] = [];
 
-  lines.push(`# Implementation Plan: ${plan.title}`);
+  lines.push(`Plan to implement`);
   lines.push("");
-  lines.push(`## Summary`);
+  lines.push(plan.title);
+  lines.push("");
   lines.push(plan.summary);
   lines.push("");
 
   if (plan.context.filesAnalyzed.length > 0) {
-    lines.push(`## Files Analyzed`);
-    plan.context.filesAnalyzed.forEach(f => lines.push(`- ${f}`));
+    lines.push("Files Analyzed");
+    plan.context.filesAnalyzed.forEach(f => lines.push(`  ${f}`));
     lines.push("");
   }
 
   if (plan.context.currentArchitecture) {
-    lines.push(`## Current Architecture`);
-    lines.push(plan.context.currentArchitecture);
+    lines.push("Current Architecture");
+    lines.push(`  ${plan.context.currentArchitecture}`);
     lines.push("");
   }
 
-  lines.push(`## Implementation Steps`);
-  plan.steps.forEach((step, i) => {
-    const riskIcon = step.riskLevel === "high" ? "⚠️" : step.riskLevel === "medium" ? "⚡" : "✓";
-    lines.push(`${i + 1}. ${riskIcon} **${step.title}**`);
-    lines.push(`   ${step.description}`);
-    if (step.filesAffected.length > 0) {
-      lines.push(`   Files: ${step.filesAffected.join(", ")}`);
-    }
-  });
-  lines.push("");
-
-  if (plan.risks.length > 0) {
-    lines.push(`## Risks`);
-    plan.risks.forEach(risk => {
-      lines.push(`- **${risk.impact.toUpperCase()}**: ${risk.description}`);
-      lines.push(`  Mitigation: ${risk.mitigation}`);
+  if (plan.steps.length > 0) {
+    lines.push("Implementation Steps");
+    plan.steps.forEach((step, i) => {
+      const icon = RISK_ICONS[step.riskLevel] ?? " ";
+      lines.push(`  ${i + 1}. [${icon}] ${step.title}`);
+      lines.push(`     ${step.description}`);
+      if (step.filesAffected.length > 0) {
+        lines.push(`     Files: ${step.filesAffected.join(", ")}`);
+      }
     });
     lines.push("");
   }
 
-  lines.push(`## Testing Strategy`);
-  lines.push(plan.testingStrategy || "TBD");
-  lines.push("");
+  if (plan.risks.length > 0) {
+    lines.push("Risks");
+    plan.risks.forEach(risk => {
+      lines.push(`  [${risk.impact.toUpperCase()}] ${risk.description}`);
+      lines.push(`    Mitigation: ${risk.mitigation}`);
+    });
+    lines.push("");
+  }
 
-  lines.push(`## Rollback Plan`);
-  lines.push(plan.rollbackPlan || "TBD");
-  lines.push("");
+  if (plan.testingStrategy) {
+    lines.push("Testing Strategy");
+    lines.push(`  ${plan.testingStrategy}`);
+    lines.push("");
+  }
 
-  lines.push(`## Estimated Changes`);
-  lines.push(`- Files to create: ${plan.estimatedChanges.filesCreated}`);
-  lines.push(`- Files to modify: ${plan.estimatedChanges.filesModified}`);
-  lines.push(`- Files to delete: ${plan.estimatedChanges.filesDeleted}`);
-  lines.push("");
+  if (plan.rollbackPlan) {
+    lines.push("Rollback Plan");
+    lines.push(`  ${plan.rollbackPlan}`);
+    lines.push("");
+  }
 
-  lines.push("---");
-  lines.push("**Awaiting approval to proceed with implementation.**");
-  lines.push("Reply with 'proceed', 'approve', or 'go ahead' to start execution.");
-  lines.push("Reply with 'stop', 'cancel', or provide feedback to modify the plan.");
+  lines.push("Estimated Changes");
+  lines.push(`  Files to create: ${plan.estimatedChanges.filesCreated}`);
+  lines.push(`  Files to modify: ${plan.estimatedChanges.filesModified}`);
+  lines.push(`  Files to delete: ${plan.estimatedChanges.filesDeleted}`);
 
   return lines.join("\n");
 };

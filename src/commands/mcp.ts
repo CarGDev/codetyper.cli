@@ -77,11 +77,14 @@ const handleList = async (_args: string[]): Promise<void> => {
     const enabled =
       server.enabled !== false ? chalk.green("✓") : chalk.gray("○");
     console.log(`  ${enabled} ${chalk.cyan(name)}`);
-    console.log(
-      `    Command: ${server.command} ${(server.args || []).join(" ")}`,
-    );
-    if (server.transport && server.transport !== "stdio") {
-      console.log(`    Transport: ${server.transport}`);
+    const t = server.type ?? "stdio";
+    if (t === "stdio") {
+      console.log(
+        `    Command: ${server.command ?? ""} ${(server.args || []).join(" ")}`,
+      );
+    } else {
+      console.log(`    Type: ${t}`);
+      console.log(`    URL: ${server.url ?? "(none)"}`);
     }
     console.log();
   }
@@ -95,13 +98,18 @@ const handleAdd = async (args: string[]): Promise<void> => {
   if (!name) {
     errorMessage("Server name required");
     infoMessage(
-      "Usage: codetyper mcp add <name> --command <cmd> [--args <args>]",
+      "Usage: codetyper mcp add <name> --url <url> [--type http|sse]",
+    );
+    infoMessage(
+      "       codetyper mcp add <name> --command <cmd> [--args <args>]",
     );
     return;
   }
 
   // Parse options
   let command = "";
+  let url = "";
+  let type: "stdio" | "http" | "sse" = "stdio";
   const serverArgs: string[] = [];
   let isGlobal = false;
 
@@ -109,8 +117,12 @@ const handleAdd = async (args: string[]): Promise<void> => {
     const arg = args[i];
     if (arg === "--command" || arg === "-c") {
       command = args[++i] || "";
+    } else if (arg === "--url" || arg === "-u") {
+      url = args[++i] || "";
+      if (!type || type === "stdio") type = "http";
+    } else if (arg === "--type" || arg === "-t") {
+      type = (args[++i] || "stdio") as "stdio" | "http" | "sse";
     } else if (arg === "--args" || arg === "-a") {
-      // Collect remaining args
       while (args[i + 1] && !args[i + 1].startsWith("--")) {
         serverArgs.push(args[++i]);
       }
@@ -119,26 +131,24 @@ const handleAdd = async (args: string[]): Promise<void> => {
     }
   }
 
-  if (!command) {
-    // Interactive mode - ask for command
-    infoMessage("Adding MCP server interactively...");
-    infoMessage("Example: npx @modelcontextprotocol/server-sqlite");
-
-    // For now, require command flag
-    errorMessage("Command required. Use --command <cmd>");
+  if (!command && !url) {
+    errorMessage(
+      "Either --command (stdio) or --url (http/sse) is required.",
+    );
     return;
   }
 
   try {
-    await addServer(
-      name,
-      {
-        command,
-        args: serverArgs.length > 0 ? serverArgs : undefined,
-        enabled: true,
-      },
-      isGlobal,
-    );
+    const config: Omit<import("@/types/mcp").MCPServerConfig, "name"> = url
+      ? { type, url, enabled: true }
+      : {
+          type: "stdio",
+          command,
+          args: serverArgs.length > 0 ? serverArgs : undefined,
+          enabled: true,
+        };
+
+    await addServer(name, config, isGlobal);
 
     successMessage(`Added MCP server: ${name}`);
     infoMessage(`Connect with: codetyper mcp connect ${name}`);

@@ -13,6 +13,12 @@ export type SchemaSkipKey = (typeof SCHEMA_SKIP_KEYS)[number];
 export const TOOL_NAMES = ["read", "glob", "grep"];
 
 /**
- * Tools that can modify files
+ * Tools that can modify files — used for tracking modified files in the TUI
  */
-export const FILE_MODIFYING_TOOLS = ["write", "edit"] as const;
+export const FILE_MODIFYING_TOOLS = [
+  "write",
+  "edit",
+  "multi_edit",
+  "apply_patch",
+  "bash",
+] as const;

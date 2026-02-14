@@ -212,6 +212,7 @@ export interface PlanApprovalPrompt {
   id: string;
   planTitle: string;
   planSummary: string;
+  planContent?: string;
   planFilePath?: string;
   resolve: (response: PlanApprovalPromptResponse) => void;
 }
@@ -253,6 +254,21 @@ export interface SessionStats {
   thinkingStartTime: number | null;
   lastThinkingDuration: number;
   contextMaxTokens: number;
+}
+
+// ============================================================================
+// Modified File Tracking
+// ============================================================================
+
+export interface ModifiedFileEntry {
+  /** Relative or absolute file path */
+  filePath: string;
+  /** Net lines added */
+  additions: number;
+  /** Net lines deleted */
+  deletions: number;
+  /** Timestamp of the last modification */
+  lastModified: number;
 }
 
 // ============================================================================

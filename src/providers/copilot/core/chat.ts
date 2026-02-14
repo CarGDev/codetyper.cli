@@ -7,6 +7,8 @@ import got from "got";
 import {
   COPILOT_MAX_RETRIES,
   COPILOT_UNLIMITED_MODEL,
+  COPILOT_STREAM_TIMEOUT,
+  COPILOT_CONNECTION_RETRY_DELAY,
 } from "@constants/copilot";
 import { refreshToken, buildHeaders } from "@providers/copilot/auth/token";
 import {
@@ -16,12 +18,14 @@ import {
 import {
   sleep,
   isRateLimitError,
+  isConnectionError,
   getRetryDelay,
   isQuotaExceededError,
 } from "@providers/copilot/utils";
 import type { CopilotToken } from "@/types/copilot";
 import type {
   Message,
+  MessageContent,
   ChatCompletionOptions,
   ChatCompletionResponse,
   StreamChunk,
@@ -30,7 +34,7 @@ import { addDebugLog } from "@tui-solid/components/logs/debug-log-panel";
 
 interface FormattedMessage {
   role: string;
-  content: string;
+  content: MessageContent;
   tool_call_id?: string;
   tool_calls?: Message["tool_calls"];
 }
@@ -39,7 +43,7 @@ const formatMessages = (messages: Message[]): FormattedMessage[] =>
   messages.map((msg) => {
     const formatted: FormattedMessage = {
       role: msg.role,
-      content: msg.content,
+      content: msg.content, // Already string or ContentPart[] — pass through
     };
 
     if (msg.tool_call_id) {
@@ -61,6 +65,8 @@ interface ChatRequestBody {
   stream: boolean;
   tools?: ChatCompletionOptions["tools"];
   tool_choice?: string;
+  /** Request usage data in stream responses (OpenAI-compatible) */
+  stream_options?: { include_usage: boolean };
 }
 
 // Default max tokens for requests without tools
@@ -94,6 +100,11 @@ const buildRequestBody = (
     temperature: options?.temperature ?? 0.3,
     stream,
   };
+
+  // Request usage data when streaming
+  if (stream) {
+    body.stream_options = { include_usage: true };
+  }
 
   if (hasTools) {
     body.tools = options.tools;
@@ -255,6 +266,16 @@ const processStreamLine = (
       }
     }
 
+    // Capture usage data (OpenAI sends it in the final chunk before [DONE])
+    if (parsed.usage) {
+      const promptTokens = parsed.usage.prompt_tokens ?? 0;
+      const completionTokens = parsed.usage.completion_tokens ?? 0;
+      onChunk({
+        type: "usage",
+        usage: { promptTokens, completionTokens },
+      });
+    }
+
     // Handle truncation: if finish_reason is "length", content was cut off
     if (finishReason === "length") {
       addDebugLog("api", "Stream truncated due to max_tokens limit");
@@ -270,23 +291,43 @@ const processStreamLine = (
   return false;
 };
 
-const executeStream = (
+const executeStream = async (
   endpoint: string,
   token: CopilotToken,
   body: ChatRequestBody,
   onChunk: (chunk: StreamChunk) => void,
-): Promise<void> =>
-  new Promise((resolve, reject) => {
-    const stream = got.stream.post(endpoint, {
-      headers: buildHeaders(token),
-      json: body,
-    });
+): Promise<void> => {
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      ...buildHeaders(token),
+      Accept: "text/event-stream",
+    },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(COPILOT_STREAM_TIMEOUT),
+  });
 
-    let buffer = "";
-    let doneReceived = false;
+  if (!response.ok) {
+    throw new Error(
+      `Copilot API error: ${response.status} ${response.statusText}`,
+    );
+  }
 
-    stream.on("data", (data: Buffer) => {
-      buffer += data.toString();
+  if (!response.body) {
+    throw new Error("No response body from Copilot stream");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let doneReceived = false;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split("\n");
       buffer = lines.pop() ?? "";
 
@@ -296,31 +337,24 @@ const executeStream = (
           return;
         }
       }
-    });
+    }
+  } finally {
+    reader.releaseLock();
+  }
 
-    stream.on("error", (error: Error) => {
-      onChunk({ type: "error", error: error.message });
-      reject(error);
-    });
+  // Process remaining buffer
+  if (buffer.trim()) {
+    processStreamLine(buffer, onChunk);
+  }
 
-    stream.on("end", () => {
-      // Process any remaining data in buffer that didn't have trailing newline
-      if (buffer.trim()) {
-        processStreamLine(buffer, onChunk);
-      }
-
-      // Ensure done is sent even if stream ended without [DONE] message
-      if (!doneReceived) {
-        addDebugLog(
-          "api",
-          "Stream ended without [DONE] message, sending done chunk",
-        );
-        onChunk({ type: "done" });
-      }
-
-      resolve();
-    });
-  });
+  if (!doneReceived) {
+    addDebugLog(
+      "api",
+      "Stream ended without [DONE] message, sending done chunk",
+    );
+    onChunk({ type: "done" });
+  }
+};
 
 export const chatStream = async (
   messages: Message[],
@@ -368,6 +402,16 @@ export const chatStream = async (
         // Switch to unlimited model and retry
         body.model = COPILOT_UNLIMITED_MODEL;
         switchedToUnlimited = true;
+        continue;
+      }
+
+      if (isConnectionError(error) && attempt < COPILOT_MAX_RETRIES - 1) {
+        const delay = COPILOT_CONNECTION_RETRY_DELAY * Math.pow(2, attempt);
+        addDebugLog(
+          "api",
+          `Connection error, retrying in ${delay}ms (attempt ${attempt + 1})`,
+        );
+        await sleep(delay);
         continue;
       }
 

@@ -1,16 +1,7 @@
-/**
- * Copilot Token API
- *
- * Low-level API calls for Copilot token management
- */
-
 import got from "got";
 import { COPILOT_AUTH_URL } from "@constants/copilot";
 import type { CopilotToken } from "@/types/copilot";
 
-/**
- * Refresh Copilot access token using OAuth token
- */
 export const fetchCopilotToken = async (
   oauthToken: string,
 ): Promise<CopilotToken> => {
@@ -30,9 +21,6 @@ export const fetchCopilotToken = async (
   return response;
 };
 
-/**
- * Build standard headers for Copilot API requests
- */
 export const buildCopilotHeaders = (
   token: CopilotToken,
 ): Record<string, string> => ({

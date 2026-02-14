@@ -29,6 +29,7 @@ import {
   processMemoryCommand,
   buildRelevantMemoryPrompt,
 } from "@services/memory-service";
+import { getMessageText } from "@/types/providers";
 import type { ChatState } from "@commands/components/chat/state";
 
 export const sendMessage = async (
@@ -57,7 +58,7 @@ export const sendMessage = async (
 
     // Inject debugging system message before user message if not already present
     const hasDebuggingPrompt = state.messages.some(
-      (msg) => msg.role === "system" && msg.content.includes("debugging mode"),
+      (msg) => msg.role === "system" && getMessageText(msg.content).includes("debugging mode"),
     );
 
     if (!hasDebuggingPrompt) {
@@ -83,7 +84,7 @@ export const sendMessage = async (
     // Inject code review system message before user message if not already present
     const hasReviewPrompt = state.messages.some(
       (msg) =>
-        msg.role === "system" && msg.content.includes("code review mode"),
+        msg.role === "system" && getMessageText(msg.content).includes("code review mode"),
     );
 
     if (!hasReviewPrompt) {
@@ -109,7 +110,7 @@ export const sendMessage = async (
     // Inject refactoring system message before user message if not already present
     const hasRefactoringPrompt = state.messages.some(
       (msg) =>
-        msg.role === "system" && msg.content.includes("refactoring mode"),
+        msg.role === "system" && getMessageText(msg.content).includes("refactoring mode"),
     );
 
     if (!hasRefactoringPrompt) {

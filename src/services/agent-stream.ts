@@ -195,6 +195,12 @@ const processStreamChunk = (
       }
     },
 
+    usage: () => {
+      if (chunk.usage) {
+        callbacks.onUsage?.(chunk.usage);
+      }
+    },
+
     done: () => {
       // Finalize all pending tool calls
       for (const partial of accumulator.toolCalls.values()) {
@@ -657,6 +663,7 @@ export const runAgentLoopStream = async (
         finalResponse: "Execution aborted by user",
         iterations,
         toolCalls: allToolCalls,
+        stopReason: "aborted",
       };
     }
 
@@ -726,13 +733,14 @@ export const runAgentLoopStream = async (
         if (allFailed) {
           consecutiveErrors++;
           if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
-            const errorMsg = `Stopping: ${consecutiveErrors} consecutive tool errors. Check model compatibility with tool calling.`;
+            const errorMsg = `Stopping after ${consecutiveErrors} consecutive tool errors. Check model compatibility with tool calling.`;
             state.options.onError?.(errorMsg);
             return {
               success: false,
               finalResponse: errorMsg,
               iterations,
               toolCalls: allToolCalls,
+              stopReason: "consecutive_errors",
             };
           }
         }
@@ -751,12 +759,18 @@ export const runAgentLoopStream = async (
         finalResponse: `Error: ${errorMessage}`,
         iterations,
         toolCalls: allToolCalls,
+        stopReason: "error",
       };
     }
   }
 
-  if (iterations >= maxIterations) {
-    state.options.onWarning?.(`Reached max iterations (${maxIterations})`);
+  const hitMaxIterations = iterations >= maxIterations;
+
+  if (hitMaxIterations) {
+    const warnMsg = `Agent reached max iterations (${maxIterations}). ` +
+      `Completed ${allToolCalls.length} tool call(s) across ${iterations} iteration(s). ` +
+      `The task may be incomplete — you can send another message to continue.`;
+    state.options.onWarning?.(warnMsg);
   }
 
   return {
@@ -764,6 +778,7 @@ export const runAgentLoopStream = async (
     finalResponse,
     iterations,
     toolCalls: allToolCalls,
+    stopReason: hitMaxIterations ? "max_iterations" : "completed",
   };
 };
 

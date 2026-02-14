@@ -790,6 +790,62 @@ const CARGDEV_CYBERPUNK_COLORS: ThemeColors = {
   headerGradient: ["#ff79c6", "#bd93f9", "#8be9fd"],
 };
 
+const PINK_PURPLE_COLORS: ThemeColors = {
+  primary: "#ff69b4",
+  secondary: "#b47ee5",
+  accent: "#e84393",
+
+  success: "#a3e048",
+  error: "#ff4757",
+  warning: "#ffa502",
+  info: "#cf6fef",
+
+  text: "#f5e6f0",
+  textDim: "#9a7aa0",
+  textMuted: "#4a3050",
+
+  background: "#1a0a20",
+  backgroundPanel: "#120818",
+  backgroundElement: "#2a1535",
+
+  border: "#3d1f4e",
+  borderFocus: "#ff69b4",
+  borderWarning: "#ffa502",
+  borderModal: "#b47ee5",
+
+  bgHighlight: "#2a1535",
+  bgCursor: "#e84393",
+  bgAdded: "#a3e048",
+  bgRemoved: "#ff4757",
+
+  diffAdded: "#a3e048",
+  diffRemoved: "#ff4757",
+  diffContext: "#9a7aa0",
+  diffHeader: "#f5e6f0",
+  diffHunk: "#cf6fef",
+  diffLineBgAdded: "#1a2d1a",
+  diffLineBgRemoved: "#2d1a1a",
+  diffLineText: "#f5e6f0",
+
+  roleUser: "#ff69b4",
+  roleAssistant: "#b47ee5",
+  roleSystem: "#ffa502",
+  roleTool: "#cf6fef",
+
+  modeIdle: "#b47ee5",
+  modeEditing: "#ff69b4",
+  modeThinking: "#e84393",
+  modeToolExecution: "#ffa502",
+  modePermission: "#cf6fef",
+
+  toolPending: "#9a7aa0",
+  toolRunning: "#ffa502",
+  toolSuccess: "#a3e048",
+  toolError: "#ff4757",
+
+  headerGradient: ["#ff69b4", "#e84393", "#b47ee5"],
+};
+
 export const THEMES: Record<string, Theme> = {
   default: {
     name: "default",
@@ -860,6 +916,11 @@ export const THEMES: Record<string, Theme> = {
     name: "cargdev-cyberpunk",
     displayName: "Cargdev Cyberpunk",
     colors: CARGDEV_CYBERPUNK_COLORS,
+  },
+  "pink-purple": {
+    name: "pink-purple",
+    displayName: "Pink Purple",
+    colors: PINK_PURPLE_COLORS,
   },
 };
 

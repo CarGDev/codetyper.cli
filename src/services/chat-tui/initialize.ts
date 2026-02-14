@@ -19,6 +19,8 @@ import {
   buildCompletePrompt,
 } from "@services/prompt-builder";
 import { initSuggestionService } from "@services/command-suggestion-service";
+import { initializeRegistry as initializeSkillRegistry } from "@services/skill-registry";
+import { initializeKeybinds } from "@services/keybind-resolver";
 import * as brainService from "@services/brain";
 import { BRAIN_DISABLED } from "@constants/brain";
 import { addContextFile } from "@services/chat-tui/files";
@@ -27,6 +29,8 @@ import type { ChatSession } from "@/types/common";
 import type { ChatTUIOptions } from "@interfaces/ChatTUIOptions";
 import type { ChatServiceState } from "@/types/chat-service";
 import type { InteractionMode } from "@/types/tui";
+import { getModelContextSize } from "@constants/copilot";
+import { getDefaultModel } from "@providers/core/chat";
 
 const createInitialState = async (
   options: ChatTUIOptions,
@@ -223,6 +227,10 @@ export const initializeChatService = async (
 
   const session = await initializeSession(state, options);
 
+  // Set context max tokens based on the resolved provider + model
+  const effectiveModel = state.model ?? getDefaultModel(state.provider);
+  appStore.setContextMaxTokens(getModelContextSize(effectiveModel).input);
+
   if (state.messages.length === 0) {
     state.messages.push({ role: "system", content: state.systemPrompt });
   }
@@ -231,6 +239,8 @@ export const initializeChatService = async (
   await Promise.all([
     addInitialContextFiles(state, options.files),
     initializePermissions(),
+    initializeSkillRegistry(),
+    initializeKeybinds(),
   ]);
 
   initSuggestionService(process.cwd());

@@ -29,6 +29,7 @@ import { HelpDetail } from "@tui-solid/components/panels/help-detail";
 import { TodoPanel } from "@tui-solid/components/panels/todo-panel";
 import { CenteredModal } from "@tui-solid/components/modals/centered-modal";
 import { DebugLogPanel } from "@tui-solid/components/logs/debug-log-panel";
+import { ActivityPanel } from "@tui-solid/components/panels/activity-panel";
 import { BrainMenu } from "@tui-solid/components/menu/brain-menu";
 import { BRAIN_DISABLED } from "@constants/brain";
 import { initializeMCP, getServerInstances } from "@services/mcp/manager";
@@ -280,6 +281,8 @@ export function Session(props: SessionProps) {
         <box flexDirection="column" flexGrow={1}>
           <LogPanel />
         </box>
+
+        <ActivityPanel />
 
         <Show when={app.todosVisible() && props.plan}>
           <TodoPanel plan={props.plan ?? null} visible={app.todosVisible()} />

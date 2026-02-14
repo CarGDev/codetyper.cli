@@ -2,6 +2,7 @@
  * Chat TUI message handling
  */
 
+import { v4 as uuidv4 } from "uuid";
 import { addMessage, saveSession } from "@services/core/session";
 import {
   createStreamingAgent,
@@ -56,6 +57,7 @@ import { PROVIDER_IDS } from "@constants/provider-quality";
 import { appStore } from "@tui-solid/context/app";
 import type { StreamCallbacks } from "@/types/streaming";
 import type { TaskType } from "@/types/provider-quality";
+import type { ContentPart, MessageContent } from "@/types/providers";
 import type {
   ChatServiceState,
   ChatServiceCallbacks,
@@ -69,6 +71,12 @@ import {
   executeDetectedCommand,
 } from "@services/command-detection";
 import { detectSkillCommand, executeSkill } from "@services/skill-service";
+import {
+  buildSkillInjectionForPrompt,
+  getDetectedSkillsSummary,
+} from "@services/skill-registry";
+import { stripMarkdown } from "@/utils/markdown/strip";
+import { createThinkingParser } from "@services/reasoning/thinking-parser";
 import {
   getActivePlans,
   isApprovalMessage,
@@ -105,7 +113,9 @@ export const abortCurrentOperation = async (
     appStore.setMode("idle");
     addDebugLog(
       "state",
-      rollback ? "Operation aborted with rollback" : "Operation aborted by user",
+      rollback
+        ? "Operation aborted with rollback"
+        : "Operation aborted by user",
     );
     return true;
   }
@@ -213,6 +223,48 @@ export const getExecutionState = (): {
   };
 };
 
+/**
+ * Extract file path(s) from a tool call's arguments.
+ *
+ * Different tools store the path in different places:
+ * - write / edit / delete : `args.filePath` or `args.path`
+ * - multi_edit           : `args.edits[].file_path`
+ * - apply_patch          : `args.targetFile` (or parsed from patch header)
+ * - bash                 : no reliable path, skip
+ */
+const extractToolPaths = (
+  toolName: string,
+  args?: Record<string, unknown>,
+): { primary?: string; all: string[] } => {
+  if (!args) return { all: [] };
+
+  // Standard single-file tools
+  const singlePath =
+    (args.filePath as string) ??
+    (args.file_path as string) ??
+    (args.path as string);
+
+  if (singlePath && toolName !== "multi_edit") {
+    return { primary: String(singlePath), all: [String(singlePath)] };
+  }
+
+  // multi_edit: array of edits with file_path
+  if (toolName === "multi_edit" && Array.isArray(args.edits)) {
+    const paths = (args.edits as Array<{ file_path?: string }>)
+      .map((e) => e.file_path)
+      .filter((p): p is string => Boolean(p));
+    const unique = [...new Set(paths)];
+    return { primary: unique[0], all: unique };
+  }
+
+  // apply_patch: targetFile override or embedded in patch content
+  if (toolName === "apply_patch" && args.targetFile) {
+    return { primary: String(args.targetFile), all: [String(args.targetFile)] };
+  }
+
+  return { all: [] };
+};
+
 const createToolCallHandler =
   (
     callbacks: ChatServiceCallbacks,
@@ -220,11 +272,13 @@ const createToolCallHandler =
   ) =>
   (call: { id: string; name: string; arguments?: Record<string, unknown> }) => {
     const args = call.arguments;
-    if (
-      (FILE_MODIFYING_TOOLS as readonly string[]).includes(call.name) &&
-      args?.path
-    ) {
-      toolCallRef.current = { name: call.name, path: String(args.path) };
+    const isModifying = (FILE_MODIFYING_TOOLS as readonly string[]).includes(
+      call.name,
+    );
+
+    if (isModifying) {
+      const { primary, all } = extractToolPaths(call.name, args);
+      toolCallRef.current = { name: call.name, path: primary, paths: all };
     } else {
       toolCallRef.current = { name: call.name };
     }
@@ -237,6 +291,28 @@ const createToolCallHandler =
       args,
     });
   };
+
+/**
+ * Estimate additions/deletions from tool output text
+ */
+const estimateChanges = (
+  output: string,
+): { additions: number; deletions: number } => {
+  let additions = 0;
+  let deletions = 0;
+
+  for (const line of output.split("\n")) {
+    if (line.startsWith("+") && !line.startsWith("+++")) additions++;
+    else if (line.startsWith("-") && !line.startsWith("---")) deletions++;
+  }
+
+  // Fallback estimate when no diff markers are found
+  if (additions === 0 && deletions === 0 && output.length > 0) {
+    additions = output.split("\n").length;
+  }
+
+  return { additions, deletions };
+};
 
 const createToolResultHandler =
   (
@@ -252,8 +328,33 @@ const createToolResultHandler =
       error?: string;
     },
   ) => {
-    if (result.success && toolCallRef.current?.path) {
-      analyzeFileChange(toolCallRef.current.path);
+    const ref = toolCallRef.current;
+
+    if (result.success && ref) {
+      const output = result.output ?? "";
+      const paths = ref.paths?.length ? ref.paths : ref.path ? [ref.path] : [];
+
+      if (paths.length > 0) {
+        const { additions, deletions } = estimateChanges(output);
+
+        // Distribute changes across paths (or assign all to the single path)
+        const perFile = paths.length > 1
+          ? {
+              additions: Math.max(1, Math.ceil(additions / paths.length)),
+              deletions: Math.ceil(deletions / paths.length),
+            }
+          : { additions, deletions };
+
+        for (const filePath of paths) {
+          analyzeFileChange(filePath);
+          appStore.addModifiedFile({
+            filePath,
+            additions: perFile.additions,
+            deletions: perFile.deletions,
+            lastModified: Date.now(),
+          });
+        }
+      }
     }
 
     callbacks.onToolResult(
@@ -270,6 +371,34 @@ const createToolResultHandler =
  */
 const createStreamCallbacks = (): StreamCallbacksWithState => {
   let chunkCount = 0;
+  let currentSegmentHasContent = false;
+  let receivedUsage = false;
+  const thinkingParser = createThinkingParser();
+
+  const emitThinking = (thinking: string | null): void => {
+    if (!thinking) return;
+    appStore.addLog({ type: "thinking", content: thinking });
+  };
+
+  /**
+   * Finalize the current streaming segment (if it has content) so that
+   * tool logs appear below the pre-tool text and a new streaming segment
+   * can be started afterward for post-tool text (e.g. summary).
+   */
+  const finalizeCurrentSegment = (): void => {
+    if (!currentSegmentHasContent) return;
+
+    // Flush thinking parser before finalizing the segment
+    const flushed = thinkingParser.flush();
+    if (flushed.visible) {
+      appStore.appendStreamContent(flushed.visible);
+    }
+    emitThinking(flushed.thinking);
+
+    appStore.completeStreaming();
+    currentSegmentHasContent = false;
+    addDebugLog("stream", "Finalized streaming segment before tool call");
+  };
 
   const callbacks: StreamCallbacks = {
     onContentChunk: (content: string) => {
@@ -278,11 +407,30 @@ const createStreamCallbacks = (): StreamCallbacksWithState => {
         "stream",
         `Chunk #${chunkCount}: "${content.substring(0, 30)}${content.length > 30 ? "..." : ""}"`,
       );
-      appStore.appendStreamContent(content);
+
+      // Feed through the thinking parser — only append visible content.
+      // <thinking>…</thinking> blocks are stripped and emitted separately.
+      const result = thinkingParser.feed(content);
+      if (result.visible) {
+        // If the previous streaming segment was finalized (e.g. before a tool call),
+        // start a new one so post-tool text appears after tool output logs.
+        if (!currentSegmentHasContent && !appStore.getState().streamingLog.isStreaming) {
+          appStore.startStreaming();
+          addDebugLog("stream", "Started new streaming segment for post-tool content");
+        }
+        appStore.appendStreamContent(result.visible);
+        currentSegmentHasContent = true;
+      }
+      emitThinking(result.thinking);
     },
 
     onToolCallStart: (toolCall) => {
       addDebugLog("tool", `Tool start: ${toolCall.name} (${toolCall.id})`);
+
+      // Finalize accumulated streaming text so it stays above tool output
+      // and the post-tool summary will appear below.
+      finalizeCurrentSegment();
+
       appStore.setCurrentToolCall({
         id: toolCall.id,
         name: toolCall.name,
@@ -308,7 +456,28 @@ const createStreamCallbacks = (): StreamCallbacksWithState => {
       });
     },
 
+    onUsage: (usage) => {
+      receivedUsage = true;
+      addDebugLog(
+        "api",
+        `Token usage: prompt=${usage.promptTokens}, completion=${usage.completionTokens}`,
+      );
+      appStore.addTokens(usage.promptTokens, usage.completionTokens);
+    },
+
     onComplete: () => {
+      // Flush any remaining buffered content from the thinking parser
+      const flushed = thinkingParser.flush();
+      if (flushed.visible) {
+        // Ensure a streaming log exists if we're flushing post-tool content
+        if (!currentSegmentHasContent && !appStore.getState().streamingLog.isStreaming) {
+          appStore.startStreaming();
+        }
+        appStore.appendStreamContent(flushed.visible);
+        currentSegmentHasContent = true;
+      }
+      emitThinking(flushed.thinking);
+
       // Note: Don't call completeStreaming() here!
       // The agent loop may have multiple iterations (tool calls + final response)
       // Streaming will be completed manually after the entire agent finishes
@@ -320,6 +489,7 @@ const createStreamCallbacks = (): StreamCallbacksWithState => {
 
     onError: (error: string) => {
       addDebugLog("error", `Stream error: ${error}`);
+      thinkingParser.reset();
       appStore.cancelStreaming();
       appStore.addLog({
         type: "error",
@@ -331,6 +501,7 @@ const createStreamCallbacks = (): StreamCallbacksWithState => {
   return {
     callbacks,
     hasReceivedContent: () => chunkCount > 0,
+    hasReceivedUsage: () => receivedUsage,
   };
 };
 
@@ -426,7 +597,10 @@ export const handleMessage = async (
     if (isApprovalMessage(message)) {
       approvePlan(plan.id, message);
       startPlanExecution(plan.id);
-      callbacks.onLog("system", `Plan "${plan.title}" approved. Proceeding with implementation.`);
+      callbacks.onLog(
+        "system",
+        `Plan "${plan.title}" approved. Proceeding with implementation.`,
+      );
       addDebugLog("state", `Plan ${plan.id} approved by user`);
 
       // Continue with agent execution - the agent will see the approved status
@@ -438,7 +612,10 @@ export const handleMessage = async (
       // Fall through to normal agent processing
     } else if (isRejectionMessage(message)) {
       rejectPlan(plan.id, message);
-      callbacks.onLog("system", `Plan "${plan.title}" rejected. Please provide feedback or a new approach.`);
+      callbacks.onLog(
+        "system",
+        `Plan "${plan.title}" rejected. Please provide feedback or a new approach.`,
+      );
       addDebugLog("state", `Plan ${plan.id} rejected by user`);
 
       // Add rejection to messages so agent can respond
@@ -449,7 +626,10 @@ export const handleMessage = async (
       // Fall through to normal agent processing to get revised plan
     } else {
       // Neither approval nor rejection - treat as feedback/modification request
-      callbacks.onLog("system", `Plan "${plan.title}" awaiting approval. Reply 'yes' to approve or 'no' to reject.`);
+      callbacks.onLog(
+        "system",
+        `Plan "${plan.title}" awaiting approval. Reply 'yes' to approve or 'no' to reject.`,
+      );
 
       // Show the plan again with the feedback
       const planDisplay = formatPlanForDisplay(plan);
@@ -611,6 +791,90 @@ export const handleMessage = async (
   const { enrichedMessage, issues } =
     await enrichMessageWithIssues(processedMessage);
 
+  // Inline @mention subagent invocation (e.g. "Find all API endpoints @explore")
+  try {
+    const mentionRegex = /@([a-zA-Z_]+)/g;
+    const mentionMap: Record<string, string> = {
+      explore: "explore",
+      general: "implement",
+      plan: "plan",
+    };
+
+    const mentions: string[] = [];
+    let m: RegExpExecArray | null;
+    while ((m = mentionRegex.exec(message))) {
+      const key = m[1]?.toLowerCase();
+      if (key && mentionMap[key]) mentions.push(key);
+    }
+
+    if (mentions.length > 0) {
+      // Clean message to use as task prompt (remove mentions)
+      const cleaned = enrichedMessage.replace(/@[a-zA-Z_]+/g, "").trim();
+
+      // Lazy import task agent helpers (avoid circular deps)
+      const { executeTaskAgent, getBackgroundAgentStatus } =
+        await import("@/tools/task-agent/execute");
+      const { v4: uuidv4 } = await import("uuid");
+
+      // Minimal tool context for invoking the task agent
+      const toolCtx = {
+        sessionId: uuidv4(),
+        messageId: uuidv4(),
+        workingDir: process.cwd(),
+        abort: new AbortController(),
+        autoApprove: true,
+        onMetadata: () => {},
+      } as any;
+
+      for (const key of mentions) {
+        const agentType = mentionMap[key];
+        try {
+          const params = {
+            agent_type: agentType,
+            task: cleaned || message,
+            run_in_background: true,
+          } as any;
+
+          const startResult = await executeTaskAgent(params, toolCtx);
+
+          // Show started message in UI
+          appStore.addLog({
+            type: "system",
+            content: `Started subagent @${key} (ID: ${startResult.metadata?.agentId ?? "?"}).`,
+          });
+
+          // Poll briefly for completion and attach result if ready
+          const agentId = startResult.metadata?.agentId as string | undefined;
+          if (agentId) {
+            const maxAttempts = 10;
+            const interval = 300;
+            for (let i = 0; i < maxAttempts; i++) {
+              // eslint-disable-next-line no-await-in-loop
+              const status = await getBackgroundAgentStatus(agentId);
+              if (status && status.success && status.output) {
+                // Attach assistant result to conversation
+                appStore.addLog({ type: "assistant", content: status.output });
+                addMessage("assistant", status.output);
+                await saveSession();
+                break;
+              }
+              // eslint-disable-next-line no-await-in-loop
+              await new Promise((res) => setTimeout(res, interval));
+            }
+          }
+        } catch (err) {
+          appStore.addLog({
+            type: "error",
+            content: `Subagent @${key} failed to start: ${String(err)}`,
+          });
+        }
+      }
+    }
+  } catch (err) {
+    // Non-fatal - don't block main flow on subagent helpers
+    addDebugLog("error", `Subagent invocation error: ${String(err)}`);
+  }
+
   if (issues.length > 0) {
     callbacks.onLog(
       "system",
@@ -623,7 +887,35 @@ export const handleMessage = async (
 
   const userMessage = buildContextMessage(state, enrichedMessage);
 
-  state.messages.push({ role: "user", content: userMessage });
+  // Build multimodal content if there are pasted images
+  const { pastedImages } = appStore.getState();
+  let messageContent: MessageContent = userMessage;
+
+  if (pastedImages.length > 0) {
+    const parts: ContentPart[] = [
+      { type: "text", text: userMessage },
+    ];
+
+    for (const img of pastedImages) {
+      parts.push({
+        type: "image_url",
+        image_url: {
+          url: `data:${img.mediaType};base64,${img.data}`,
+          detail: "auto",
+        },
+      });
+    }
+
+    messageContent = parts;
+    addDebugLog(
+      "info",
+      `[images] Attached ${pastedImages.length} image(s) to user message`,
+    );
+    // Images are consumed; clear from store
+    appStore.clearPastedImages();
+  }
+
+  state.messages.push({ role: "user", content: messageContent });
 
   clearSuggestions();
 
@@ -707,6 +999,37 @@ export const handleMessage = async (
       ? state.model
       : getDefaultModel(effectiveProvider);
 
+  // Auto-detect and inject relevant skills based on the user prompt.
+  // Skills are activated transparently and their instructions are injected
+  // into the conversation as a system message so the agent benefits from
+  // specialized knowledge (e.g., TypeScript, React, Security, etc.).
+  try {
+    const { injection, detected } =
+      await buildSkillInjectionForPrompt(message);
+    if (detected.length > 0 && injection) {
+      const summary = getDetectedSkillsSummary(detected);
+      addDebugLog("info", `[skills] ${summary}`);
+      callbacks.onLog("system", summary);
+
+      // Inject skill context as a system message right before the user message
+      // so the agent has specialized knowledge for this prompt.
+      const insertIdx = Math.max(0, state.messages.length - 1);
+      state.messages.splice(insertIdx, 0, {
+        role: "system" as const,
+        content: injection,
+      });
+      addDebugLog(
+        "info",
+        `[skills] Injected ${detected.length} skill(s) as system context`,
+      );
+    }
+  } catch (error) {
+    addDebugLog(
+      "error",
+      `Skill detection failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+
   // Start streaming UI
   addDebugLog(
     "state",
@@ -731,8 +1054,10 @@ export const handleMessage = async (
       autoApprove: state.autoApprove,
       chatMode: isReadOnlyMode,
       onText: (text: string) => {
+        // Note: Do NOT call appStore.appendStreamContent() here.
+        // Streaming content is already handled by onContentChunk in streamState.callbacks.
+        // Calling appendStreamContent from both onText and onContentChunk causes double content.
         addDebugLog("info", `onText callback: "${text.substring(0, 50)}..."`);
-        appStore.appendStreamContent(text);
       },
       onToolCall: createToolCallHandler(callbacks, toolCallRef),
       onToolResult: createToolResultHandler(callbacks, toolCallRef),
@@ -758,7 +1083,10 @@ export const handleMessage = async (
       onStepModeDisabled: () => {
         addDebugLog("state", "Step mode disabled");
       },
-      onWaitingForStep: (toolName: string, _toolArgs: Record<string, unknown>) => {
+      onWaitingForStep: (
+        toolName: string,
+        _toolArgs: Record<string, unknown>,
+      ) => {
         appStore.addLog({
           type: "system",
           content: `⏳ Step mode: Ready to execute ${toolName}. Press Enter to continue.`,
@@ -766,14 +1094,20 @@ export const handleMessage = async (
         addDebugLog("state", `Waiting for step: ${toolName}`);
       },
       onAbort: (rollbackCount: number) => {
-        addDebugLog("state", `Abort initiated, ${rollbackCount} actions to rollback`);
+        addDebugLog(
+          "state",
+          `Abort initiated, ${rollbackCount} actions to rollback`,
+        );
       },
       onRollback: (action: { type: string; description: string }) => {
         appStore.addLog({
           type: "system",
           content: `↩ Rolling back: ${action.description}`,
         });
-        addDebugLog("state", `Rollback: ${action.type} - ${action.description}`);
+        addDebugLog(
+          "state",
+          `Rollback: ${action.type} - ${action.description}`,
+        );
       },
       onRollbackComplete: (actionsRolledBack: number) => {
         appStore.addLog({
@@ -788,19 +1122,32 @@ export const handleMessage = async (
   // Store agent reference for abort capability
   currentAgent = agent;
 
-  try {
-    addDebugLog(
-      "api",
-      `Agent.run() started with ${state.messages.length} messages`,
-    );
-    const result = await agent.run(state.messages);
-    addDebugLog(
-      "api",
-      `Agent.run() completed: success=${result.success}, iterations=${result.iterations}`,
-    );
-
+  /**
+   * Process the result of an agent run: finalize streaming, show stop reason,
+   * persist to session.
+   */
+  const processAgentResult = async (
+    result: Awaited<ReturnType<typeof agent.run>>,
+    userMessage: string,
+  ): Promise<void> => {
     // Stop thinking timer
     appStore.stopThinking();
+
+    // If the stream didn't deliver API-reported usage data, estimate tokens
+    // from message lengths so the context counter never stays stuck at 0.
+    if (!streamState.hasReceivedUsage()) {
+      const inputEstimate = Math.ceil(userMessage.length / 4);
+      const outputEstimate = Math.ceil((result.finalResponse?.length ?? 0) / 4);
+      // Add tool I/O overhead: each tool call/result adds tokens
+      const toolOverhead = result.toolCalls.length * 150; // ~150 tokens per tool exchange
+      if (inputEstimate > 0 || outputEstimate > 0) {
+        appStore.addTokens(inputEstimate + toolOverhead, outputEstimate + toolOverhead);
+        addDebugLog(
+          "info",
+          `Token estimate (no API usage): ~${inputEstimate + toolOverhead} in, ~${outputEstimate + toolOverhead} out`,
+        );
+      }
+    }
 
     if (result.finalResponse) {
       addDebugLog(
@@ -812,7 +1159,7 @@ export const handleMessage = async (
       // Run audit if cascade mode with Ollama
       if (shouldAudit && effectiveProvider === "ollama") {
         const auditResult = await runAudit(
-          message,
+          userMessage,
           result.finalResponse,
           callbacks,
         );
@@ -844,35 +1191,165 @@ export const handleMessage = async (
         content: finalResponse,
       });
 
-      // Check if streaming content was received - if not, add the response as a log
-      // This handles cases where streaming didn't work or content was all in final response
-      if (!streamState.hasReceivedContent() && finalResponse) {
+      // Single source of truth: decide based on whether the provider
+      // actually streamed visible content, not whether we asked for streaming.
+      const streamedContent = streamState.hasReceivedContent();
+
+      if (streamedContent) {
+        // Streaming delivered content — finalize the last streaming segment.
+        addDebugLog("info", "Completing streaming with received content");
+        if (appStore.getState().streamingLog.isStreaming) {
+          appStore.completeStreaming();
+        }
+      } else if (finalResponse) {
         addDebugLog(
           "info",
           "No streaming content received, adding fallback log",
         );
-        // Streaming didn't receive content, manually add the response
-        appStore.cancelStreaming(); // Remove empty streaming log
+        if (appStore.getState().streamingLog.isStreaming) {
+          appStore.cancelStreaming();
+        }
         appStore.addLog({
           type: "assistant",
-          content: finalResponse,
+          content: stripMarkdown(finalResponse),
         });
-      } else {
-        // Streaming received content - finalize the streaming log
-        addDebugLog("info", "Completing streaming with received content");
-        appStore.completeStreaming();
       }
 
-      addMessage("user", message);
+      // Persist to session
+      addMessage("user", userMessage);
       addMessage("assistant", finalResponse);
       await saveSession();
 
-      await processLearningsFromExchange(message, finalResponse, callbacks);
+      await processLearningsFromExchange(userMessage, finalResponse, callbacks);
 
       const suggestions = getPendingSuggestions();
       if (suggestions.length > 0) {
         const formatted = formatSuggestions(suggestions);
         callbacks.onLog("system", formatted);
+      }
+    }
+
+    // Show agent stop reason to the user so they know why it ended
+    const stopReason = result.stopReason ?? "completed";
+    const toolCount = result.toolCalls.length;
+    const iters = result.iterations;
+
+    if (stopReason === "max_iterations") {
+      appStore.addLog({
+        type: "system",
+        content: `Agent stopped: reached max iterations (${iters}). ` +
+          `${toolCount} tool call(s) completed. ` +
+          `Send another message to continue where it left off.`,
+      });
+    } else if (stopReason === "consecutive_errors") {
+      appStore.addLog({
+        type: "error",
+        content: `Agent stopped: repeated tool failures. ${toolCount} tool call(s) attempted across ${iters} iteration(s).`,
+      });
+    } else if (stopReason === "aborted") {
+      appStore.addLog({
+        type: "system",
+        content: `Agent aborted by user after ${iters} iteration(s) and ${toolCount} tool call(s).`,
+      });
+    } else if (stopReason === "error") {
+      appStore.addLog({
+        type: "error",
+        content: `Agent encountered an error after ${iters} iteration(s) and ${toolCount} tool call(s).`,
+      });
+    } else if (stopReason === "completed" && toolCount > 0) {
+      // Only show a summary for non-trivial agent runs (with tool calls)
+      appStore.addLog({
+        type: "system",
+        content: `Agent completed: ${toolCount} tool call(s) in ${iters} iteration(s).`,
+      });
+    }
+  };
+
+  try {
+    addDebugLog(
+      "api",
+      `Agent.run() started with ${state.messages.length} messages`,
+    );
+    let result = await agent.run(state.messages);
+    addDebugLog(
+      "api",
+      `Agent.run() completed: success=${result.success}, iterations=${result.iterations}, stopReason=${result.stopReason}`,
+    );
+
+    await processAgentResult(result, message);
+
+    // After agent finishes, check for pending plans and auto-continue on approval
+    let continueAfterPlan = true;
+    while (continueAfterPlan) {
+      continueAfterPlan = false;
+
+      const newPendingPlans = getActivePlans().filter(
+        (p) => p.status === "pending",
+      );
+      if (newPendingPlans.length === 0) break;
+
+      const plan = newPendingPlans[0];
+      const planContent = formatPlanForDisplay(plan);
+      addDebugLog("state", `Showing plan approval modal: ${plan.id}`);
+
+      const approved = await new Promise<boolean>((resolve) => {
+        appStore.setMode("plan_approval");
+        appStore.setPlanApprovalPrompt({
+          id: uuidv4(),
+          planTitle: plan.title,
+          planSummary: plan.summary,
+          planContent,
+          resolve: (response) => {
+            appStore.setPlanApprovalPrompt(null);
+
+            if (response.approved) {
+              approvePlan(plan.id, response.editMode);
+              startPlanExecution(plan.id);
+              addDebugLog("state", `Plan ${plan.id} approved via modal`);
+              appStore.addLog({
+                type: "system",
+                content: `Plan "${plan.title}" approved. Continuing implementation...`,
+              });
+
+              state.messages.push({
+                role: "user",
+                content: `The user approved the plan "${plan.title}". ` +
+                  `Proceed with the full implementation — complete ALL steps in the plan. ` +
+                  `Do not stop until every step is done or you need further user input.`,
+              });
+            } else {
+              rejectPlan(plan.id, response.feedback ?? "User cancelled");
+              addDebugLog("state", `Plan ${plan.id} rejected via modal`);
+              appStore.addLog({
+                type: "system",
+                content: `Plan "${plan.title}" cancelled.`,
+              });
+            }
+
+            resolve(response.approved);
+          },
+        });
+      });
+
+      // If the plan was approved, re-run the agent loop so it continues working
+      if (approved) {
+        addDebugLog("api", "Re-running agent after plan approval");
+        appStore.setMode("thinking");
+        appStore.startThinking();
+        appStore.startStreaming();
+
+        result = await agent.run(state.messages);
+        addDebugLog(
+          "api",
+          `Agent.run() (post-plan) completed: success=${result.success}, iterations=${result.iterations}, stopReason=${result.stopReason}`,
+        );
+
+        await processAgentResult(result, message);
+
+        // Loop again to check for new pending plans from this agent run
+        continueAfterPlan = true;
+      } else {
+        appStore.setMode("idle");
       }
     }
   } catch (error) {

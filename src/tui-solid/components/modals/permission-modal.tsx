@@ -25,9 +25,16 @@ const PERMISSION_OPTIONS: PermissionOption[] = [
   { key: "n", label: "No, deny this request", scope: "deny", allowed: false },
 ];
 
+/**
+ * Default to "Yes, for this session" (index 1) instead of "Yes, this once" (index 0).
+ * This prevents the user from having to re-approve the same pattern every time
+ * (e.g. for curl, web_search, etc.) which is the most common intended behavior.
+ */
+const DEFAULT_SELECTION = 1;
+
 export function PermissionModal(props: PermissionModalProps) {
   const theme = useTheme();
-  const [selectedIndex, setSelectedIndex] = createSignal(0);
+  const [selectedIndex, setSelectedIndex] = createSignal(DEFAULT_SELECTION);
   const isActive = () => props.isActive ?? true;
 
   const handleResponse = (allowed: boolean, scope?: PermissionScope): void => {

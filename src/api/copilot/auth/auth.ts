@@ -1,9 +1,3 @@
-/**
- * Copilot Authentication API
- *
- * Low-level API calls for GitHub OAuth device flow
- */
-
 import got from "got";
 import {
   GITHUB_CLIENT_ID,

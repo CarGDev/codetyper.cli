@@ -29,6 +29,8 @@ export interface OllamaMessage {
   role: string;
   content: string;
   tool_calls?: OllamaToolCall[];
+  /** Base64-encoded images for multimodal models (e.g. llava) */
+  images?: string[];
 }
 
 export interface OllamaChatOptions {

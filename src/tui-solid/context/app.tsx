@@ -16,9 +16,12 @@ import type {
   StreamingLogState,
   SuggestionState,
   MCPServerDisplay,
+  ModifiedFileEntry,
 } from "@/types/tui";
 import type { ProviderModel } from "@/types/providers";
 import type { BrainConnectionStatus, BrainUser } from "@/types/brain";
+import type { PastedImage } from "@/types/image";
+import { stripMarkdown } from "@/utils/markdown/strip";
 
 interface AppStore {
   mode: AppMode;
@@ -49,6 +52,8 @@ interface AppStore {
   suggestions: SuggestionState;
   cascadeEnabled: boolean;
   mcpServers: MCPServerDisplay[];
+  modifiedFiles: ModifiedFileEntry[];
+  pastedImages: PastedImage[];
   brain: {
     status: BrainConnectionStatus;
     user: BrainUser | null;
@@ -95,6 +100,7 @@ interface AppContextValue {
   suggestions: Accessor<SuggestionState>;
   cascadeEnabled: Accessor<boolean>;
   mcpServers: Accessor<MCPServerDisplay[]>;
+  modifiedFiles: Accessor<ModifiedFileEntry[]>;
   brain: Accessor<{
     status: BrainConnectionStatus;
     user: BrainUser | null;
@@ -201,6 +207,16 @@ interface AppContextValue {
     status: MCPServerDisplay["status"],
   ) => void;
 
+  // Modified file tracking
+  addModifiedFile: (entry: ModifiedFileEntry) => void;
+  clearModifiedFiles: () => void;
+
+  // Pasted image tracking
+  pastedImages: Accessor<PastedImage[]>;
+  addPastedImage: (image: PastedImage) => void;
+  clearPastedImages: () => void;
+  removePastedImage: (id: string) => void;
+
   // Computed
   isInputLocked: () => boolean;
 }
@@ -268,6 +284,8 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         suggestions: createInitialSuggestionState(),
         cascadeEnabled: true,
         mcpServers: [],
+        modifiedFiles: [],
+        pastedImages: [],
         brain: {
           status: "disconnected" as BrainConnectionStatus,
           user: null,
@@ -326,6 +344,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
       const suggestions = (): SuggestionState => store.suggestions;
       const cascadeEnabled = (): boolean => store.cascadeEnabled;
       const mcpServers = (): MCPServerDisplay[] => store.mcpServers;
+      const modifiedFiles = (): ModifiedFileEntry[] => store.modifiedFiles;
       const brain = () => store.brain;
 
       // Mode actions
@@ -590,6 +609,52 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         );
       };
 
+      // Modified file tracking
+      const addModifiedFile = (entry: ModifiedFileEntry): void => {
+        setStore(
+          produce((s) => {
+            const existing = s.modifiedFiles.find(
+              (f) => f.filePath === entry.filePath,
+            );
+            if (existing) {
+              existing.additions += entry.additions;
+              existing.deletions += entry.deletions;
+              existing.lastModified = entry.lastModified;
+            } else {
+              s.modifiedFiles.push({ ...entry });
+            }
+          }),
+        );
+      };
+
+      const clearModifiedFiles = (): void => {
+        setStore("modifiedFiles", []);
+      };
+
+      // Pasted image tracking
+      const addPastedImage = (image: PastedImage): void => {
+        setStore(
+          produce((s) => {
+            s.pastedImages.push({ ...image });
+          }),
+        );
+      };
+
+      const clearPastedImages = (): void => {
+        setStore("pastedImages", []);
+      };
+
+      const removePastedImage = (id: string): void => {
+        setStore(
+          produce((s) => {
+            const idx = s.pastedImages.findIndex((img) => img.id === id);
+            if (idx !== -1) {
+              s.pastedImages.splice(idx, 1);
+            }
+          }),
+        );
+      };
+
       // Session stats actions
       const startThinking = (): void => {
         setStore("sessionStats", {
@@ -703,6 +768,12 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         const logIndex = store.logs.findIndex((l) => l.id === logId);
 
         batch(() => {
+          // Strip markdown from the fully accumulated content before finalizing
+          if (logIndex !== -1) {
+            const rawContent = store.logs[logIndex].content;
+            setStore("logs", logIndex, "content", stripMarkdown(rawContent));
+          }
+
           setStore("streamingLog", createInitialStreamingState());
           if (logIndex !== -1) {
             const currentMetadata = store.logs[logIndex].metadata ?? {};
@@ -829,6 +900,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         suggestions,
         cascadeEnabled,
         mcpServers,
+        modifiedFiles,
         brain,
 
         // Mode actions
@@ -899,6 +971,16 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         addMcpServer,
         updateMcpServerStatus,
 
+        // Modified file tracking
+        addModifiedFile,
+        clearModifiedFiles,
+
+        // Pasted image tracking
+        pastedImages: () => store.pastedImages,
+        addPastedImage,
+        clearPastedImages,
+        removePastedImage,
+
         // Session stats actions
         startThinking,
         stopThinking,
@@ -968,6 +1050,7 @@ const defaultAppState = {
   streamingLog: createInitialStreamingState(),
   suggestions: createInitialSuggestionState(),
   mcpServers: [] as MCPServerDisplay[],
+  pastedImages: [] as PastedImage[],
   brain: {
     status: "disconnected" as BrainConnectionStatus,
     user: null,
@@ -1009,6 +1092,7 @@ export const appStore = {
       streamingLog: storeRef.streamingLog(),
       suggestions: storeRef.suggestions(),
       mcpServers: storeRef.mcpServers(),
+      pastedImages: storeRef.pastedImages(),
       brain: storeRef.brain(),
     };
   },
@@ -1239,5 +1323,35 @@ export const appStore = {
   ): void => {
     if (!storeRef) return;
     storeRef.updateMcpServerStatus(id, status);
+  },
+
+  addModifiedFile: (entry: ModifiedFileEntry): void => {
+    if (!storeRef) return;
+    storeRef.addModifiedFile(entry);
+  },
+
+  clearModifiedFiles: (): void => {
+    if (!storeRef) return;
+    storeRef.clearModifiedFiles();
+  },
+
+  addPastedImage: (image: PastedImage): void => {
+    if (!storeRef) return;
+    storeRef.addPastedImage(image);
+  },
+
+  clearPastedImages: (): void => {
+    if (!storeRef) return;
+    storeRef.clearPastedImages();
+  },
+
+  removePastedImage: (id: string): void => {
+    if (!storeRef) return;
+    storeRef.removePastedImage(id);
+  },
+
+  getPastedImages: (): PastedImage[] => {
+    if (!storeRef) return [];
+    return storeRef.pastedImages();
   },
 };

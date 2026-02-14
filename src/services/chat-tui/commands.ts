@@ -4,6 +4,7 @@
 
 import { saveSession as saveSessionSession } from "@services/core/session";
 import { appStore } from "@tui-solid/context/app";
+import { getMessageText } from "@/types/providers";
 import { CHAT_MESSAGES, type CommandName } from "@constants/chat-service";
 import { handleLogin, handleLogout, showWhoami } from "@services/chat-tui/auth";
 import {
@@ -44,7 +45,7 @@ const saveSession: CommandHandler = async (_, callbacks) => {
 
 const showContext: CommandHandler = (state, callbacks) => {
   const tokenEstimate = state.messages.reduce(
-    (sum, msg) => sum + Math.ceil(msg.content.length / 4),
+    (sum, msg) => sum + Math.ceil(getMessageText(msg.content).length / 4),
     0,
   );
   callbacks.onLog(

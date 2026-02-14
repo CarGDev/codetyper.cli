@@ -1,8 +1,14 @@
-import { createMemo, Show, onMount, onCleanup } from "solid-js";
+import { createMemo, Show, For, onMount, onCleanup } from "solid-js";
 import { useKeyboard } from "@opentui/solid";
 import { TextareaRenderable, type PasteEvent } from "@opentui/core";
 import { useTheme } from "@tui-solid/context/theme";
 import { useAppStore } from "@tui-solid/context/app";
+import { matchesAction } from "@services/keybind-resolver";
+import {
+  readClipboardImage,
+  formatImageSize,
+  getImageSizeFromBase64,
+} from "@services/clipboard-service";
 
 /** Minimum lines to trigger paste summary */
 const MIN_PASTE_LINES = 3;
@@ -110,12 +116,40 @@ export function InputArea(props: InputAreaProps) {
     return theme.colors.border;
   });
 
-  // Handle "/" to open command menu when input is empty
-  // Handle Enter to submit (backup in case onSubmit doesn't fire)
-  // Handle Ctrl+M to toggle interaction mode (Ctrl+Tab doesn't work in most terminals)
+  /**
+   * Try to read an image from the clipboard and add it as a pasted image.
+   * Called on Ctrl+V — if an image is found it gets inserted as a placeholder;
+   * otherwise the default text-paste behavior takes over.
+   */
+  const handleImagePaste = async (): Promise<boolean> => {
+    try {
+      const image = await readClipboardImage();
+      if (!image) return false;
+
+      // Store the image in app state
+      app.addPastedImage(image);
+
+      // Insert a visual placeholder into the input
+      const size = formatImageSize(getImageSizeFromBase64(image.data));
+      const placeholder = `[Image: ${image.mediaType.split("/")[1].toUpperCase()} ${size}]`;
+
+      if (inputRef) {
+        inputRef.insertText(placeholder + " ");
+        app.setInputBuffer(inputRef.plainText);
+      }
+
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  // Keyboard handler using configurable keybinds from keybind-resolver.
+  // Keybinds are loaded from ~/.config/codetyper/keybindings.json on startup.
+  // See DEFAULT_KEYBINDS in constants/keybinds.ts for all available actions.
   useKeyboard((evt) => {
-    // Ctrl+M works even when locked or menus are open
-    if (evt.ctrl && evt.name === "m") {
+    // Mode toggle — works even when locked or menus are open
+    if (matchesAction(evt, "mode_toggle")) {
       app.toggleInteractionMode();
       evt.preventDefault();
       evt.stopPropagation();
@@ -126,21 +160,46 @@ export function InputArea(props: InputAreaProps) {
     // Don't capture keys when any menu/modal is open
     if (isMenuOpen()) return;
 
-    if (evt.name === "/" && !app.inputBuffer()) {
+    // Ctrl+V: attempt clipboard image paste first, then fall through to text paste
+    if (matchesAction(evt, "input_paste")) {
+      handleImagePaste().then((handled) => {
+        // If an image was found, the placeholder is already inserted.
+        // If not, the default terminal paste (text) has already fired.
+        if (handled) {
+          // Image was pasted — nothing else to do
+        }
+      });
+      // Don't preventDefault — let the terminal's native text paste
+      // fire in parallel. If the clipboard has an image, handleImagePaste
+      // will insert its own placeholder; the text paste will be empty/no-op.
+      return;
+    }
+
+    // Command menu from "/" — works at any point in the input
+    if (matchesAction(evt, "command_menu")) {
+      app.insertText("/");
       app.openCommandMenu();
       evt.preventDefault();
       evt.stopPropagation();
       return;
     }
 
-    if (evt.name === "@") {
+    // File picker from "@" — works at any point in the input
+    if (matchesAction(evt, "file_picker")) {
+      app.insertText("@");
       app.setMode("file_picker");
       evt.preventDefault();
       evt.stopPropagation();
       return;
     }
 
-    if (evt.name === "return" && !evt.shift && !evt.ctrl && !evt.meta) {
+    // Submit input
+    if (
+      matchesAction(evt, "input_submit") &&
+      !evt.shift &&
+      !evt.ctrl &&
+      !evt.meta
+    ) {
       handleSubmit();
       evt.preventDefault();
       evt.stopPropagation();
@@ -157,8 +216,13 @@ export function InputArea(props: InputAreaProps) {
       if (inputRef) inputRef.clear();
       app.setInputBuffer("");
       clearPastedBlocks();
+      // NOTE: Do NOT clear pasted images here — the message handler reads them
+      // asynchronously and clears them after consuming. Clearing here would race
+      // and cause images to be silently dropped.
     }
   };
+
+  const imageCount = createMemo(() => app.pastedImages().length);
 
   /**
    * Handle paste events - summarize large pastes
@@ -238,21 +302,42 @@ export function InputArea(props: InputAreaProps) {
           onKeyDown={(evt) => {
             // Don't capture keys when any menu/modal is open
             if (isMenuOpen()) return;
-            if (evt.name === "return" && !evt.shift && !evt.ctrl && !evt.meta) {
+            if (
+              matchesAction(evt, "input_submit") &&
+              !evt.shift &&
+              !evt.ctrl &&
+              !evt.meta
+            ) {
               handleSubmit();
               evt.preventDefault();
             }
-            if (evt.name === "/" && !app.inputBuffer()) {
+            if (matchesAction(evt, "command_menu")) {
+              app.insertText("/");
               app.openCommandMenu();
               evt.preventDefault();
             }
-            if (evt.name === "@") {
+            if (matchesAction(evt, "file_picker")) {
+              app.insertText("@");
               app.setMode("file_picker");
               evt.preventDefault();
             }
           }}
           onSubmit={handleSubmit}
         />
+        <Show when={imageCount() > 0}>
+          <box flexDirection="row" paddingTop={0}>
+            <For each={app.pastedImages()}>
+              {(img) => (
+                <text fg={theme.colors.accent}>
+                  {` [${img.mediaType.split("/")[1].toUpperCase()} ${formatImageSize(getImageSizeFromBase64(img.data))}]`}
+                </text>
+              )}
+            </For>
+            <text fg={theme.colors.textDim}>
+              {` (${imageCount()} image${imageCount() > 1 ? "s" : ""} attached)`}
+            </text>
+          </box>
+        </Show>
       </Show>
     </box>
   );

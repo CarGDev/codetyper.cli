@@ -4,12 +4,44 @@
 
 export type ProviderName = "copilot" | "ollama";
 
+/** A text content part in a multimodal message */
+export interface TextContentPart {
+  type: "text";
+  text: string;
+}
+
+/** An image content part in a multimodal message (OpenAI-compatible) */
+export interface ImageContentPart {
+  type: "image_url";
+  image_url: {
+    url: string; // data:image/png;base64,... or a URL
+    detail?: "auto" | "low" | "high";
+  };
+}
+
+/** A single part of multimodal message content */
+export type ContentPart = TextContentPart | ImageContentPart;
+
+/** Message content can be a simple string or an array of content parts */
+export type MessageContent = string | ContentPart[];
+
 export interface Message {
   role: "system" | "user" | "assistant" | "tool";
-  content: string;
+  content: MessageContent;
   tool_call_id?: string;
   tool_calls?: ToolCall[];
 }
+
+/**
+ * Helper: extract plain text from message content regardless of format
+ */
+export const getMessageText = (content: MessageContent): string => {
+  if (typeof content === "string") return content;
+  return content
+    .filter((p): p is TextContentPart => p.type === "text")
+    .map((p) => p.text)
+    .join("");
+};
 
 export interface ToolCall {
   id: string;
@@ -53,10 +85,14 @@ export interface ChatCompletionResponse {
 }
 
 export interface StreamChunk {
-  type: "content" | "tool_call" | "done" | "error" | "model_switched";
+  type: "content" | "tool_call" | "done" | "error" | "model_switched" | "usage";
   content?: string;
   toolCall?: Partial<ToolCall>;
   error?: string;
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+  };
   modelSwitch?: {
     from: string;
     to: string;
