@@ -97,6 +97,7 @@ Full-screen terminal interface with real-time streaming responses.
 - `/` - Open command menu (works anywhere in input)
 - `Ctrl+M` - Toggle interaction mode
 - `Ctrl+T` - Toggle todo panel
+- `Ctrl+O` - Toggle activity panel
 - `Shift+Up/Down` - Scroll log panel
 - `Ctrl+C` (twice) - Exit
 
@@ -465,7 +466,9 @@ bun run lint
 ## Recent Changes (v0.4.2)
 
 - **Pink Purple Theme**: New built-in color theme
+- **Activity Panel Toggle**: `Ctrl+O` to show/hide the activity panel
 - **Image Paste Fix**: Fixed race condition where pasted images were silently dropped
+- **Terminal Exit Fix**: Fixed `997;1n` garbage text appearing on exit
 - **@ and / Anywhere**: File picker and command menu now work at any cursor position
 - **Plan Approval Gate**: User confirmation before agent executes plans
 - **Execution Control**: Pause, resume, and abort agent execution

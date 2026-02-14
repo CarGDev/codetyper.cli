@@ -20,6 +20,7 @@ import {
   registerExitHandlers,
   exitFullscreen,
   clearScreen,
+  drainStdin,
 } from "@utils/core/terminal";
 import { createCallbacks } from "@commands/chat-tui";
 import { agentLoader } from "@services/agent-loader";
@@ -35,7 +36,9 @@ const createHandleExit = (): (() => void) => (): void => {
   exitFullscreen();
   clearScreen();
   console.log("Goodbye!");
-  process.exit(0);
+  // Drain stdin to consume pending terminal responses (e.g. DECRQM 997;1n)
+  // before exiting, so they don't echo as garbage text in the shell
+  drainStdin().then(() => process.exit(0));
 };
 
 const createHandleModelSelect =

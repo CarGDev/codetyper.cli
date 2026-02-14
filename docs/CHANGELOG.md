@@ -10,12 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Pink Purple Theme**: New built-in theme with hot pink primary, purple secondary, and deep magenta accent on a dark plum background
+- **Activity Panel Toggle**: `Ctrl+O` keybind to show/hide the activity panel (context/tokens, modified files)
 
 ### Fixed
 
 - **Image Paste Race Condition**: Fixed images being silently dropped when pasting via Ctrl+V. The `clearPastedImages()` call in the input area was racing with the async message handler, clearing images before they could be read and attached to the message
 - **@ File Picker**: Now works at any cursor position in the input, not just when the input is empty
 - **/ Command Menu**: Now works at any cursor position in the input, not just when the input is empty
+- **Terminal Garbage on Exit**: Fixed `997;1n` text appearing on exit, caused by unanswered DECRQM mode 997 query from the TUI renderer
 
 ### Planned
 

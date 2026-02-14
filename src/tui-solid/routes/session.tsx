@@ -282,7 +282,9 @@ export function Session(props: SessionProps) {
           <LogPanel />
         </box>
 
-        <ActivityPanel />
+        <Show when={app.activityVisible()}>
+          <ActivityPanel />
+        </Show>
 
         <Show when={app.todosVisible() && props.plan}>
           <TodoPanel plan={props.plan ?? null} visible={app.todosVisible()} />
@@ -303,9 +305,7 @@ export function Session(props: SessionProps) {
         />
       </Show>
 
-      <Show
-        when={app.mode() === "plan_approval" && app.planApprovalPrompt()}
-      >
+      <Show when={app.mode() === "plan_approval" && app.planApprovalPrompt()}>
         <PlanApprovalModal
           prompt={app.planApprovalPrompt()!}
           onRespond={props.onPlanApprovalResponse}
@@ -314,7 +314,11 @@ export function Session(props: SessionProps) {
       </Show>
 
       <StatusBar />
-      <Show when={app.mode() !== "permission_prompt" && app.mode() !== "plan_approval"}>
+      <Show
+        when={
+          app.mode() !== "permission_prompt" && app.mode() !== "plan_approval"
+        }
+      >
         <InputArea onSubmit={props.onSubmit} />
       </Show>
 

@@ -44,6 +44,7 @@ interface AppStore {
   availableModels: ProviderModel[];
   sessionStats: SessionStats;
   todosVisible: boolean;
+  activityVisible: boolean;
   debugLogVisible: boolean;
   interruptPending: boolean;
   exitPending: boolean;
@@ -89,6 +90,7 @@ interface AppContextValue {
   availableModels: Accessor<ProviderModel[]>;
   sessionStats: Accessor<SessionStats>;
   todosVisible: Accessor<boolean>;
+  activityVisible: Accessor<boolean>;
   debugLogVisible: Accessor<boolean>;
   interruptPending: Accessor<boolean>;
   exitPending: Accessor<boolean>;
@@ -172,6 +174,7 @@ interface AppContextValue {
 
   // UI state actions
   toggleTodos: () => void;
+  toggleActivity: () => void;
   toggleDebugLog: () => void;
   setInterruptPending: (pending: boolean) => void;
   setExitPending: (pending: boolean) => void;
@@ -276,6 +279,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         availableModels: [],
         sessionStats: createInitialSessionStats(),
         todosVisible: true,
+        activityVisible: true,
         debugLogVisible: false,
         interruptPending: false,
         exitPending: false,
@@ -331,6 +335,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
       const availableModels = (): ProviderModel[] => store.availableModels;
       const sessionStats = (): SessionStats => store.sessionStats;
       const todosVisible = (): boolean => store.todosVisible;
+      const activityVisible = (): boolean => store.activityVisible;
       const debugLogVisible = (): boolean => store.debugLogVisible;
       const interruptPending = (): boolean => store.interruptPending;
       const exitPending = (): boolean => store.exitPending;
@@ -700,6 +705,10 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         setStore("todosVisible", !store.todosVisible);
       };
 
+      const toggleActivity = (): void => {
+        setStore("activityVisible", !store.activityVisible);
+      };
+
       const toggleDebugLog = (): void => {
         setStore("debugLogVisible", !store.debugLogVisible);
       };
@@ -889,6 +898,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         availableModels,
         sessionStats,
         todosVisible,
+        activityVisible,
         debugLogVisible,
         interruptPending,
         exitPending,
@@ -990,6 +1000,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
 
         // UI state actions
         toggleTodos,
+        toggleActivity,
         toggleDebugLog,
         setInterruptPending,
         setExitPending,
@@ -1085,6 +1096,7 @@ export const appStore = {
       sessionStats: storeRef.sessionStats(),
       cascadeEnabled: storeRef.cascadeEnabled(),
       todosVisible: storeRef.todosVisible(),
+      activityVisible: storeRef.activityVisible(),
       debugLogVisible: storeRef.debugLogVisible(),
       interruptPending: storeRef.interruptPending(),
       exitPending: storeRef.exitPending(),
@@ -1215,6 +1227,11 @@ export const appStore = {
   toggleTodos: (): void => {
     if (!storeRef) return;
     storeRef.toggleTodos();
+  },
+
+  toggleActivity: (): void => {
+    if (!storeRef) return;
+    storeRef.toggleActivity();
   },
 
   toggleDebugLog: (): void => {

@@ -20,6 +20,56 @@ let spinner: Ora | null = null;
 let exitHandlersRegistered = false;
 
 /**
+ * Drain any pending stdin data (e.g. DECRQM responses from @opentui/core's
+ * theme-mode detection that queries mode 997). The terminal responds with
+ * `\x1b[?997;1n` or `\x1b[?997;2n`, but if the TUI renderer has already
+ * torn down its stdin listener and disabled raw mode, those bytes echo as
+ * visible garbage ("997;1n") in the shell.
+ *
+ * Strategy: re-enable raw mode so the response doesn't echo, attach a
+ * temporary listener to swallow any bytes that arrive, wait long enough
+ * for the terminal to respond, then clean up.
+ */
+export const drainStdin = (): Promise<void> =>
+  new Promise((resolve) => {
+    try {
+      if (!process.stdin.isTTY) {
+        resolve();
+        return;
+      }
+
+      // Re-enable raw mode so pending responses don't echo
+      process.stdin.setRawMode(true);
+      process.stdin.resume();
+      process.stdin.setEncoding("utf8");
+
+      // Swallow any bytes that arrive
+      const sink = (): void => {};
+      process.stdin.on("data", sink);
+
+      // Wait for in-flight terminal responses then clean up
+      setTimeout(() => {
+        try {
+          process.stdin.removeListener("data", sink);
+          // Read and discard any remaining buffered data
+          while (process.stdin.read() !== null) {
+            // drain
+          }
+          process.stdin.setRawMode(false);
+          process.stdin.pause();
+          // Unref so this doesn't keep the process alive
+          process.stdin.unref();
+        } catch {
+          // Ignore — stdin may already be destroyed
+        }
+        resolve();
+      }, 100);
+    } catch {
+      resolve();
+    }
+  });
+
+/**
  * Emergency cleanup for terminal state on process exit
  * Uses writeSync to fd 1 (stdout) to guarantee bytes are flushed
  * before the process terminates

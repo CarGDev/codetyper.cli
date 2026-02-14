@@ -113,7 +113,7 @@ export const DEFAULT_KEYBINDS: Readonly<Record<KeybindAction, string>> = {
 
   // Sidebar / panels
   sidebar_toggle: "<leader>b",
-  activity_toggle: "<leader>s",
+  activity_toggle: "ctrl+o",
 } as const;
 
 /**

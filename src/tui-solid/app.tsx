@@ -286,8 +286,19 @@ function AppContent(props: AppProps) {
       return;
     }
 
+    // Toggle activity panel
+    if (matchesAction(evt, "activity_toggle")) {
+      app.toggleActivity();
+      evt.preventDefault();
+      return;
+    }
+
     // Command menu trigger from "/" when input is empty
-    if (matchesAction(evt, "command_menu") && app.mode() === "idle" && !app.inputBuffer()) {
+    if (
+      matchesAction(evt, "command_menu") &&
+      app.mode() === "idle" &&
+      !app.inputBuffer()
+    ) {
       app.openCommandMenu();
       evt.preventDefault();
       return;
