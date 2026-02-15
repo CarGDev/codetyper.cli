@@ -17,8 +17,6 @@ import {
   getExecutionState,
 } from "@services/chat-tui-service";
 import { matchesAction } from "@services/keybind-resolver";
-import { TERMINAL_RESET } from "@constants/terminal";
-import { generateSessionSummary } from "@utils/core/session-stats";
 import { copyToClipboard } from "@services/clipboard/text-clipboard";
 import versionData from "@/version.json";
 import { ExitProvider, useExit } from "@tui-solid/context/exit";
@@ -27,7 +25,6 @@ import {
   AppStoreProvider,
   useAppStore,
   setAppStoreRef,
-  appStore,
 } from "@tui-solid/context/app";
 import { ThemeProvider, useTheme } from "@tui-solid/context/theme";
 import { KeybindProvider } from "@tui-solid/context/keybind";
@@ -521,6 +518,7 @@ function App(props: AppProps) {
   return (
     <ErrorBoundary fallback={(err: Error) => <ErrorFallback error={err} />}>
       <ExitProvider
+        sessionId={props.sessionId}
         onExit={() => props.onExit({ exitCode: 0, sessionId: props.sessionId })}
       >
         <RouteProvider>
@@ -575,51 +573,10 @@ export interface TuiRenderOptions extends TuiInput {
 
 export function tui(options: TuiRenderOptions): Promise<TuiOutput> {
   return new Promise<TuiOutput>((resolve) => {
-    const { writeSync } = require("fs");
-
     const handleExit = (output: TuiOutput): void => {
-      try {
-        // First, drain any pending terminal responses (e.g. DECRQM 997;1n)
-        // while still in raw mode, before exiting alternate screen
-        const drainTimeout = 50; // 50ms is enough for terminal responses
-        
-        const finishExit = (): void => {
-          writeSync(1, TERMINAL_RESET);
-          
-          const state = appStore.getState();
-          const summary = generateSessionSummary({
-            sessionId: output.sessionId ?? "unknown",
-            sessionStats: state.sessionStats,
-            modifiedFiles: state.modifiedFiles,
-            modelName: state.model,
-            providerName: state.provider,
-          });
-          writeSync(1, summary + "\n");
-          resolve(output);
-        };
-        
-        // If stdin is TTY and in raw mode, try to drain pending data
-        if (process.stdin.isTTY && process.stdin.isRaw) {
-          const sink = (): void => {};
-          process.stdin.on("data", sink);
-          
-          const cleanup = (): void => {
-            process.stdin.removeListener("data", sink);
-            // Read and discard any buffered data
-            while (process.stdin.read() !== null) {
-              // drain
-            }
-            finishExit();
-          };
-          
-          setTimeout(cleanup, drainTimeout);
-        } else {
-          finishExit();
-        }
-      } catch {
-        // Ignore - stdout may already be closed
-        resolve(output);
-      }
+      // ExitProvider handles the summary display and process exit
+      // We just resolve the promise here for cleanup
+      resolve(output);
     };
 
     render(() => <App {...options} onExit={handleExit} />, {
