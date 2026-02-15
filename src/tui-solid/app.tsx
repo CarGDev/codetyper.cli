@@ -579,21 +579,47 @@ export function tui(options: TuiRenderOptions): Promise<TuiOutput> {
 
     const handleExit = (output: TuiOutput): void => {
       try {
-        writeSync(1, TERMINAL_RESET);
-
-        const state = appStore.getState();
-        const summary = generateSessionSummary({
-          sessionId: output.sessionId ?? "unknown",
-          sessionStats: state.sessionStats,
-          modifiedFiles: state.modifiedFiles,
-          modelName: state.model,
-          providerName: state.provider,
-        });
-        writeSync(1, summary);
+        // First, drain any pending terminal responses (e.g. DECRQM 997;1n)
+        // while still in raw mode, before exiting alternate screen
+        const drainTimeout = 50; // 50ms is enough for terminal responses
+        
+        const finishExit = (): void => {
+          writeSync(1, TERMINAL_RESET);
+          
+          const state = appStore.getState();
+          const summary = generateSessionSummary({
+            sessionId: output.sessionId ?? "unknown",
+            sessionStats: state.sessionStats,
+            modifiedFiles: state.modifiedFiles,
+            modelName: state.model,
+            providerName: state.provider,
+          });
+          writeSync(1, summary + "\n");
+          resolve(output);
+        };
+        
+        // If stdin is TTY and in raw mode, try to drain pending data
+        if (process.stdin.isTTY && process.stdin.isRaw) {
+          const sink = (): void => {};
+          process.stdin.on("data", sink);
+          
+          const cleanup = (): void => {
+            process.stdin.removeListener("data", sink);
+            // Read and discard any buffered data
+            while (process.stdin.read() !== null) {
+              // drain
+            }
+            finishExit();
+          };
+          
+          setTimeout(cleanup, drainTimeout);
+        } else {
+          finishExit();
+        }
       } catch {
         // Ignore - stdout may already be closed
+        resolve(output);
       }
-      resolve(output);
     };
 
     render(() => <App {...options} onExit={handleExit} />, {

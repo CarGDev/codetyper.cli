@@ -18,7 +18,6 @@ import { getThinkingMessage } from "@constants/status-messages";
 import {
   enterFullscreen,
   registerExitHandlers,
-  drainStdin,
 } from "@utils/core/terminal";
 import { createCallbacks } from "@commands/chat-tui";
 import { agentLoader } from "@services/agent-loader";
@@ -32,9 +31,8 @@ interface ExecuteContext {
 const createHandleExit = (): (() => void) => (): void => {
   cleanupPermissionHandler();
   // Note: Session stats are displayed by the TUI exit handler in app.tsx
-  // Drain stdin to consume pending terminal responses (e.g. DECRQM 997;1n)
-  // before exiting, so they don't echo as garbage text in the shell
-  drainStdin().then(() => process.exit(0));
+  // The TUI handles terminal cleanup and draining stdin before exit
+  process.exit(0);
 };
 
 const createHandleModelSelect =
