@@ -18,7 +18,7 @@ import {
 } from "@services/chat-tui-service";
 import { matchesAction } from "@services/keybind-resolver";
 import { TERMINAL_RESET } from "@constants/terminal";
-import { formatExitMessage } from "@services/exit-message";
+import { generateSessionSummary } from "@utils/core/session-stats";
 import { copyToClipboard } from "@services/clipboard/text-clipboard";
 import versionData from "@/version.json";
 import { ExitProvider, useExit } from "@tui-solid/context/exit";
@@ -582,14 +582,14 @@ export function tui(options: TuiRenderOptions): Promise<TuiOutput> {
         writeSync(1, TERMINAL_RESET);
 
         const state = appStore.getState();
-        const firstUserLog = state?.logs?.find(
-          (log: { type: string }) => log.type === "user",
-        );
-        const sessionTitle = firstUserLog?.content;
-        const exitMsg = formatExitMessage(output.sessionId, sessionTitle);
-        if (exitMsg) {
-          writeSync(1, exitMsg);
-        }
+        const summary = generateSessionSummary({
+          sessionId: output.sessionId ?? "unknown",
+          sessionStats: state.sessionStats,
+          modifiedFiles: state.modifiedFiles,
+          modelName: state.model,
+          providerName: state.provider,
+        });
+        writeSync(1, summary);
       } catch {
         // Ignore - stdout may already be closed
       }

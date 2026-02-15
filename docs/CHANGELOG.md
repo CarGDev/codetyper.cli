@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Pink Purple Theme**: New built-in theme with hot pink primary, purple secondary, and deep magenta accent on a dark plum background
 - **Activity Panel Toggle**: `Ctrl+O` keybind to show/hide the activity panel (context/tokens, modified files)
+- **Session Stats on Exit**: Display detailed session statistics when quitting the CLI
+  - Total usage estimate and Premium requests
+  - API time spent and total session time
+  - Total code changes (+additions/-deletions)
+  - Breakdown by AI model with token usage (input/output/cached)
+  - Resume command with session ID for easy session continuation
 
 ### Fixed
 

@@ -247,6 +247,16 @@ export interface LearningResponse {
 // Session Types
 // ============================================================================
 
+/**
+ * Per-model token usage tracking
+ */
+export interface ModelUsage {
+  modelId: string;
+  inputTokens: number;
+  outputTokens: number;
+  cachedTokens?: number;
+}
+
 export interface SessionStats {
   startTime: number;
   inputTokens: number;
@@ -254,6 +264,12 @@ export interface SessionStats {
   thinkingStartTime: number | null;
   lastThinkingDuration: number;
   contextMaxTokens: number;
+  /** Total time spent in API calls (milliseconds) */
+  apiTimeSpent: number;
+  /** API call start time for tracking (null if not in a call) */
+  apiCallStartTime: number | null;
+  /** Per-model token usage breakdown */
+  modelUsage: ModelUsage[];
 }
 
 // ============================================================================

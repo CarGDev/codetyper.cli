@@ -18,8 +18,6 @@ import { getThinkingMessage } from "@constants/status-messages";
 import {
   enterFullscreen,
   registerExitHandlers,
-  exitFullscreen,
-  clearScreen,
   drainStdin,
 } from "@utils/core/terminal";
 import { createCallbacks } from "@commands/chat-tui";
@@ -33,9 +31,7 @@ interface ExecuteContext {
 
 const createHandleExit = (): (() => void) => (): void => {
   cleanupPermissionHandler();
-  exitFullscreen();
-  clearScreen();
-  console.log("Goodbye!");
+  // Note: Session stats are displayed by the TUI exit handler in app.tsx
   // Drain stdin to consume pending terminal responses (e.g. DECRQM 997;1n)
   // before exiting, so they don't echo as garbage text in the shell
   drainStdin().then(() => process.exit(0));

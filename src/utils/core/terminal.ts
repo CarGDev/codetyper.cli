@@ -7,7 +7,7 @@ import chalk from "chalk";
 import ora, { Ora } from "ora";
 import boxen from "boxen";
 import { TERMINAL_SEQUENCES } from "@constants/ui";
-import { TERMINAL_RESET } from "@constants/terminal";
+import { TERMINAL_RESET, DISABLE_MOUSE_TRACKING } from "@constants/terminal";
 
 /**
  * Spinner state
@@ -42,6 +42,9 @@ export const drainStdin = (): Promise<void> =>
       process.stdin.setRawMode(true);
       process.stdin.resume();
       process.stdin.setEncoding("utf8");
+
+      // Disable mouse tracking to prevent mouse events from leaking to shell
+      process.stdout.write(DISABLE_MOUSE_TRACKING);
 
       // Swallow any bytes that arrive
       const sink = (): void => {};

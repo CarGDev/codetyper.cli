@@ -465,6 +465,9 @@ bun run lint
 
 ## Recent Changes (v0.4.2)
 
+- **Session Stats on Exit**: Displays detailed session summary when quitting:
+  - Total API time spent, session duration, code changes (+/-)
+  - Per-model token usage breakdown with resume command
 - **Pink Purple Theme**: New built-in color theme
 - **Activity Panel Toggle**: `Ctrl+O` to show/hide the activity panel
 - **Image Paste Fix**: Fixed race condition where pasted images were silently dropped

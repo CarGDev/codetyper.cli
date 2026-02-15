@@ -169,6 +169,9 @@ interface AppContextValue {
   startThinking: () => void;
   stopThinking: () => void;
   addTokens: (input: number, output: number) => void;
+  startApiCall: () => void;
+  stopApiCall: () => void;
+  addTokensWithModel: (modelId: string, input: number, output: number, cached?: number) => void;
   resetSessionStats: () => void;
   setContextMaxTokens: (maxTokens: number) => void;
 
@@ -234,6 +237,9 @@ const createInitialSessionStats = (): SessionStats => ({
   thinkingStartTime: null,
   lastThinkingDuration: 0,
   contextMaxTokens: 128000, // Default, updated when model is selected
+  apiTimeSpent: 0,
+  apiCallStartTime: null,
+  modelUsage: [],
 });
 
 const createInitialStreamingState = (): StreamingLogState => ({
@@ -689,6 +695,53 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         });
       };
 
+      const startApiCall = (): void => {
+        setStore("sessionStats", {
+          ...store.sessionStats,
+          apiCallStartTime: Date.now(),
+        });
+      };
+
+      const stopApiCall = (): void => {
+        const elapsed = store.sessionStats.apiCallStartTime
+          ? Date.now() - store.sessionStats.apiCallStartTime
+          : 0;
+        setStore("sessionStats", {
+          ...store.sessionStats,
+          apiTimeSpent: store.sessionStats.apiTimeSpent + elapsed,
+          apiCallStartTime: null,
+        });
+      };
+
+      const addTokensWithModel = (
+        modelId: string,
+        input: number,
+        output: number,
+        cached?: number,
+      ): void => {
+        setStore(
+          produce((s) => {
+            const existing = s.sessionStats.modelUsage.find(
+              (m) => m.modelId === modelId,
+            );
+            if (existing) {
+              existing.inputTokens += input;
+              existing.outputTokens += output;
+              if (cached) existing.cachedTokens = (existing.cachedTokens ?? 0) + cached;
+            } else {
+              s.sessionStats.modelUsage.push({
+                modelId,
+                inputTokens: input,
+                outputTokens: output,
+                cachedTokens: cached,
+              });
+            }
+            s.sessionStats.inputTokens += input;
+            s.sessionStats.outputTokens += output;
+          }),
+        );
+      };
+
       const resetSessionStats = (): void => {
         setStore("sessionStats", createInitialSessionStats());
       };
@@ -982,6 +1035,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         updateMcpServerStatus,
 
         // Modified file tracking
+        modifiedFiles: () => store.modifiedFiles,
         addModifiedFile,
         clearModifiedFiles,
 
@@ -995,6 +1049,9 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         startThinking,
         stopThinking,
         addTokens,
+        startApiCall,
+        stopApiCall,
+        addTokensWithModel,
         resetSessionStats,
         setContextMaxTokens,
 
@@ -1062,6 +1119,7 @@ const defaultAppState = {
   suggestions: createInitialSuggestionState(),
   mcpServers: [] as MCPServerDisplay[],
   pastedImages: [] as PastedImage[],
+  modifiedFiles: [] as ModifiedFileEntry[],
   brain: {
     status: "disconnected" as BrainConnectionStatus,
     user: null,
@@ -1105,6 +1163,7 @@ export const appStore = {
       suggestions: storeRef.suggestions(),
       mcpServers: storeRef.mcpServers(),
       pastedImages: storeRef.pastedImages(),
+      modifiedFiles: storeRef.modifiedFiles(),
       brain: storeRef.brain(),
     };
   },
@@ -1212,6 +1271,21 @@ export const appStore = {
   addTokens: (input: number, output: number): void => {
     if (!storeRef) return;
     storeRef.addTokens(input, output);
+  },
+
+  startApiCall: (): void => {
+    if (!storeRef) return;
+    storeRef.startApiCall();
+  },
+
+  stopApiCall: (): void => {
+    if (!storeRef) return;
+    storeRef.stopApiCall();
+  },
+
+  addTokensWithModel: (modelId: string, input: number, output: number, cached?: number): void => {
+    if (!storeRef) return;
+    storeRef.addTokensWithModel(modelId, input, output, cached);
   },
 
   resetSessionStats: (): void => {
