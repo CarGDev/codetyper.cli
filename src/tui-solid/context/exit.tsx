@@ -1,12 +1,9 @@
 import { createSignal, onCleanup } from "solid-js";
 import { useRenderer } from "@opentui/solid";
 import { createSimpleContext } from "./helper";
-import { generateSessionSummary } from "@utils/core/session-stats";
-import { appStore } from "./app";
 
 interface ExitContextInput extends Record<string, unknown> {
-  sessionId?: string;
-  onExit?: () => void;
+  onExit?: () => void | Promise<void>;
 }
 
 interface ExitContextValue {
@@ -16,6 +13,8 @@ interface ExitContextValue {
   requestExit: () => void;
   cancelExit: () => void;
   confirmExit: () => void;
+  setExitMessage: (message: string | undefined) => void;
+  getExitMessage: () => string | undefined;
 }
 
 export const { provider: ExitProvider, use: useExit } = createSimpleContext<
@@ -28,32 +27,41 @@ export const { provider: ExitProvider, use: useExit } = createSimpleContext<
     const [exitCode, setExitCode] = createSignal(0);
     const [isExiting, setIsExiting] = createSignal(false);
     const [exitRequested, setExitRequested] = createSignal(false);
+    const [exitMessage, setExitMessageState] = createSignal<string | undefined>(undefined);
 
-    const exit = (code = 0): void => {
+    const exit = async (code = 0): Promise<void> => {
       setExitCode(code);
       setIsExiting(true);
       
-      // Generate and store exit message before destroying renderer
-      const state = appStore.getState();
-      const summary = generateSessionSummary({
-        sessionId: props.sessionId ?? "unknown",
-        sessionStats: state.sessionStats,
-        modifiedFiles: state.modifiedFiles,
-        modelName: state.model,
-        providerName: state.provider,
-      });
+      // Reset window title before destroying renderer
+      try {
+        renderer.setTerminalTitle("");
+      } catch {
+        // Ignore
+      }
       
-      // Destroy renderer first to stop rendering
+      // Destroy renderer to stop rendering and exit alternate screen
       renderer.destroy();
       
-      // Call the onExit callback
-      props.onExit?.();
+      // Call the onExit callback (may be async)
+      await props.onExit?.();
       
-      // Write the summary after renderer is destroyed
-      process.stdout.write(summary + "\n");
+      // Write the stored exit message after renderer is destroyed
+      const message = exitMessage();
+      if (message) {
+        process.stdout.write(message + "\n");
+      }
       
       // Exit the process
       process.exit(code);
+    };
+
+    const setExitMessage = (message: string | undefined): void => {
+      setExitMessageState(message);
+    };
+
+    const getExitMessage = (): string | undefined => {
+      return exitMessage();
     };
 
     const requestExit = (): void => {
@@ -73,6 +81,7 @@ export const { provider: ExitProvider, use: useExit } = createSimpleContext<
     onCleanup(() => {
       setIsExiting(false);
       setExitRequested(false);
+      setExitMessageState(undefined);
     });
 
     return {
@@ -82,6 +91,8 @@ export const { provider: ExitProvider, use: useExit } = createSimpleContext<
       requestExit,
       cancelExit,
       confirmExit,
+      setExitMessage,
+      getExitMessage,
     };
   },
 });

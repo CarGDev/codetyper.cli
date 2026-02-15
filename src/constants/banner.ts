@@ -20,7 +20,6 @@ export const BANNER_MINIMAL = [
   "╰───────────────────────────────────────╯",
 ] as const;
 
-// Block-style banner (similar to opencode)
 export const BANNER_BLOCKS = [
   "█▀▀ █▀█ █▀▄ █▀▀ ▀█▀ █▄█ █▀█ █▀▀ █▀█",
   "█   █ █ █ █ █▀▀  █   █  █▀▀ █▀▀ █▀▄",

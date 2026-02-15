@@ -2,7 +2,6 @@
  * Task Agent Tool
  *
  * Allows spawning specialized sub-agents for complex tasks.
- * Implements the agent delegation pattern from claude-code and opencode.
  * Supports parallel execution of up to 3 agents simultaneously.
  */
 
@@ -63,9 +62,7 @@ const taskAgentSchema = z.object({
     .enum(["explore", "implement", "test", "review", "refactor", "plan"])
     .describe("The type of specialized agent to spawn"),
 
-  task: z
-    .string()
-    .describe("The task for the agent to perform"),
+  task: z.string().describe("The task for the agent to perform"),
 
   context_files: z
     .array(z.string())
@@ -124,13 +121,21 @@ const agentQueue: QueuedAgent[] = [];
  * Process the agent queue
  */
 const processQueue = async (): Promise<void> => {
-  while (agentQueue.length > 0 && runningForegroundAgents < MAX_CONCURRENT_AGENTS) {
+  while (
+    agentQueue.length > 0 &&
+    runningForegroundAgents < MAX_CONCURRENT_AGENTS
+  ) {
     const queued = agentQueue.shift();
     if (!queued) break;
 
     runningForegroundAgents++;
 
-    executeAgentInternal(queued.params, queued.systemPrompt, queued.taskPrompt, queued.ctx)
+    executeAgentInternal(
+      queued.params,
+      queued.systemPrompt,
+      queued.taskPrompt,
+      queued.ctx,
+    )
       .then(queued.resolve)
       .catch(queued.reject)
       .finally(() => {
@@ -167,7 +172,7 @@ export const executeTaskAgent = async (
  */
 const buildAgentSystemPrompt = (
   agentType: AgentType,
-  config: typeof AGENT_TYPES[AgentType],
+  config: (typeof AGENT_TYPES)[AgentType],
 ): string => {
   const prompts: Record<AgentType, string> = {
     explore: `You are an EXPLORATION agent. Your task is to quickly understand code.
@@ -267,7 +272,9 @@ const buildTaskPrompt = (params: TaskAgentParams): string => {
   const parts = [`## Task\n${params.task}`];
 
   if (params.context_files?.length) {
-    parts.push(`\n## Context Files\n${params.context_files.map(f => `- ${f}`).join("\n")}`);
+    parts.push(
+      `\n## Context Files\n${params.context_files.map((f) => `- ${f}`).join("\n")}`,
+    );
   }
 
   return parts.join("\n");
@@ -429,7 +436,7 @@ export const getBackgroundAgentStatus = async (
 
   // Check if completed (with short timeout)
   const result = await Promise.race([
-    agent.promise.then(r => ({ completed: true as const, result: r })),
+    agent.promise.then((r) => ({ completed: true as const, result: r })),
     new Promise<{ completed: false }>((resolve) =>
       setTimeout(() => resolve({ completed: false }), 100),
     ),

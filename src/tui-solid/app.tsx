@@ -20,11 +20,13 @@ import { matchesAction } from "@services/keybind-resolver";
 import { copyToClipboard } from "@services/clipboard/text-clipboard";
 import versionData from "@/version.json";
 import { ExitProvider, useExit } from "@tui-solid/context/exit";
+import { generateSessionSummary } from "@utils/core/session-stats";
 import { RouteProvider, useRoute } from "@tui-solid/context/route";
 import {
   AppStoreProvider,
   useAppStore,
   setAppStoreRef,
+  appStore,
 } from "@tui-solid/context/app";
 import { ThemeProvider, useTheme } from "@tui-solid/context/theme";
 import { KeybindProvider } from "@tui-solid/context/keybind";
@@ -115,6 +117,20 @@ function AppContent(props: AppProps) {
   const [fileList, setFileList] = createSignal<string[]>([]);
 
   setAppStoreRef(app);
+
+  // Set exit message reactively (like OpenCode does)
+  // This ensures the message is pre-computed and ready when exit is called
+  createEffect(() => {
+    const state = appStore.getState();
+    const summary = generateSessionSummary({
+      sessionId: props.sessionId ?? "unknown",
+      sessionStats: state.sessionStats,
+      modifiedFiles: state.modifiedFiles,
+      modelName: state.model,
+      providerName: state.provider,
+    });
+    exit.setExitMessage(summary);
+  });
 
   /** Copy selected text to clipboard and clear selection */
   const copySelectionToClipboard = async (): Promise<void> => {
@@ -518,7 +534,6 @@ function App(props: AppProps) {
   return (
     <ErrorBoundary fallback={(err: Error) => <ErrorFallback error={err} />}>
       <ExitProvider
-        sessionId={props.sessionId}
         onExit={() => props.onExit({ exitCode: 0, sessionId: props.sessionId })}
       >
         <RouteProvider>

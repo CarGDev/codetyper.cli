@@ -264,7 +264,6 @@ export const setWorkingDirectory = async (dir: string): Promise<void> => {
 
 /**
  * Create a subagent session (child of a parent session)
- * Used by task_agent for proper session-based isolation like opencode
  */
 export const createSubagentSession = async (
   config: SubagentSessionConfig,
@@ -283,8 +282,9 @@ export const createSubagentSession = async (
   };
 
   // Set working directory
-  (session as SubagentChatSession & { workingDirectory?: string }).workingDirectory =
-    config.workingDirectory;
+  (
+    session as SubagentChatSession & { workingDirectory?: string }
+  ).workingDirectory = config.workingDirectory;
 
   // Save but don't set as current (subagents run independently)
   await saveSession(session);
