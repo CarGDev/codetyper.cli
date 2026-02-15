@@ -2,7 +2,6 @@
  * Agent and Skill Templates
  *
  * Templates for creating new agents and skills in .codetyper/ directories.
- * Based on patterns from claude-code and opencode.
  */
 
 /**
@@ -127,7 +126,16 @@ export const DEFAULT_TOOLS_BY_TYPE = {
   plan: ["glob", "grep", "read"],
   security: ["glob", "grep", "read"],
   documentation: ["glob", "grep", "read", "write"],
-  general: ["glob", "grep", "read", "write", "edit", "bash", "web_search", "web_fetch"],
+  general: [
+    "glob",
+    "grep",
+    "read",
+    "write",
+    "edit",
+    "bash",
+    "web_search",
+    "web_fetch",
+  ],
 } as const;
 
 /**

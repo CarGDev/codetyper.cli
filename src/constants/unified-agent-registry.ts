@@ -199,14 +199,7 @@ export const CLAUDE_CODE_AGENTS: UnifiedAgentDefinition[] = [
     source: "claude-code",
     tier: "balanced",
     mode: "subagent",
-    tools: [
-      "glob",
-      "grep",
-      "read",
-      "web_fetch",
-      "web_search",
-      "todo_write",
-    ],
+    tools: ["glob", "grep", "read", "web_fetch", "web_search", "todo_write"],
     deniedTools: ["edit", "write", "bash"],
     maxTurns: 15,
     color: "yellow",
@@ -220,14 +213,7 @@ export const CLAUDE_CODE_AGENTS: UnifiedAgentDefinition[] = [
     source: "claude-code",
     tier: "balanced",
     mode: "subagent",
-    tools: [
-      "glob",
-      "grep",
-      "read",
-      "web_fetch",
-      "web_search",
-      "todo_write",
-    ],
+    tools: ["glob", "grep", "read", "web_fetch", "web_search", "todo_write"],
     deniedTools: ["edit", "write", "bash"],
     maxTurns: 15,
     color: "green",
@@ -380,15 +366,7 @@ export const CURSOR_AGENTS: UnifiedAgentDefinition[] = [
     source: "cursor",
     tier: "balanced",
     mode: "primary",
-    tools: [
-      "glob",
-      "grep",
-      "read",
-      "edit",
-      "write",
-      "bash",
-      "web_search",
-    ],
+    tools: ["glob", "grep", "read", "edit", "write", "bash", "web_search"],
     maxTurns: 50,
     tags: ["general-purpose", "pair-programming"],
     systemPrompt: `You are a pair programmer. Keep going until the query is completely resolved.
@@ -404,15 +382,7 @@ Never output code unless requested - use edit tools instead.`,
     source: "cursor",
     tier: "balanced",
     mode: "primary",
-    tools: [
-      "glob",
-      "grep",
-      "read",
-      "edit",
-      "write",
-      "bash",
-      "web_search",
-    ],
+    tools: ["glob", "grep", "read", "edit", "write", "bash", "web_search"],
     maxTurns: 50,
     tags: ["cli", "terminal", "interactive"],
     systemPrompt: `You are an interactive CLI tool for software engineering tasks.
@@ -546,18 +516,14 @@ export const getAgentsBySource = (
 /**
  * Get agents by tier
  */
-export const getAgentsByTier = (
-  tier: AgentTier,
-): UnifiedAgentDefinition[] => {
+export const getAgentsByTier = (tier: AgentTier): UnifiedAgentDefinition[] => {
   return UNIFIED_AGENT_REGISTRY.filter((a) => a.tier === tier);
 };
 
 /**
  * Get agents by mode
  */
-export const getAgentsByMode = (
-  mode: AgentMode,
-): UnifiedAgentDefinition[] => {
+export const getAgentsByMode = (mode: AgentMode): UnifiedAgentDefinition[] => {
   return UNIFIED_AGENT_REGISTRY.filter(
     (a) => a.mode === mode || a.mode === "all",
   );
@@ -604,7 +570,15 @@ const mapTier = (tier: AgentTier): "fast" | "balanced" | "thorough" => {
  */
 const mapColor = (
   color?: string,
-): "red" | "green" | "blue" | "yellow" | "cyan" | "magenta" | "white" | "gray" => {
+):
+  | "red"
+  | "green"
+  | "blue"
+  | "yellow"
+  | "cyan"
+  | "magenta"
+  | "white"
+  | "gray" => {
   const validColors = new Set([
     "red",
     "green",
@@ -616,7 +590,15 @@ const mapColor = (
     "gray",
   ]);
   if (color && validColors.has(color)) {
-    return color as "red" | "green" | "blue" | "yellow" | "cyan" | "magenta" | "white" | "gray";
+    return color as
+      | "red"
+      | "green"
+      | "blue"
+      | "yellow"
+      | "cyan"
+      | "magenta"
+      | "white"
+      | "gray";
   }
   return "cyan";
 };

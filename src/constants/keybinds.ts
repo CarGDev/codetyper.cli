@@ -2,7 +2,6 @@
  * Keybind Configuration
  *
  * Defines all configurable keybindings with defaults.
- * Modeled after OpenCode's keybind system with leader key support,
  * comma-separated alternatives, and `<leader>` prefix expansion.
  *
  * Format: "mod+key" or "mod+key,mod+key" for alternatives
@@ -62,9 +61,6 @@ export type KeybindAction =
 // Default Keybinds
 // ============================================================================
 
-/**
- * Default leader key prefix (similar to vim leader or OpenCode's ctrl+x).
- */
 export const DEFAULT_LEADER = "ctrl+x";
 
 /**

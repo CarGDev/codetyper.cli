@@ -2,7 +2,6 @@
  * Activity Panel
  *
  * Right sidebar showing session summary: context usage, modified files, etc.
- * Inspired by OpenCode's clean summary view.
  */
 
 import { For, Show, createMemo } from "solid-js";
@@ -29,8 +28,7 @@ const formatTokenCount = (tokens: number): string => {
   return tokens.toString();
 };
 
-const formatPercent = (value: number): string =>
-  `${Math.round(value)}%`;
+const formatPercent = (value: number): string => `${Math.round(value)}%`;
 
 export function ActivityPanel() {
   const theme = useTheme();
@@ -86,10 +84,7 @@ export function ActivityPanel() {
     >
       {/* Context Section */}
       <box flexDirection="column" marginBottom={1}>
-        <text
-          fg={theme.colors.text}
-          attributes={TextAttributes.BOLD}
-        >
+        <text fg={theme.colors.text} attributes={TextAttributes.BOLD}>
           Context
         </text>
         <box flexDirection="row" marginTop={1}>
@@ -109,24 +104,17 @@ export function ActivityPanel() {
 
       {/* Separator */}
       <box marginBottom={1}>
-        <text fg={theme.colors.border}>
-          {"─".repeat(PANEL_WIDTH - 2)}
-        </text>
+        <text fg={theme.colors.border}>{"─".repeat(PANEL_WIDTH - 2)}</text>
       </box>
 
       {/* Modified Files Section */}
       <box flexDirection="column">
         <box flexDirection="row" justifyContent="space-between">
-          <text
-            fg={theme.colors.text}
-            attributes={TextAttributes.BOLD}
-          >
+          <text fg={theme.colors.text} attributes={TextAttributes.BOLD}>
             Modified Files
           </text>
           <Show when={modifiedFiles().length > 0}>
-            <text fg={theme.colors.textDim}>
-              {modifiedFiles().length}
-            </text>
+            <text fg={theme.colors.textDim}>{modifiedFiles().length}</text>
           </Show>
         </box>
 
@@ -145,15 +133,11 @@ export function ActivityPanel() {
                   </text>
                   <text fg={theme.colors.textDim}> </text>
                   <Show when={file.additions > 0}>
-                    <text fg={theme.colors.success}>
-                      +{file.additions}
-                    </text>
+                    <text fg={theme.colors.success}>+{file.additions}</text>
                   </Show>
                   <Show when={file.deletions > 0}>
                     <text fg={theme.colors.textDim}> </text>
-                    <text fg={theme.colors.error}>
-                      -{file.deletions}
-                    </text>
+                    <text fg={theme.colors.error}>-{file.deletions}</text>
                   </Show>
                 </box>
               )}
@@ -164,15 +148,11 @@ export function ActivityPanel() {
           <box marginTop={1}>
             <text fg={theme.colors.textDim}>Total: </text>
             <Show when={totalChanges().additions > 0}>
-              <text fg={theme.colors.success}>
-                +{totalChanges().additions}
-              </text>
+              <text fg={theme.colors.success}>+{totalChanges().additions}</text>
             </Show>
             <Show when={totalChanges().deletions > 0}>
               <text fg={theme.colors.textDim}> </text>
-              <text fg={theme.colors.error}>
-                -{totalChanges().deletions}
-              </text>
+              <text fg={theme.colors.error}>-{totalChanges().deletions}</text>
             </Show>
           </box>
         </Show>

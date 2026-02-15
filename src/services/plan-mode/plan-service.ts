@@ -2,7 +2,6 @@
  * Plan Mode Service
  *
  * Manages the plan approval workflow for complex tasks.
- * Implements the pattern from claude-code and opencode where
  * complex operations require user approval before execution.
  */
 
@@ -50,14 +49,7 @@ const COMPLEXITY_KEYWORDS = {
     "system",
     "integration",
   ],
-  moderate: [
-    "feature",
-    "component",
-    "service",
-    "api",
-    "endpoint",
-    "module",
-  ],
+  moderate: ["feature", "component", "service", "api", "endpoint", "module"],
 };
 
 /**
@@ -71,7 +63,7 @@ export const analyzeTask = (
   const reasons: string[] = [];
 
   // Check for critical keywords
-  const hasCriticalKeyword = COMPLEXITY_KEYWORDS.critical.some(k =>
+  const hasCriticalKeyword = COMPLEXITY_KEYWORDS.critical.some((k) =>
     lowerTask.includes(k),
   );
   if (hasCriticalKeyword) {
@@ -79,7 +71,7 @@ export const analyzeTask = (
   }
 
   // Check for complex keywords
-  const hasComplexKeyword = COMPLEXITY_KEYWORDS.complex.some(k =>
+  const hasComplexKeyword = COMPLEXITY_KEYWORDS.complex.some((k) =>
     lowerTask.includes(k),
   );
   if (hasComplexKeyword) {
@@ -87,7 +79,7 @@ export const analyzeTask = (
   }
 
   // Check for always-require operations
-  const matchesAlwaysRequire = criteria.alwaysRequireFor.some(op => {
+  const matchesAlwaysRequire = criteria.alwaysRequireFor.some((op) => {
     const opKeywords: Record<string, string[]> = {
       delete: ["delete", "remove", "drop"],
       refactor: ["refactor", "restructure", "rewrite"],
@@ -96,14 +88,14 @@ export const analyzeTask = (
       database: ["database", "migration", "schema"],
       config: ["config", "environment", "settings"],
     };
-    return opKeywords[op]?.some(k => lowerTask.includes(k));
+    return opKeywords[op]?.some((k) => lowerTask.includes(k));
   });
   if (matchesAlwaysRequire) {
     reasons.push("Task matches always-require-approval criteria");
   }
 
   // Check for skip-approval patterns
-  const matchesSkipApproval = criteria.skipApprovalFor.some(op => {
+  const matchesSkipApproval = criteria.skipApprovalFor.some((op) => {
     const skipPatterns: Record<string, RegExp> = {
       single_file_edit: /^(fix|update|change|modify)\s+(the\s+)?(\w+\.\w+)$/i,
       add_comment: /^add\s+(a\s+)?comment/i,
@@ -119,7 +111,7 @@ export const analyzeTask = (
     complexity = "critical";
   } else if (hasComplexKeyword || matchesAlwaysRequire) {
     complexity = "complex";
-  } else if (COMPLEXITY_KEYWORDS.moderate.some(k => lowerTask.includes(k))) {
+  } else if (COMPLEXITY_KEYWORDS.moderate.some((k) => lowerTask.includes(k))) {
     complexity = "moderate";
   } else {
     complexity = "simple";
@@ -128,7 +120,9 @@ export const analyzeTask = (
   // Determine if plan approval is required
   const requiresPlanApproval =
     !matchesSkipApproval &&
-    (complexity === "critical" || complexity === "complex" || reasons.length > 0);
+    (complexity === "critical" ||
+      complexity === "complex" ||
+      reasons.length > 0);
 
   // Suggest approach
   const suggestedApproach = requiresPlanApproval
@@ -262,9 +256,15 @@ export const submitPlanForApproval = (
 
   for (const step of plan.steps) {
     for (const file of step.filesAffected) {
-      if (step.title.toLowerCase().includes("create") || step.title.toLowerCase().includes("add")) {
+      if (
+        step.title.toLowerCase().includes("create") ||
+        step.title.toLowerCase().includes("add")
+      ) {
         filesCreated.add(file);
-      } else if (step.title.toLowerCase().includes("delete") || step.title.toLowerCase().includes("remove")) {
+      } else if (
+        step.title.toLowerCase().includes("delete") ||
+        step.title.toLowerCase().includes("remove")
+      ) {
         filesDeleted.add(file);
       } else {
         filesModified.add(file);
@@ -286,10 +286,7 @@ export const submitPlanForApproval = (
 /**
  * Approve a plan
  */
-export const approvePlan = (
-  planId: string,
-  message?: string,
-): boolean => {
+export const approvePlan = (planId: string, message?: string): boolean => {
   const plan = activePlans.get(planId);
   if (!plan || plan.status !== "pending") {
     return false;
@@ -307,10 +304,7 @@ export const approvePlan = (
 /**
  * Reject a plan
  */
-export const rejectPlan = (
-  planId: string,
-  reason: string,
-): boolean => {
+export const rejectPlan = (planId: string, reason: string): boolean => {
   const plan = activePlans.get(planId);
   if (!plan || plan.status !== "pending") {
     return false;
@@ -354,7 +348,7 @@ export const updateStepStatus = (
     return false;
   }
 
-  const step = plan.steps.find(s => s.id === stepId);
+  const step = plan.steps.find((s) => s.id === stepId);
   if (!step) {
     return false;
   }
@@ -400,7 +394,10 @@ export const getPlan = (planId: string): ImplementationPlan | undefined => {
  */
 export const getActivePlans = (): ImplementationPlan[] => {
   return Array.from(activePlans.values()).filter(
-    p => p.status !== "completed" && p.status !== "failed" && p.status !== "rejected",
+    (p) =>
+      p.status !== "completed" &&
+      p.status !== "failed" &&
+      p.status !== "rejected",
   );
 };
 
@@ -428,7 +425,7 @@ export const formatPlanForDisplay = (plan: ImplementationPlan): string => {
 
   if (plan.context.filesAnalyzed.length > 0) {
     lines.push("Files Analyzed");
-    plan.context.filesAnalyzed.forEach(f => lines.push(`  ${f}`));
+    plan.context.filesAnalyzed.forEach((f) => lines.push(`  ${f}`));
     lines.push("");
   }
 
@@ -453,7 +450,7 @@ export const formatPlanForDisplay = (plan: ImplementationPlan): string => {
 
   if (plan.risks.length > 0) {
     lines.push("Risks");
-    plan.risks.forEach(risk => {
+    plan.risks.forEach((risk) => {
       lines.push(`  [${risk.impact.toUpperCase()}] ${risk.description}`);
       lines.push(`    Mitigation: ${risk.mitigation}`);
     });
@@ -491,7 +488,7 @@ export const isApprovalMessage = (message: string): boolean => {
     /go\s*ahead\s*(with|and)/i,
   ];
 
-  return approvalPatterns.some(p => p.test(message.trim()));
+  return approvalPatterns.some((p) => p.test(message.trim()));
 };
 
 /**
@@ -504,7 +501,7 @@ export const isRejectionMessage = (message: string): boolean => {
     /don't\s*(proceed|do|execute)/i,
   ];
 
-  return rejectionPatterns.some(p => p.test(message.trim()));
+  return rejectionPatterns.some((p) => p.test(message.trim()));
 };
 
 /**
@@ -513,7 +510,7 @@ export const isRejectionMessage = (message: string): boolean => {
 export const subscribeToPlan = (
   planId: string,
   callback: PlanEventCallback,
-): () => void => {
+): (() => void) => {
   if (!planListeners.has(planId)) {
     planListeners.set(planId, new Set());
   }
@@ -531,7 +528,7 @@ export const subscribeToPlan = (
 const emitPlanEvent = (planId: string, plan: ImplementationPlan): void => {
   const listeners = planListeners.get(planId);
   if (listeners) {
-    listeners.forEach(callback => callback(plan));
+    listeners.forEach((callback) => callback(plan));
   }
 };
 

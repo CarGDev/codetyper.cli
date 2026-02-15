@@ -2,7 +2,6 @@
  * Session Compaction Service
  *
  * Integrates auto-compaction with the agent loop and hooks system.
- * Follows OpenCode's two-tier approach: pruning (remove old tool output)
  * and compaction (summarize for fresh context).
  */
 
@@ -62,7 +61,6 @@ export const isContextOverflow = (
 /**
  * Prune old tool outputs from messages
  *
- * Strategy (following OpenCode):
  * 1. Walk backwards through messages
  * 2. Skip first N user turns (protect recent context)
  * 3. Mark tool outputs for pruning once we accumulate enough tokens

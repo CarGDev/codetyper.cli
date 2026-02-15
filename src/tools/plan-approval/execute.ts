@@ -2,7 +2,6 @@
  * Plan Approval Tool
  *
  * Allows agents to submit implementation plans for user approval.
- * This tool implements the approval gate pattern from claude-code and opencode.
  */
 
 import { z } from "zod";
@@ -35,24 +34,15 @@ const planApprovalSchema = z.object({
     .describe("The action to perform"),
 
   // For create action
-  title: z
-    .string()
-    .optional()
-    .describe("Title of the implementation plan"),
+  title: z.string().optional().describe("Title of the implementation plan"),
   summary: z
     .string()
     .optional()
     .describe("Summary of what the plan will accomplish"),
 
   // For add_step action
-  plan_id: z
-    .string()
-    .optional()
-    .describe("ID of the plan to modify"),
-  step_title: z
-    .string()
-    .optional()
-    .describe("Title of the step"),
+  plan_id: z.string().optional().describe("ID of the plan to modify"),
+  step_title: z.string().optional().describe("Title of the step"),
   step_description: z
     .string()
     .optional()
@@ -81,18 +71,12 @@ const planApprovalSchema = z.object({
     .describe("Dependencies identified"),
 
   // For add_risk action
-  risk_description: z
-    .string()
-    .optional()
-    .describe("Description of the risk"),
+  risk_description: z.string().optional().describe("Description of the risk"),
   risk_impact: z
     .enum(["low", "medium", "high"])
     .optional()
     .describe("Impact level of the risk"),
-  risk_mitigation: z
-    .string()
-    .optional()
-    .describe("How to mitigate this risk"),
+  risk_mitigation: z.string().optional().describe("How to mitigate this risk"),
 
   // For submit action
   testing_strategy: z
@@ -252,12 +236,18 @@ const handleAddContext = (params: PlanApprovalParams): ToolResult => {
  * Handle add_risk action
  */
 const handleAddRisk = (params: PlanApprovalParams): ToolResult => {
-  if (!params.plan_id || !params.risk_description || !params.risk_impact || !params.risk_mitigation) {
+  if (
+    !params.plan_id ||
+    !params.risk_description ||
+    !params.risk_impact ||
+    !params.risk_mitigation
+  ) {
     return {
       success: false,
       title: "Missing parameters",
       output: "",
-      error: "plan_id, risk_description, risk_impact, and risk_mitigation are required",
+      error:
+        "plan_id, risk_description, risk_impact, and risk_mitigation are required",
     };
   }
 
@@ -359,8 +349,10 @@ const handleCheckStatus = (params: PlanApprovalParams): ToolResult => {
   }
 
   const statusMessages: Record<string, string> = {
-    drafting: "Plan is being drafted. Add steps, context, and risks, then submit for approval.",
-    pending: "Plan is awaiting user approval. Wait for the user to approve or provide feedback.",
+    drafting:
+      "Plan is being drafted. Add steps, context, and risks, then submit for approval.",
+    pending:
+      "Plan is awaiting user approval. Wait for the user to approve or provide feedback.",
     approved: "Plan has been approved. You may proceed with implementation.",
     rejected: `Plan was rejected. Reason: ${plan.rejectionReason ?? "No reason provided"}`,
     executing: "Plan is currently being executed.",
@@ -375,7 +367,7 @@ const handleCheckStatus = (params: PlanApprovalParams): ToolResult => {
     metadata: {
       planId: plan.id,
       planStatus: plan.status,
-      stepsCompleted: plan.steps.filter(s => s.status === "completed").length,
+      stepsCompleted: plan.steps.filter((s) => s.status === "completed").length,
       totalSteps: plan.steps.length,
     },
   };
@@ -407,7 +399,7 @@ const handleAnalyzeTask = (params: PlanApprovalParams): ToolResult => {
 
   if (analysis.reasons.length > 0) {
     output.push(``, `**Reasons**:`);
-    analysis.reasons.forEach(r => output.push(`- ${r}`));
+    analysis.reasons.forEach((r) => output.push(`- ${r}`));
   }
 
   return {
