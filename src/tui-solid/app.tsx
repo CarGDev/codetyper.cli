@@ -118,7 +118,6 @@ function AppContent(props: AppProps) {
 
   setAppStoreRef(app);
 
-  // Set exit message reactively (like OpenCode does)
   // This ensures the message is pre-computed and ready when exit is called
   createEffect(() => {
     const state = appStore.getState();

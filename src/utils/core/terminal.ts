@@ -20,6 +20,25 @@ let spinner: Ora | null = null;
 let exitHandlersRegistered = false;
 
 /**
+ * Global exit message to display on process exit (set by ExitProvider in TUI mode)
+ */
+let globalExitMessage: string | undefined;
+
+/**
+ * Set the exit message to display when the process exits
+ */
+export const setGlobalExitMessage = (message: string | undefined): void => {
+  globalExitMessage = message;
+};
+
+/**
+ * Get the current global exit message
+ */
+export const getGlobalExitMessage = (): string | undefined => {
+  return globalExitMessage;
+};
+
+/**
  * Drain any pending stdin data (e.g. DECRQM responses from @opentui/core's
  * theme-mode detection that queries mode 997). The terminal responds with
  * `\x1b[?997;1n` or `\x1b[?997;2n`, but if the TUI renderer has already
@@ -80,6 +99,11 @@ export const drainStdin = (): Promise<void> =>
 const emergencyTerminalCleanup = (): void => {
   try {
     writeSync(1, TERMINAL_RESET);
+    
+    // Write exit message if set (from TUI ExitProvider)
+    if (globalExitMessage) {
+      writeSync(1, globalExitMessage + "\n");
+    }
   } catch {
     // Ignore errors during cleanup - stdout may already be closed
   }
@@ -93,28 +117,15 @@ export const registerExitHandlers = (): void => {
   if (exitHandlersRegistered) return;
   exitHandlersRegistered = true;
 
+  // Emergency cleanup will be called once on ANY exit
   process.on("exit", emergencyTerminalCleanup);
-  process.on("beforeExit", emergencyTerminalCleanup);
-  process.on("SIGINT", () => {
-    emergencyTerminalCleanup();
-    process.exit(130);
-  });
-  process.on("SIGTERM", () => {
-    emergencyTerminalCleanup();
-    process.exit(143);
-  });
-  process.on("SIGHUP", () => {
-    emergencyTerminalCleanup();
-    process.exit(128);
-  });
-  process.on("uncaughtException", () => {
-    emergencyTerminalCleanup();
-    process.exit(1);
-  });
-  process.on("unhandledRejection", () => {
-    emergencyTerminalCleanup();
-    process.exit(1);
-  });
+  
+  // Signal handlers just call process.exit() which triggers "exit" event
+  process.on("SIGINT", () => process.exit(130));
+  process.on("SIGTERM", () => process.exit(143));
+  process.on("SIGHUP", () => process.exit(128));
+  process.on("uncaughtException", () => process.exit(1));
+  process.on("unhandledRejection", () => process.exit(1));
 };
 
 /**

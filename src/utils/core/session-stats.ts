@@ -80,13 +80,20 @@ export interface SessionSummaryInput {
 }
 
 export function generateSessionSummary(input: SessionSummaryInput): string {
-  const { sessionId, sessionStats, modifiedFiles, modelName, providerName } = input;
+  const { sessionId, sessionStats, modifiedFiles, modelName } = input;
   
   const { additions, deletions } = calculateCodeChanges(modifiedFiles);
   const totalSessionTime = Date.now() - sessionStats.startTime;
   
   // Build the summary lines
   const lines: string[] = [
+    "",
+    "   ██████╗ ██████╗ ██████╗ ███████╗████████╗██╗   ██╗██████╗ ███████╗██████╗ ",
+    "  ██╔════╝██╔═══██╗██╔══██╗██╔════╝╚══██╔══╝╚██╗ ██╔╝██╔══██╗██╔════╝██╔══██╗",
+    "  ██║     ██║   ██║██║  ██║█████╗     ██║    ╚████╔╝ ██████╔╝█████╗  ██████╔╝",
+    "  ██║     ██║   ██║██║  ██║██╔══╝     ██║     ╚██╔╝  ██╔═══╝ ██╔══╝  ██╔══██╗",
+    "  ╚██████╗╚██████╔╝██████╔╝███████╗   ██║      ██║   ██║     ███████╗██║  ██║",
+    "   ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚═╝     ╚══════╝╚═╝  ╚═╝",
     "",
     "═══════════════════════════════════════════════════════════════",
     "",

@@ -1035,7 +1035,6 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         updateMcpServerStatus,
 
         // Modified file tracking
-        modifiedFiles: () => store.modifiedFiles,
         addModifiedFile,
         clearModifiedFiles,
 
