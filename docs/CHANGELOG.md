@@ -7,16 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned
+
+- **Diff Preview**: Show file changes before writing ([#112](https://github.com/CarGDev/codetyper.cli/issues/112))
+- **Model Consistency**: Ensure consistent behavior across LLM providers ([#114](https://github.com/CarGDev/codetyper.cli/issues/114))
+- **Quality Gates**: Run TypeScript, lint, and tests before task completion ([#115](https://github.com/CarGDev/codetyper.cli/issues/115))
+
+---
+
+## [0.4.7] - 2026-02-16
+
+### Fixed
+
+- **Session Resume**: Fixed `--resume` not finding sessions created in the current session
+  - New sessions now properly use the session persistence system IDs
+  - Resume link on exit now displays the correct session ID instead of "unknown"
+
+---
+
+## [0.4.6] - 2026-02-16
+
 ### Added
 
-- **Pink Purple Theme**: New built-in theme with hot pink primary, purple secondary, and deep magenta accent on a dark plum background
-- **Activity Panel Toggle**: `Ctrl+O` keybind to show/hide the activity panel (context/tokens, modified files)
-- **Session Stats on Exit**: Display detailed session statistics when quitting the CLI
-  - Total usage estimate and Premium requests
-  - API time spent and total session time
-  - Total code changes (+additions/-deletions)
-  - Breakdown by AI model with token usage (input/output/cached)
-  - Resume command with session ID for easy session continuation
 - **Copilot Usage Display**: Real-time GitHub Copilot quota monitoring in the Activity Panel
   - Shows Premium Requests, Chat, and Completions quotas with color-coded progress bars
   - Color indicators: Green (>40% remaining), Yellow (5-40%), Red (≤5%)
@@ -25,21 +37,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Available immediately when using GitHub Copilot provider
 - **Enhanced /usage Command**: Color-coded progress bars matching the Activity Panel display
 
+---
+
+## [0.4.5] - 2026-02-14
+
+### Added
+
+- **Session Stats on Exit**: Display detailed session statistics when quitting the CLI
+  - Total usage estimate and Premium requests
+  - API time spent and total session time
+  - Total code changes (+additions/-deletions)
+  - Breakdown by AI model with token usage (input/output/cached)
+  - Resume command with session ID for easy session continuation
+  - CODETYPER ASCII art banner on exit
+- **Activity Panel Toggle**: `Ctrl+O` keybind to show/hide the activity panel (context/tokens, modified files)
+
+### Fixed
+
+- **Session Summary Persistence**: Fixed exit message being cleared on exit
+- **Terminal Garbage on Exit**: Fixed `997;1n` text appearing on exit, caused by unanswered DECRQM mode 997 query from the TUI renderer
+
+---
+
+## [0.4.4] - 2026-02-12
+
+### Fixed
+
+- Minor fixes and stability improvements
+
+---
+
+## [0.4.3] - 2026-02-11
+
+### Added
+
+- **Pink Purple Theme**: New built-in theme with hot pink primary, purple secondary, and deep magenta accent on a dark plum background
+
 ### Fixed
 
 - **Image Paste Race Condition**: Fixed images being silently dropped when pasting via Ctrl+V. The `clearPastedImages()` call in the input area was racing with the async message handler, clearing images before they could be read and attached to the message
 - **@ File Picker**: Now works at any cursor position in the input, not just when the input is empty
 - **/ Command Menu**: Now works at any cursor position in the input, not just when the input is empty
-- **Terminal Garbage on Exit**: Fixed `997;1n` text appearing on exit, caused by unanswered DECRQM mode 997 query from the TUI renderer
-- **Session Resume**: Fixed `--resume` not finding sessions created in the current session
-  - New sessions now properly use the session persistence system IDs
-  - Resume link on exit now displays the correct session ID instead of "unknown"
 
-### Planned
+---
 
-- **Diff Preview**: Show file changes before writing ([#112](https://github.com/CarGDev/codetyper.cli/issues/112))
-- **Model Consistency**: Ensure consistent behavior across LLM providers ([#114](https://github.com/CarGDev/codetyper.cli/issues/114))
-- **Quality Gates**: Run TypeScript, lint, and tests before task completion ([#115](https://github.com/CarGDev/codetyper.cli/issues/115))
+## [0.4.2] - 2026-02-10
+
+### Fixed
+
+- **Exit Message Service**: Fixed exit message service to use proper constants
+
+---
+
+## [0.4.1] - 2026-02-08
+
+### Fixed
+
+- Minor bug fixes and improvements
 
 ---
 
@@ -322,6 +376,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date               | Highlights                                                             |
 | ------- | ------------------ | ---------------------------------------------------------------------- |
+| 0.4.7   | 2026-02-16         | Fixed session resume functionality                                     |
+| 0.4.6   | 2026-02-16         | Copilot usage display with color-coded progress bars                   |
+| 0.4.5   | 2026-02-14         | Session stats on exit, activity panel toggle, exit improvements        |
+| 0.4.4   | 2026-02-12         | Minor fixes and stability improvements                                 |
+| 0.4.3   | 2026-02-11         | Pink-purple theme, image paste fix, @/commands anywhere                |
+| 0.4.2   | 2026-02-10         | Exit message service fixes                                             |
+| 0.4.1   | 2026-02-08         | Minor bug fixes                                                        |
 | 0.4.0   | 2026-02-06         | Clipboard copy/read, plan approval, execution control, safety features |
 | 0.3.0   | 2025-02-04         | System prompt builder, module restructure, legacy TUI removal          |
 | 0.2.x   | 2025-01-28 - 02-01 | Hooks, plugins, session forks, vim motions, MCP browser                |
@@ -329,7 +390,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/CarGDev/codetyper.cli/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/CarGDev/codetyper.cli/compare/v0.4.7...HEAD
+[0.4.7]: https://github.com/CarGDev/codetyper.cli/compare/v0.4.6...v0.4.7
+[0.4.6]: https://github.com/CarGDev/codetyper.cli/compare/v0.4.5...v0.4.6
+[0.4.5]: https://github.com/CarGDev/codetyper.cli/compare/v0.4.4...v0.4.5
+[0.4.4]: https://github.com/CarGDev/codetyper.cli/compare/v0.4.3...v0.4.4
+[0.4.3]: https://github.com/CarGDev/codetyper.cli/compare/v0.4.2...v0.4.3
+[0.4.2]: https://github.com/CarGDev/codetyper.cli/compare/v0.4.1...v0.4.2
+[0.4.1]: https://github.com/CarGDev/codetyper.cli/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/CarGDev/codetyper.cli/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/CarGDev/codetyper.cli/compare/v0.2.4...v0.3.0
 [0.2.4]: https://github.com/CarGDev/codetyper.cli/compare/v0.2.3...v0.2.4
