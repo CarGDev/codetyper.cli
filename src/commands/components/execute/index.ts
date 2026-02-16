@@ -15,10 +15,7 @@ import type { ChatTUIOptions } from "@interfaces/ChatTUIOptions";
 import type { AgentConfig } from "@/types/agent-config";
 import { getConfig } from "@services/core/config";
 import { getThinkingMessage } from "@constants/status-messages";
-import {
-  enterFullscreen,
-  registerExitHandlers,
-} from "@utils/core/terminal";
+import { enterFullscreen, registerExitHandlers } from "@utils/core/terminal";
 import { createCallbacks } from "@commands/chat-tui";
 import { agentLoader } from "@services/agent-loader";
 import { projectSetupService } from "@services/project-setup-service";
@@ -181,13 +178,10 @@ const execute = async (options: ChatTUIOptions): Promise<void> => {
   const handleCommand = createHandleCommand(ctx, handleExit);
   const handleSubmit = createHandleSubmit(ctx, handleCommand);
 
-  // Only pass sessionId if resuming/continuing - otherwise show Home view first
-  const isResuming = options.continueSession || options.resumeSession;
-
   const savedCascadeEnabled = config.get("cascadeEnabled");
 
   const renderProps: RenderAppProps = {
-    sessionId: isResuming ? session.id : undefined,
+    sessionId: session.id,
     handleSubmit,
     handleCommand,
     handleModelSelect: handleModelSelectFn,
