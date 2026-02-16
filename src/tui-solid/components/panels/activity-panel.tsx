@@ -12,6 +12,7 @@ import {
   TOKEN_WARNING_THRESHOLD,
   TOKEN_CRITICAL_THRESHOLD,
 } from "@constants/token";
+import { CopilotUsageSection } from "./copilot-usage";
 
 /** Extract filename from a path without importing node:path */
 const getFileName = (filePath: string): string => {
@@ -82,6 +83,9 @@ export function ActivityPanel() {
       paddingTop={1}
       flexShrink={0}
     >
+      {/* Copilot Usage Section (when provider is copilot) */}
+      <CopilotUsageSection />
+
       {/* Context Section */}
       <box flexDirection="column" marginBottom={1}>
         <text fg={theme.colors.text} attributes={TextAttributes.BOLD}>

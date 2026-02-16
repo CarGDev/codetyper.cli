@@ -21,7 +21,11 @@ import type {
 import type { ProviderModel } from "@/types/providers";
 import type { BrainConnectionStatus, BrainUser } from "@/types/brain";
 import type { PastedImage } from "@/types/image";
+import type { CopilotUsageResponse } from "@/types/copilot-usage";
 import { stripMarkdown } from "@/utils/markdown/strip";
+import { getCopilotUsage } from "@/providers/copilot/usage";
+import { getUsageRefreshManager } from "@/services/copilot/usage-refresh-manager";
+import { COPILOT_DISPLAY_NAME } from "@constants/copilot";
 
 interface AppStore {
   mode: AppMode;
@@ -62,9 +66,12 @@ interface AppStore {
     memoryCount: number;
     showBanner: boolean;
   };
+  copilotUsage: CopilotUsageResponse | null;
+  copilotUsageLoading: boolean;
+  copilotUsageLastFetch: number | null;
 }
 
-interface AppContextValue {
+export interface AppContextValue {
   // State accessors
   mode: Accessor<AppMode>;
   screenMode: Accessor<ScreenMode>;
@@ -110,6 +117,9 @@ interface AppContextValue {
     memoryCount: number;
     showBanner: boolean;
   }>;
+  copilotUsage: Accessor<CopilotUsageResponse | null>;
+  copilotUsageLoading: Accessor<boolean>;
+  copilotUsageLastFetch: Accessor<number | null>;
 
   // Mode actions
   setMode: (mode: AppMode) => void;
@@ -171,7 +181,12 @@ interface AppContextValue {
   addTokens: (input: number, output: number) => void;
   startApiCall: () => void;
   stopApiCall: () => void;
-  addTokensWithModel: (modelId: string, input: number, output: number, cached?: number) => void;
+  addTokensWithModel: (
+    modelId: string,
+    input: number,
+    output: number,
+    cached?: number,
+  ) => void;
   resetSessionStats: () => void;
   setContextMaxTokens: (maxTokens: number) => void;
 
@@ -204,6 +219,11 @@ interface AppContextValue {
   setBrainCounts: (knowledge: number, memory: number) => void;
   setBrainShowBanner: (show: boolean) => void;
   dismissBrainBanner: () => void;
+
+  // Copilot usage actions
+  setCopilotUsage: (usage: CopilotUsageResponse | null) => void;
+  setCopilotUsageLoading: (loading: boolean) => void;
+  fetchCopilotUsage: () => Promise<void>;
 
   // MCP actions
   setMcpServers: (servers: MCPServerDisplay[]) => void;
@@ -303,6 +323,9 @@ export const { provider: AppStoreProvider, use: useAppStore } =
           memoryCount: 0,
           showBanner: true,
         },
+        copilotUsage: null,
+        copilotUsageLoading: false,
+        copilotUsageLastFetch: null,
       });
 
       // Input insert function (set by InputArea)
@@ -357,6 +380,11 @@ export const { provider: AppStoreProvider, use: useAppStore } =
       const mcpServers = (): MCPServerDisplay[] => store.mcpServers;
       const modifiedFiles = (): ModifiedFileEntry[] => store.modifiedFiles;
       const brain = () => store.brain;
+      const copilotUsage = (): CopilotUsageResponse | null =>
+        store.copilotUsage;
+      const copilotUsageLoading = (): boolean => store.copilotUsageLoading;
+      const copilotUsageLastFetch = (): number | null =>
+        store.copilotUsageLastFetch;
 
       // Mode actions
       const setMode = (newMode: AppMode): void => {
@@ -486,6 +514,11 @@ export const { provider: AppStoreProvider, use: useAppStore } =
           setStore("provider", newProvider);
           setStore("model", newModel);
         });
+
+        // Fetch Copilot usage immediately if provider is copilot (display name)
+        if (newProvider === COPILOT_DISPLAY_NAME) {
+          fetchCopilotUsage();
+        }
       };
 
       const setVersion = (newVersion: string): void => {
@@ -583,6 +616,48 @@ export const { provider: AppStoreProvider, use: useAppStore } =
 
       const dismissBrainBanner = (): void => {
         setStore("brain", { ...store.brain, showBanner: false });
+      };
+
+      // Copilot usage actions
+      const setCopilotUsage = (usage: CopilotUsageResponse | null): void => {
+        batch(() => {
+          setStore("copilotUsage", usage);
+          setStore("copilotUsageLastFetch", Date.now());
+        });
+      };
+
+      const setCopilotUsageLoading = (loading: boolean): void => {
+        setStore("copilotUsageLoading", loading);
+      };
+
+      const fetchCopilotUsage = async (): Promise<void> => {
+        // Only fetch if provider is copilot (display name)
+        if (store.provider !== COPILOT_DISPLAY_NAME) {
+          return;
+        }
+
+        // Check cache - don't fetch if we fetched within last 5 seconds
+        const now = Date.now();
+        if (
+          store.copilotUsageLastFetch &&
+          now - store.copilotUsageLastFetch < 5000
+        ) {
+          return;
+        }
+
+        setCopilotUsageLoading(true);
+        try {
+          const usage = await getCopilotUsage();
+          setCopilotUsage(usage);
+        } catch (error) {
+          // Silently fail - usage display is non-critical
+          console.error(
+            "[fetchCopilotUsage] Failed to fetch Copilot usage:",
+            error,
+          );
+        } finally {
+          setCopilotUsageLoading(false);
+        }
       };
 
       // MCP actions
@@ -727,7 +802,8 @@ export const { provider: AppStoreProvider, use: useAppStore } =
             if (existing) {
               existing.inputTokens += input;
               existing.outputTokens += output;
-              if (cached) existing.cachedTokens = (existing.cachedTokens ?? 0) + cached;
+              if (cached)
+                existing.cachedTokens = (existing.cachedTokens ?? 0) + cached;
             } else {
               s.sessionStats.modelUsage.push({
                 modelId,
@@ -847,6 +923,12 @@ export const { provider: AppStoreProvider, use: useAppStore } =
             });
           }
         });
+
+        // Trigger Copilot usage refresh after streaming completes (debounced)
+        if (store.provider === "copilot") {
+          const refreshManager = getUsageRefreshManager();
+          refreshManager.manualRefresh();
+        }
       };
 
       const cancelStreaming = (): void => {
@@ -965,6 +1047,9 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         mcpServers,
         modifiedFiles,
         brain,
+        copilotUsage,
+        copilotUsageLoading,
+        copilotUsageLastFetch,
 
         // Mode actions
         setMode,
@@ -1028,6 +1113,11 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         setBrainCounts,
         setBrainShowBanner,
         dismissBrainBanner,
+
+        // Copilot usage actions
+        setCopilotUsage,
+        setCopilotUsageLoading,
+        fetchCopilotUsage,
 
         // MCP actions
         setMcpServers,
@@ -1126,6 +1216,9 @@ const defaultAppState = {
     memoryCount: 0,
     showBanner: true,
   },
+  copilotUsage: null,
+  copilotUsageLoading: false,
+  copilotUsageLastFetch: null,
 };
 
 export const appStore = {
@@ -1164,6 +1257,9 @@ export const appStore = {
       pastedImages: storeRef.pastedImages(),
       modifiedFiles: storeRef.modifiedFiles(),
       brain: storeRef.brain(),
+      copilotUsage: storeRef.copilotUsage(),
+      copilotUsageLoading: storeRef.copilotUsageLoading(),
+      copilotUsageLastFetch: storeRef.copilotUsageLastFetch(),
     };
   },
 
@@ -1282,7 +1378,12 @@ export const appStore = {
     storeRef.stopApiCall();
   },
 
-  addTokensWithModel: (modelId: string, input: number, output: number, cached?: number): void => {
+  addTokensWithModel: (
+    modelId: string,
+    input: number,
+    output: number,
+    cached?: number,
+  ): void => {
     if (!storeRef) return;
     storeRef.addTokensWithModel(modelId, input, output, cached);
   },

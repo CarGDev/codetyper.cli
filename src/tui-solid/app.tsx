@@ -6,6 +6,7 @@ import {
   Switch,
   createSignal,
   createEffect,
+  onCleanup,
 } from "solid-js";
 import { batch } from "solid-js";
 import { getFiles } from "@services/file-picker/files";
@@ -34,6 +35,8 @@ import { DialogProvider } from "@tui-solid/context/dialog";
 import { ToastProvider, Toast, useToast } from "@tui-solid/ui/toast";
 import { Home } from "@tui-solid/routes/home";
 import { Session } from "@tui-solid/routes/session";
+import { getUsageRefreshManager } from "@services/copilot/usage-refresh-manager";
+import { COPILOT_DISPLAY_NAME } from "@constants/copilot";
 import type { TuiInput, TuiOutput } from "@interfaces/index";
 import type { MCPServerDisplay } from "@/types/tui";
 import type {
@@ -122,7 +125,7 @@ function AppContent(props: AppProps) {
   createEffect(() => {
     const state = appStore.getState();
     const summary = generateSessionSummary({
-      sessionId: props.sessionId ?? "unknown",
+      sessionId: state.sessionId ?? "unknown",
       sessionStats: state.sessionStats,
       modifiedFiles: state.modifiedFiles,
       modelName: state.model,
@@ -196,6 +199,25 @@ function AppContent(props: AppProps) {
       await props.onSubmit(props.initialPrompt!);
     }, 100);
   }
+
+  // Lifecycle: Start/stop Copilot usage refresh manager based on provider
+  createEffect(() => {
+    const refreshManager = getUsageRefreshManager();
+    const currentProvider = app.provider();
+
+    if (currentProvider === COPILOT_DISPLAY_NAME) {
+      // Start refresh manager when provider is copilot (display name)
+      refreshManager.start(app);
+    } else {
+      // Stop refresh manager when provider changes away from copilot
+      refreshManager.stop();
+    }
+
+    // Cleanup on unmount
+    onCleanup(() => {
+      refreshManager.stop();
+    });
+  });
 
   useKeyboard((evt) => {
     // Clipboard: copy selected text

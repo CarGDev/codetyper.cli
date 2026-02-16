@@ -6,6 +6,10 @@ import { usageStore } from "@stores/core/usage-store";
 import { getUserInfo } from "@providers/copilot/auth/credentials";
 import { getCopilotUsage } from "@providers/copilot/usage";
 import { PROGRESS_BAR } from "@constants/ui";
+import {
+  getQuotaStatus,
+  calculatePercentRemaining,
+} from "@constants/quota-colors";
 import type {
   ChatServiceState,
   ChatServiceCallbacks,
@@ -30,14 +34,20 @@ const formatDuration = (ms: number): string => {
   return `${seconds}s`;
 };
 
-const renderBar = (percent: number): string => {
+const renderBar = (percent: number, color?: string): string => {
   const clampedPercent = Math.max(0, Math.min(100, percent));
   const filledWidth = Math.round((clampedPercent / 100) * PROGRESS_BAR.WIDTH);
   const emptyWidth = PROGRESS_BAR.WIDTH - filledWidth;
-  return (
-    PROGRESS_BAR.FILLED_CHAR.repeat(filledWidth) +
-    PROGRESS_BAR.EMPTY_CHAR.repeat(emptyWidth)
-  );
+
+  const filled = PROGRESS_BAR.FILLED_CHAR.repeat(filledWidth);
+  const empty = PROGRESS_BAR.EMPTY_CHAR.repeat(emptyWidth);
+
+  // If color is provided, wrap with ANSI color codes
+  if (color) {
+    return `${color}${filled}\x1b[2m${empty}\x1b[0m`;
+  }
+
+  return filled + empty;
 };
 
 const formatQuotaBar = (
@@ -55,8 +65,9 @@ const formatQuotaBar = (
 
   if (quota.unlimited) {
     lines.push(name);
+    const greenColor = "\x1b[32m"; // Green ANSI color
     lines.push(
-      PROGRESS_BAR.FILLED_CHAR.repeat(PROGRESS_BAR.WIDTH) + " Unlimited",
+      `${greenColor}${PROGRESS_BAR.FILLED_CHAR.repeat(PROGRESS_BAR.WIDTH)}\x1b[0m Unlimited`,
     );
     return lines;
   }
@@ -64,9 +75,25 @@ const formatQuotaBar = (
   const used = quota.entitlement - quota.remaining;
   const percentUsed =
     quota.entitlement > 0 ? (used / quota.entitlement) * 100 : 0;
+  const percentRemaining = calculatePercentRemaining(
+    quota.remaining,
+    quota.entitlement,
+    quota.unlimited,
+  );
+
+  // Get color based on percentage remaining
+  const statusInfo = getQuotaStatus(percentRemaining);
+  let ansiColor = "\x1b[32m"; // Green
+  if (statusInfo.color === "warning") {
+    ansiColor = "\x1b[33m"; // Yellow
+  } else if (statusInfo.color === "error") {
+    ansiColor = "\x1b[31m"; // Red
+  }
 
   lines.push(name);
-  lines.push(`${renderBar(percentUsed)} ${percentUsed.toFixed(0)}% used`);
+  lines.push(
+    `${renderBar(percentUsed, ansiColor)} ${percentUsed.toFixed(0)}% used`,
+  );
   if (resetInfo) {
     lines.push(resetInfo);
   }
