@@ -1,6 +1,6 @@
 {
   "name": "codetyper-cli",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "CodeTyper AI Agent - Standalone CLI for autonomous code generation",
   "main": "dist/index.js",
   "bin": {
