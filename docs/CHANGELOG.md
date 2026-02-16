@@ -17,6 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Total code changes (+additions/-deletions)
   - Breakdown by AI model with token usage (input/output/cached)
   - Resume command with session ID for easy session continuation
+- **Copilot Usage Display**: Real-time GitHub Copilot quota monitoring in the Activity Panel
+  - Shows Premium Requests, Chat, and Completions quotas with color-coded progress bars
+  - Color indicators: Green (>40% remaining), Yellow (5-40%), Red (≤5%)
+  - Auto-refreshes every 60 seconds and after task completion
+  - Displays quota reset date
+  - Available immediately when using GitHub Copilot provider
+- **Enhanced /usage Command**: Color-coded progress bars matching the Activity Panel display
 
 ### Fixed
 
@@ -24,6 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **@ File Picker**: Now works at any cursor position in the input, not just when the input is empty
 - **/ Command Menu**: Now works at any cursor position in the input, not just when the input is empty
 - **Terminal Garbage on Exit**: Fixed `997;1n` text appearing on exit, caused by unanswered DECRQM mode 997 query from the TUI renderer
+- **Session Resume**: Fixed `--resume` not finding sessions created in the current session
+  - New sessions now properly use the session persistence system IDs
+  - Resume link on exit now displays the correct session ID instead of "unknown"
 
 ### Planned
 

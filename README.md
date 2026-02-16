@@ -133,26 +133,26 @@ Press `/` to access all commands organized by category.
 
 **Available Commands:**
 
-| Category | Command      | Description                       |
-| -------- | ------------ | --------------------------------- |
-| General  | `/help`      | Show available commands           |
-| General  | `/clear`     | Clear conversation history        |
-| General  | `/exit`      | Exit the chat                     |
-| Session  | `/save`      | Save current session              |
-| Session  | `/context`   | Show context information          |
-| Session  | `/usage`     | Show token usage statistics       |
-| Session  | `/remember`  | Save a learning about the project |
-| Session  | `/learnings` | Show saved learnings              |
-| Settings | `/model`     | Select AI model                   |
-| Settings | `/agent`     | Select agent                      |
-| Settings | `/mode`      | Switch interaction mode           |
-| Settings | `/provider`  | Switch LLM provider               |
-| Settings | `/status`    | Show provider status              |
-| Settings | `/theme`     | Change color theme                |
-| Settings | `/mcp`       | Manage MCP servers                |
-| Account  | `/whoami`    | Show logged in account            |
-| Account  | `/login`     | Authenticate with provider        |
-| Account  | `/logout`    | Sign out from provider            |
+| Category | Command      | Description                                     |
+| -------- | ------------ | ----------------------------------------------- |
+| General  | `/help`      | Show available commands                         |
+| General  | `/clear`     | Clear conversation history                      |
+| General  | `/exit`      | Exit the chat                                   |
+| Session  | `/save`      | Save current session                            |
+| Session  | `/context`   | Show context information                        |
+| Session  | `/usage`     | Show token usage with color-coded progress bars |
+| Session  | `/remember`  | Save a learning about the project               |
+| Session  | `/learnings` | Show saved learnings                            |
+| Settings | `/model`     | Select AI model                                 |
+| Settings | `/agent`     | Select agent                                    |
+| Settings | `/mode`      | Switch interaction mode                         |
+| Settings | `/provider`  | Switch LLM provider                             |
+| Settings | `/status`    | Show provider status                            |
+| Settings | `/theme`     | Change color theme                              |
+| Settings | `/mcp`       | Manage MCP servers                              |
+| Account  | `/whoami`    | Show logged in account                          |
+| Account  | `/login`     | Authenticate with provider                      |
+| Account  | `/logout`    | Sign out from provider                          |
 
 ### Agent Mode with Diff View
 
@@ -192,6 +192,21 @@ Access to multiple AI models through GitHub Copilot.
 - GPT-5.2-codex, GPT-5.1-codex
 - Grok-code-fast-1
 - And more...
+
+### Copilot Usage Display
+
+Real-time monitoring of your GitHub Copilot quota usage directly in the Activity Panel.
+
+**Features:**
+
+- **Premium Requests** - Track your premium request quota
+- **Chat** - Monitor chat message limits
+- **Completions** - View code completion quota
+- **Color-coded Progress Bars** - Green (>40%), Yellow (5-40%), Red (≤5%)
+- **Auto-refresh** - Updates every 60 seconds and after each task
+- **Reset Date** - Shows when quotas reset
+
+Accessible via the Activity Panel (`Ctrl+O`) when using GitHub Copilot provider.
 
 ### Theme System
 
