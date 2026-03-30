@@ -586,12 +586,14 @@ export const handleMessage = async (
   message: string,
   callbacks: ChatServiceCallbacks,
 ): Promise<void> => {
-  debugLog("message", "handleMessage called", { messageLen: message.length, provider: state.provider, model: state.model });
+  debugLog("message", "USER PROMPT", message);
+  debugLog("message", "handleMessage context", { provider: state.provider, model: state.model, messageCount: state.messages.length, contextFiles: state.contextFiles.size, mode: state.currentMode });
   // Check for feedback on previous response
   await checkUserFeedback(message, callbacks);
 
   // Check for pending plan approvals
   const pendingPlans = getActivePlans().filter((p) => p.status === "pending");
+  debugLog("message", "plan check", { pendingPlans: pendingPlans.length });
   if (pendingPlans.length > 0) {
     const plan = pendingPlans[0];
 
@@ -650,8 +652,10 @@ export const handleMessage = async (
   }
 
   // Check for skill commands (e.g., /review, /commit)
+  debugLog("message", "checking skill commands");
   const skillMatch = await detectSkillCommand(message);
   if (skillMatch) {
+    debugLog("message", "SKILL DETECTED", { skill: skillMatch.skill.command, name: skillMatch.skill.name, args: skillMatch.args });
     addDebugLog("info", `Detected skill: /${skillMatch.skill.command}`);
     callbacks.onLog("system", `Running skill: ${skillMatch.skill.name}`);
 
@@ -674,8 +678,10 @@ export const handleMessage = async (
   }
 
   // Detect explicit command requests and execute directly
+  debugLog("message", "checking explicit commands");
   const detected = detectCommand(message);
   if (detected.detected && detected.command) {
+    debugLog("message", "COMMAND DETECTED", { command: detected.command });
     addDebugLog("info", `Detected command: ${detected.command}`);
 
     // Show the user's request
@@ -722,6 +728,7 @@ export const handleMessage = async (
 
   // Get interaction mode and cascade setting from app store
   const { interactionMode, cascadeEnabled } = appStore.getState();
+  debugLog("message", "mode & routing", { interactionMode, cascadeEnabled, currentMode: state.currentMode });
   const isReadOnlyMode =
     interactionMode === "ask" || interactionMode === "code-review";
 
@@ -739,6 +746,7 @@ export const handleMessage = async (
     );
   }
 
+  debugLog("message", "processing file references");
   let processedMessage = await processFileReferences(state, message);
 
   // In code-review mode, check for PR URLs and enrich with PR context
@@ -809,6 +817,7 @@ export const handleMessage = async (
       if (key && mentionMap[key]) mentions.push(key);
     }
 
+    debugLog("message", "@mention scan", { found: mentions });
     if (mentions.length > 0) {
       // Clean message to use as task prompt (remove mentions)
       const cleaned = enrichedMessage.replace(/@[a-zA-Z_]+/g, "").trim();
@@ -894,6 +903,7 @@ export const handleMessage = async (
     );
   }
 
+  debugLog("message", "building context message", { enrichedLen: enrichedMessage.length, contextFiles: state.contextFiles.size });
   const userMessage = buildContextMessage(state, enrichedMessage);
 
   // Build multimodal content if there are pasted images
@@ -932,6 +942,7 @@ export const handleMessage = async (
   const config = getModelCompactionConfig(state.model);
   const { needsCompaction } = checkCompactionNeeded(state.messages, config);
 
+  debugLog("message", "compaction check", { needsCompaction, messageCount: state.messages.length });
   if (needsCompaction) {
     appStore.setIsCompacting(true);
     callbacks.onLog("system", CHAT_MESSAGES.COMPACTION_STARTING);
@@ -953,6 +964,7 @@ export const handleMessage = async (
 
   // Determine routing for cascade mode
   const taskType = detectTaskType(message);
+  debugLog("message", "ROUTING", { taskType, cascadeEnabled });
   let effectiveProvider = state.provider;
   let shouldAudit = false;
 
@@ -1015,6 +1027,7 @@ export const handleMessage = async (
   try {
     const { injection, detected } =
       await buildSkillInjectionForPrompt(message);
+    debugLog("message", "SKILL INJECTION", { detectedCount: detected.length, injectionLen: injection?.length });
     if (detected.length > 0 && injection) {
       const summary = getDetectedSkillsSummary(detected);
       addDebugLog("info", `[skills] ${summary}`);
@@ -1048,6 +1061,7 @@ export const handleMessage = async (
     "state",
     `Mode: ${appStore.getState().interactionMode}, Cascade: ${cascadeEnabled}`,
   );
+  debugLog("message", "STARTING AGENT", { effectiveProvider, effectiveModel, isReadOnlyMode, shouldAudit, totalMessages: state.messages.length, systemPromptLen: state.systemPrompt.length });
   appStore.setMode("thinking");
   appStore.startThinking();
   appStore.startStreaming();
