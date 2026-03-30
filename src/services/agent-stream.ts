@@ -34,6 +34,8 @@ import {
 } from "@services/execution-control";
 import { getActivePlans } from "@services/plan-mode/plan-service";
 import { truncateToolOutput } from "@utils/tool-output-truncation";
+import { getModelContextSize, DEFAULT_CONTEXT_SIZE } from "@constants/copilot";
+import { CHARS_PER_TOKEN } from "@constants/token";
 
 // =============================================================================
 // Constants
@@ -59,6 +61,49 @@ const sessionModifiedFiles = new Set<string>();
 /** Reset session file tracking (call on new session) */
 export const resetSessionModifiedFiles = (): void => {
   sessionModifiedFiles.clear();
+};
+
+/**
+ * Estimate total tokens in the message array.
+ * Uses chars/4 approximation — good enough for budget enforcement.
+ */
+const estimateMessageTokens = (messages: AgentMessage[]): number => {
+  let totalChars = 0;
+  for (const msg of messages) {
+    const content = "content" in msg && msg.content ? String(msg.content) : "";
+    totalChars += content.length;
+    if ("tool_calls" in msg && msg.tool_calls) {
+      totalChars += JSON.stringify(msg.tool_calls).length;
+    }
+  }
+  return Math.ceil(totalChars / CHARS_PER_TOKEN);
+};
+
+/**
+ * Trim oldest non-system messages when approaching context budget.
+ * Keeps: first system message, last N messages, all tool results for pending calls.
+ */
+const enforceContextBudget = (
+  messages: AgentMessage[],
+  budgetTokens: number,
+): AgentMessage[] => {
+  const currentTokens = estimateMessageTokens(messages);
+  // Leave 20% headroom for the response
+  const limit = Math.floor(budgetTokens * 0.80);
+
+  if (currentTokens <= limit) return messages;
+
+  logAgent("CONTEXT BUDGET exceeded", { currentTokens, limit, messageCount: messages.length });
+
+  // Keep system message (index 0) + last 6 messages (3 turns)
+  const systemMsg = messages[0];
+  const recentMessages = messages.slice(-6);
+
+  const trimmed = [systemMsg, ...recentMessages];
+  const trimmedTokens = estimateMessageTokens(trimmed);
+  logAgent("CONTEXT TRIMMED", { before: currentTokens, after: trimmedTokens, kept: trimmed.length, dropped: messages.length - trimmed.length });
+
+  return trimmed;
 };
 
 // =============================================================================
@@ -694,8 +739,13 @@ export const runAgentLoopStream = async (
     state.options.onWarning?.(`MCP tools unavailable: ${mcpResult.error}`);
   }
 
-  const agentMessages: AgentMessage[] = [...messages];
-  logAgent("starting agent loop", { provider: state.options.provider, model: state.options.model, maxIterations, toolFilter: state.options.toolFilter, messageCount: messages.length });
+  let agentMessages: AgentMessage[] = [...messages];
+
+  // Get model context budget
+  const modelId = state.options.model ?? "gpt-4.1";
+  const contextSize = getModelContextSize(modelId);
+  const contextBudget = contextSize.input || DEFAULT_CONTEXT_SIZE.input;
+  logAgent("starting agent loop", { provider: state.options.provider, model: modelId, maxIterations, toolFilter: state.options.toolFilter, messageCount: messages.length, contextBudget });
 
   while (iterations < maxIterations) {
     // Check for abort at start of each iteration
@@ -713,7 +763,11 @@ export const runAgentLoopStream = async (
     await state.executionControl.waitIfPaused();
 
     iterations++;
-    logAgent(`iteration ${iterations}/${maxIterations}`, { messagesInContext: agentMessages.length });
+
+    // Enforce context budget before each LLM call
+    agentMessages = enforceContextBudget(agentMessages, contextBudget);
+
+    logAgent(`iteration ${iterations}/${maxIterations}`, { messagesInContext: agentMessages.length, estimatedTokens: estimateMessageTokens(agentMessages) });
 
     try {
       const response = await callLLMStream(state, agentMessages);
