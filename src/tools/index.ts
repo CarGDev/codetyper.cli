@@ -18,6 +18,7 @@ import { applyPatchTool } from "@tools/apply-patch";
 import { taskAgentTool } from "@tools/task-agent/execute";
 import { planApprovalTool } from "@tools/plan-approval/execute";
 import { askUserTool } from "@tools/ask-user/execute";
+import { completeTaskTool } from "@tools/complete-task/execute";
 import {
   isMCPTool,
   executeMCPTool,
@@ -48,6 +49,7 @@ export const tools: ToolDefinition[] = [
   taskAgentTool,
   planApprovalTool,
   askUserTool,
+  completeTaskTool,
 ];
 
 

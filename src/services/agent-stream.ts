@@ -522,7 +522,7 @@ const PARALLEL_SAFE_TOOLS = new Set([
 /**
  * Maximum number of parallel tool executions
  */
-const MAX_PARALLEL_TOOLS = 3;
+const MAX_PARALLEL_TOOLS = 10;
 
 /**
  * Execute tool calls with intelligent parallelism
@@ -783,6 +783,19 @@ export const runAgentLoopStream = async (
           agentMessages.push(toolResultMessage);
         }
 
+        // Check if complete_task was called — if so, break immediately
+        const completionResult = toolResults.find(
+          ({ toolCall: tc }) => tc.name === "complete_task",
+        );
+        if (completionResult) {
+          const meta = completionResult.result.metadata;
+          const summary = (meta?.summary as string) ?? "";
+          logAgent("COMPLETE_TASK called via tool", { result: meta?.result, summary });
+          finalResponse = summary;
+          state.options.onText?.(summary);
+          break;
+        }
+
         // Check for repeated failures
         if (allFailed) {
           consecutiveErrors++;
@@ -799,38 +812,49 @@ export const runAgentLoopStream = async (
           }
         }
       } else {
-        // No tool calls — check if this is a genuine completion or lazy exit
-        const content = response.content || "";
-        const isFirstIteration = iterations === 1;
-        const hasToolCallsInHistory = allToolCalls.length > 0;
-        const writeTools = new Set(["write", "edit", "multi_edit", "apply_patch", "bash"]);
-        const didWriteAnything = allToolCalls.some((tc) => writeTools.has(tc.call.name));
-        const looksLikeSummary = !isFirstIteration && hasToolCallsInHistory &&
-          !didWriteAnything &&
-          content.length < 3000 &&
-          !state.options.chatMode &&
-          iterations <= 5;
+        // No tool calls — model returned text without calling any tools.
+        // Check if complete_task was called in this iteration's tool results.
+        const completionCall = allToolCalls.find(
+          (tc) => tc.call.name === "complete_task",
+        );
 
-        // If the model gathered info via tools but never wrote/edited anything,
-        // it's likely summarizing instead of implementing
-        if (looksLikeSummary && iterations < maxIterations - 1) {
-          logAgent("NUDGE: model exited with summary after tool calls, forcing continuation");
-          const nudge: AgentMessage = {
-            role: "user" as const,
-            content: "You gathered information but did not implement the changes. Use tools (edit, write, bash) to complete the task now. Do not just summarize — execute.",
-          };
-          agentMessages.push({
-            role: "assistant" as const,
-            content,
-          });
-          agentMessages.push(nudge);
-          // Don't break — continue the loop
-        } else {
-          // Genuine final response
+        if (completionCall) {
+          // Agent explicitly signaled completion via complete_task tool
+          const summary = completionCall.result.metadata?.summary as string ?? response.content ?? "";
+          logAgent("COMPLETE_TASK called", { result: completionCall.result.metadata?.result, summary });
+          finalResponse = summary || response.content || "";
+          state.options.onText?.(finalResponse);
+          break;
+        }
+
+        // In chat mode, text-only responses are fine (user is asking questions)
+        if (state.options.chatMode) {
+          finalResponse = response.content || "";
+          state.options.onText?.(finalResponse);
+          break;
+        }
+
+        // Not chat mode and no complete_task → force continuation
+        const content = response.content || "";
+
+        // Safety valve: if we've been going for too many iterations, accept the response
+        if (iterations >= maxIterations - 2) {
+          logAgent("SAFETY: accepting text response near max iterations", { iterations });
           finalResponse = content;
           state.options.onText?.(finalResponse);
           break;
         }
+
+        // Inject nudge: tell the agent it must use tools or call complete_task
+        logAgent("FORCE CONTINUE: model returned text without complete_task", { contentLen: content.length, iterations });
+        agentMessages.push({
+          role: "assistant" as const,
+          content,
+        });
+        agentMessages.push({
+          role: "user" as const,
+          content: "You must either use tools to implement changes, or call complete_task to signal you are done. Do not respond with just text.",
+        });
       }
     } catch (error: unknown) {
       logError(`agent loop error at iteration ${iterations}`, error);

@@ -1076,6 +1076,7 @@ export const handleMessage = async (
       verbose: state.verbose,
       autoApprove: state.autoApprove,
       chatMode: isReadOnlyMode,
+      toolFilter: isReadOnlyMode ? "review" : "code",
       onText: (text: string) => {
         // Note: Do NOT call appStore.appendStreamContent() here.
         // Streaming content is already handled by onContentChunk in streamState.callbacks.

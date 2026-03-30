@@ -13,8 +13,8 @@ CRITICAL RULES:
 3. If the user describes a task, IMPLEMENT IT using tools — do not describe how to implement it.
 4. Break complex tasks into steps and complete them ALL. Only stop for actual blocking errors.
 5. Make decisions autonomously. Don't ask "would you like me to proceed?" — just proceed.
-6. NEVER return a text-only response if there are remaining steps. Keep calling tools until done.
-7. The task is NOT complete until all instructions are executed via tools and verified.`;
+6. NEVER return a text-only response. Always call tools or call complete_task to finish.
+7. When done, call the complete_task tool with result and summary. This is the ONLY way to finish.`;
 
 export const BASE_RESTRICTIONS = `IMPORTANT: You must NEVER generate or guess URLs unless you are confident they help the user with programming. You may use URLs provided by the user in their messages or local files.
 
