@@ -214,7 +214,7 @@ export function Header(props: HeaderProps) {
           </box>
           <box flexDirection="row">
             <text fg={theme.colors.textDim}>Model: </text>
-            <text fg={theme.colors.accent}>{app.model() || "auto"}</text>
+            <text fg={theme.colors.accent}>{app.model() || "gpt-4.1"}</text>
           </box>
           <Show when={app.sessionId()}>
             <box flexDirection="row">

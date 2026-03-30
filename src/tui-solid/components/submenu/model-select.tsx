@@ -13,17 +13,11 @@ interface ModelSelectProps {
 
 const MAX_VISIBLE = 10;
 
-const AUTO_MODEL: ProviderModel = {
-  id: "auto",
-  name: "Auto",
-  supportsTools: true,
-  supportsStreaming: true,
-  costMultiplier: undefined,
-  isUnlimited: true,
-};
+// "auto" model removed — Copilot API rejects it (returns model_not_supported).
+// Default model is gpt-4.1 (free, 111K context, 16K output).
 
 const formatCostMultiplier = (model: ProviderModel): string => {
-  if (model.id === "auto") return "";
+  // removed auto model check
 
   const multiplier = model.costMultiplier;
   if (multiplier === undefined) {
@@ -39,7 +33,7 @@ const getCostColor = (
   model: ProviderModel,
   theme: ReturnType<typeof useTheme>,
 ): string => {
-  if (model.id === "auto") return theme.colors.textDim;
+  // removed auto model check
 
   const multiplier = model.costMultiplier;
   if (multiplier === undefined) {
@@ -67,7 +61,7 @@ export function ModelSelect(props: ModelSelectProps) {
   const [filter, setFilter] = createSignal("");
 
   const allModels = createMemo((): ProviderModel[] => {
-    return [AUTO_MODEL, ...app.availableModels()];
+    return [...app.availableModels()];
   });
 
   const filteredModels = createMemo((): ProviderModel[] => {
@@ -207,7 +201,7 @@ export function ModelSelect(props: ModelSelectProps) {
               const actualIndex = () => scrollOffset() + visibleIndex();
               const isSelected = () => actualIndex() === selectedIndex();
               const isCurrent = () => model.id === app.model();
-              const isAuto = () => model.id === "auto";
+              const isDefault = () => model.id === "gpt-4.1";
               const costLabel = () => formatCostMultiplier(model);
               const costColor = () => getCostColor(model, theme);
 
@@ -223,27 +217,27 @@ export function ModelSelect(props: ModelSelectProps) {
                   </text>
                   <text
                     fg={
-                      isAuto()
+                      isDefault()
                         ? theme.colors.warning
                         : isSelected()
                           ? theme.colors.accent
                           : undefined
                     }
                     attributes={
-                      isSelected() || isAuto()
+                      isSelected() || isDefault()
                         ? TextAttributes.BOLD
                         : TextAttributes.NONE
                     }
                   >
                     {model.id}
                   </text>
-                  <Show when={costLabel() && !isAuto()}>
+                  <Show when={costLabel() && !isDefault()}>
                     <text fg={costColor()}> [{costLabel()}]</text>
                   </Show>
                   <Show when={isCurrent()}>
                     <text fg={theme.colors.success}> (current)</text>
                   </Show>
-                  <Show when={isAuto()}>
+                  <Show when={isDefault()}>
                     <text fg={theme.colors.textDim}>
                       {" "}
                       - Let Copilot choose the best model

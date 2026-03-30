@@ -39,7 +39,7 @@ export const execute = async (options: ChatOptions): Promise<void> => {
 
   state.verbose = options.verbose || false;
   state.autoApprove = options.autoApprove || false;
-  state.currentModel = options.model || config.get("model") || "auto";
+  state.currentModel = options.model || config.get("model") || undefined;
 
   const status = await getProviderStatus(state.currentProvider);
   if (!status.valid) {
@@ -122,7 +122,7 @@ export const execute = async (options: ChatOptions): Promise<void> => {
     options.initialPrompt && options.initialPrompt.trim().length > 0;
 
   const provider = getProvider(state.currentProvider);
-  const model = state.currentModel || "auto";
+  const model = state.currentModel || "gpt-4.1";
 
   printWelcome("0.1.0", provider.displayName, model);
 
