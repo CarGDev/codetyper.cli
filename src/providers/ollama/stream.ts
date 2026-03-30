@@ -3,7 +3,7 @@
  */
 
 import { OLLAMA_ENDPOINTS, OLLAMA_TIMEOUTS } from "@constants/ollama";
-import { logError } from "@utils/debug-logger";
+import { logApi, logError } from "@utils/debug-logger";
 import { getOllamaBaseUrl } from "@providers/ollama/state";
 import { buildChatRequest, mapToolCall } from "@providers/ollama/core/chat";
 import type {
@@ -62,10 +62,14 @@ export const ollamaChatStream = async (
 ): Promise<void> => {
   const baseUrl = getOllamaBaseUrl();
   const body = buildChatRequest(messages, options, true);
-  addDebugLog(
-    "api",
-    `Ollama stream request: ${messages.length} msgs, model=${body.model}`,
-  );
+  logApi("ollama stream REQUEST", {
+    url: `${baseUrl}${OLLAMA_ENDPOINTS.CHAT}`,
+    model: body.model,
+    messageCount: messages.length,
+    toolCount: body.tools?.length,
+    stream: true,
+    messageRoles: body.messages.map((m) => m.role),
+  });
 
   const response = await fetch(`${baseUrl}${OLLAMA_ENDPOINTS.CHAT}`, {
     method: "POST",

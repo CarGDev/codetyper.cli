@@ -239,6 +239,16 @@ const executeChatRequest = async (
     };
   }
 
+  logApi("copilot chat RESPONSE", {
+    contentLen: result.content?.length,
+    toolCallCount: result.toolCalls?.length,
+    toolCallNames: result.toolCalls?.map((tc) => tc.function.name),
+    hasReasoning: !!result.reasoningText,
+    hasReasoningOpaque: !!result.reasoningOpaque,
+    usage: result.usage,
+    finishReason: result.finishReason,
+  });
+
   return result;
 };
 
@@ -246,7 +256,7 @@ export const chat = async (
   messages: Message[],
   options?: ChatCompletionOptions,
 ): Promise<ChatResult> => {
-  logApi("copilot chat request", { messageCount: messages.length, model: options?.model, toolCount: options?.tools?.length });
+  logApi("copilot chat REQUEST", { messageCount: messages.length, model: options?.model, toolCount: options?.tools?.length, temperature: options?.temperature });
   const token = await refreshToken();
   const endpoint = getEndpoint(token);
   const originalModel =
@@ -382,17 +392,35 @@ const executeStream = async (
   onChunk: (chunk: StreamChunk) => void,
   extraHeaders?: Record<string, string>,
 ): Promise<void> => {
-  logApi("copilot stream request", { model: body.model, messageCount: body.messages.length, toolCount: body.tools?.length, initiator: extraHeaders?.["X-Initiator"], hasCache: body.messages.some((m: FormattedMessage) => !!m.cache_control) });
+  const allHeaders = { ...buildHeaders(token), Accept: "text/event-stream", ...extraHeaders };
+  logApi("copilot stream REQUEST", {
+    endpoint,
+    model: body.model,
+    messageCount: body.messages.length,
+    toolCount: body.tools?.length,
+    toolNames: body.tools?.map((t) => t.function.name),
+    initiator: extraHeaders?.["X-Initiator"],
+    hasCache: body.messages.some((m: FormattedMessage) => !!m.cache_control),
+    temperature: body.temperature,
+    max_tokens: body.max_tokens,
+    headers: Object.keys(allHeaders),
+  });
+  // Log full message roles + content lengths (not full content to avoid bloat)
+  logApi("copilot stream MESSAGES", body.messages.map((m) => ({
+    role: m.role,
+    contentLen: typeof m.content === "string" ? m.content.length : JSON.stringify(m.content).length,
+    hasToolCalls: !!m.tool_calls?.length,
+    hasCache: !!m.cache_control,
+    hasReasoning: !!m.reasoning_opaque,
+  })));
   const response = await fetch(endpoint, {
     method: "POST",
-    headers: {
-      ...buildHeaders(token),
-      Accept: "text/event-stream",
-      ...extraHeaders,
-    },
+    headers: allHeaders,
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(COPILOT_STREAM_TIMEOUT),
   });
+
+  logApi("copilot stream RESPONSE status", { status: response.status, statusText: response.statusText, headers: Object.fromEntries([...response.headers.entries()].filter(([k]) => k.startsWith("x-") || k.includes("rate") || k.includes("retry") || k.includes("request-id"))) });
 
   if (!response.ok) {
     throw new Error(

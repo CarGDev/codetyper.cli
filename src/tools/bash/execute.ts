@@ -3,6 +3,7 @@
  */
 
 import { spawn } from "child_process";
+import { logTool } from "@utils/debug-logger";
 
 import {
   BASH_DEFAULTS,
@@ -177,6 +178,7 @@ export const executeBash = async (
   ctx: ToolContext,
 ): Promise<ToolResult> => {
   const { command } = args;
+  logTool("BASH command", { command, workdir: args.workdir, timeout: args.timeout });
 
   // Guard against undefined command (can happen with malformed tool calls)
   if (!command) {

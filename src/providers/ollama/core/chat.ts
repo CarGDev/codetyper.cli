@@ -189,7 +189,14 @@ export const ollamaChat = async (
   messages: Message[],
   options?: ChatCompletionOptions,
 ): Promise<ChatCompletionResponse> => {
-  logApi("ollama chat request", { messageCount: messages.length, model: options?.model, toolCount: options?.tools?.length });
+  logApi("ollama chat REQUEST", {
+    messageCount: messages.length,
+    model: options?.model,
+    toolCount: options?.tools?.length,
+    toolNames: options?.tools?.map((t) => t.function.name),
+    temperature: options?.temperature,
+    messageRoles: messages.map((m) => m.role),
+  });
   const baseUrl = getOllamaBaseUrl();
   const body = buildChatRequest(messages, options, false);
 

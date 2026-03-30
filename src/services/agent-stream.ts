@@ -359,7 +359,10 @@ const executeTool = async (
   state: StreamAgentState,
   toolCall: ToolCall,
 ): Promise<ToolResult> => {
-  logTool(`executing: ${toolCall.name}`, { id: toolCall.id, args: Object.keys(toolCall.arguments) });
+  logTool(`executing: ${toolCall.name}`, {
+    id: toolCall.id,
+    args: toolCall.arguments,
+  });
   // Check if execution was aborted
   if (state.executionControl.getState() === "aborted") {
     return {
@@ -714,7 +717,13 @@ export const runAgentLoopStream = async (
 
     try {
       const response = await callLLMStream(state, agentMessages);
-      logAgent(`LLM response`, { contentLen: response.content?.length, toolCallCount: response.toolCalls?.length, hasReasoning: !!response.reasoningOpaque });
+      logAgent("LLM RESPONSE", {
+        contentLen: response.content?.length,
+        contentPreview: response.content?.slice(0, 200),
+        toolCallCount: response.toolCalls?.length,
+        toolCallNames: response.toolCalls?.map((tc) => tc.name),
+        hasReasoning: !!response.reasoningOpaque,
+      });
 
       // Check if response has tool calls
       if (response.toolCalls && response.toolCalls.length > 0) {
@@ -819,12 +828,22 @@ export const runAgentLoopStream = async (
     state.options.onWarning?.(warnMsg);
   }
 
+  const stopReason = hitMaxIterations ? "max_iterations" : "completed";
+  logAgent("AGENT LOOP COMPLETE", {
+    success: true,
+    iterations,
+    toolCallCount: allToolCalls.length,
+    toolCallNames: allToolCalls.map((tc) => tc.call.name),
+    stopReason,
+    responseLen: finalResponse.length,
+  });
+
   return {
     success: true,
     finalResponse,
     iterations,
     toolCalls: allToolCalls,
-    stopReason: hitMaxIterations ? "max_iterations" : "completed",
+    stopReason,
   };
 };
 
