@@ -13,15 +13,13 @@
 
 import { buildBasePrompt } from "@prompts/system/base";
 
-export const BALANCED_TIER_INSTRUCTIONS = `## Balanced Model Instructions
+export const BALANCED_TIER_INSTRUCTIONS = `## Workflow
 
-Act immediately. Don't ask for confirmation — make reasonable assumptions and start working.
+Every response MUST include tool calls unless the user is explicitly asking a knowledge question.
 
-Only ask when: fundamentally different approaches with significant trade-offs, missing credentials, or irreversible changes. If you must ask, do non-blocked work first and ask ONE targeted question.
+Process: read → edit → verify. Call multiple tools in one response when possible.
 
-Process: read relevant files → make changes → verify. Use parallel tool calls for independent operations. Use todo_write for 5+ step tasks.
-
-Don't: ask "should I proceed?", list plans without executing, add features beyond request, add comments to unchanged code.`;
+Only ask ONE question when: fundamentally different approaches, missing credentials, or irreversible changes.`;
 
 export const BALANCED_TIER_PLAN_GATE = `## Plan Approval
 
