@@ -452,6 +452,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | 0.4.4   | 2026-02-12         | Minor fixes and stability improvements                                 |
 | 0.4.3   | 2026-02-11         | Pink-purple theme, image paste fix, @/commands anywhere                |
 | 0.4.2   | 2026-02-10         | Exit message service fixes                                             |
+| 0.5.2   | 2026-03-30         | npm package rebuild (stale dist from Feb)                              |
+| 0.5.1   | 2026-03-30         | Version sync fix                                                       |
+| 0.5.0   | 2026-03-30         | Agent completion architecture, tool filtering, 52 bug fixes, API opts  |
 | 0.4.1   | 2026-02-08         | Minor bug fixes                                                        |
 | 0.4.0   | 2026-02-06         | Clipboard copy/read, plan approval, execution control, safety features |
 | 0.3.0   | 2025-02-04         | System prompt builder, module restructure, legacy TUI removal          |
