@@ -803,13 +803,16 @@ export const runAgentLoopStream = async (
         const content = response.content || "";
         const isFirstIteration = iterations === 1;
         const hasToolCallsInHistory = allToolCalls.length > 0;
+        const writeTools = new Set(["write", "edit", "multi_edit", "apply_patch", "bash"]);
+        const didWriteAnything = allToolCalls.some((tc) => writeTools.has(tc.call.name));
         const looksLikeSummary = !isFirstIteration && hasToolCallsInHistory &&
-          content.length < 2000 &&
+          !didWriteAnything &&
+          content.length < 3000 &&
           !state.options.chatMode &&
-          iterations < 3;
+          iterations <= 5;
 
-        // If the model gathered info via tools then exited with a short summary
-        // without actually making changes, nudge it to continue
+        // If the model gathered info via tools but never wrote/edited anything,
+        // it's likely summarizing instead of implementing
         if (looksLikeSummary && iterations < maxIterations - 1) {
           logAgent("NUDGE: model exited with summary after tool calls, forcing continuation");
           const nudge: AgentMessage = {
