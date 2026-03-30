@@ -26,7 +26,7 @@ import {
   initGlobal,
   getRules,
   addRule,
-  getAgents,
+
   getSkills,
   getLearnings,
   addLearning,
@@ -459,31 +459,18 @@ rulesCommand
     console.log(chalk.green(`✓ Added rule: ${name}`));
   });
 
-// ========== AGENTS COMMAND ==========
-const agentsCommand = program
-  .command("agents")
-  .description("Manage custom agents");
+// ========== AGENT COMMAND ==========
+const agentCommand = program
+  .command("agent")
+  .description("Agent management commands");
 
-agentsCommand
+agentCommand
   .command("list")
   .alias("ls")
-  .description("List all agents")
+  .description("List all available agents (built-in, project, global)")
   .action(async () => {
-    const agents = await getAgents();
-
-    console.log("\n" + chalk.bold("Custom Agents") + "\n");
-
-    if (agents.length === 0) {
-      console.log(chalk.gray("No custom agents configured"));
-      return;
-    }
-
-    for (const agent of agents) {
-      console.log(chalk.cyan(`• ${agent.name}`));
-      console.log(`  ${chalk.gray(agent.description)}`);
-      if (agent.model) console.log(`  ${chalk.gray(`Model: ${agent.model}`)}`);
-      console.log();
-    }
+    const { listAgents } = await import("@commands/agent");
+    await listAgents();
   });
 
 // ========== SKILLS COMMAND ==========
