@@ -13,46 +13,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Agent Creation Command**: `codetyper agent create <name> --prompt "..."`
 - **Session Revert/Undo**: Revert to any previous message
 - **File Watching**: Detect external editor changes
+- **Anti-Research Constraint**: Max 3 grep calls before forcing a decision
+
+---
+
+## [0.5.2] - 2026-03-30
+
+### Fixed
+
+- **npm Package Build**: Dist was stale (from Feb 16). Rebuilt with all 0.5.x changes.
+- **Package Dependencies**: Updated packages.
 
 ---
 
 ## [0.5.1] - 2026-03-30
 
+### Fixed
+
+- **Version Sync**: Fixed version mismatch between package.json and version.json.
+- **Documentation**: Updated changelog and README.
+
+---
+
+## [0.5.0] - 2026-03-30
+
 ### Added
 
-- **`complete_task` Tool**: Agents must explicitly signal completion. Text-only responses no longer stop the loop — runtime enforces completion contracts.
-- **`ask_user` Tool**: LLM presents selectable options via TUI modal with keyboard navigation.
-- **`codetyper agent list` Command**: Shows all agents (built-in + project + global) as table.
-- **Debug File Logger**: Full logging to `/tmp/codetyper.cli.log` (ENV=DEV) — API calls, tool execution, agent iterations, permissions, errors with stack traces.
-- **Tool Filter Profiles**: 7 profiles limiting tools per request. Default "code" = 10 tools (was 23).
-- **Context Budget Enforcement**: Trims messages at 80% of model context limit per iteration.
-- **Copilot API Optimizations**: X-Initiator header, cache_control on system messages, reasoning_opaque preservation, vision request header.
-- **Grep `maxResults` Parameter**: Default 200 results to prevent context explosion.
-- **Path Validation**: Shell metacharacter rejection in all file tools.
-- **Sensitive File Guard**: Multi-edit now blocks `.env` and credential files.
-- **Theme Persistence**: Saves to `~/.config/codetyper/theme.json`.
-- **Tab Navigation**: Tab = agent select, Shift+Tab = mode select.
+- **`complete_task` Tool**: Agents must explicitly signal completion via tool call. Text-only responses no longer stop the agent loop — the runtime enforces completion contracts.
+- **`ask_user` Tool**: LLM can present selectable options to users via TUI modal with keyboard navigation, 1-9 quick pick, and custom answer support.
+- **`codetyper agent list` Command**: Shows all available agents (built-in + project + global) in a formatted table. Created autonomously by the agent in 8 iterations.
+- **Debug File Logger**: Comprehensive logging to `/tmp/codetyper.cli.log` when `ENV=DEV`. Logs every API call (headers, payload, response), tool execution (full args, duration), agent iterations, permission checks, user prompts, and errors with stack traces.
+- **Startup Instrumentation**: Wraps token refresh, session ops, MCP connections, provider availability, hooks, and compaction with debug logging.
+- **Tool Filter Profiles**: 7 profiles (full, explore, code, test, review, plan, chat) limiting which tools are sent per request. Default "code" profile = 10 tools (was 23).
+- **Context Budget Enforcement**: Agent loop estimates tokens before each LLM call and trims old messages when approaching 80% of the model's context limit.
+- **Copilot API Optimizations**: `X-Initiator: agent/user` header, `cache_control: ephemeral` on system messages, `reasoning_opaque` preservation across turns, `Copilot-Vision-Request` header for image detection.
+- **Grep `maxResults` Parameter**: Default limit of 200 results to prevent context explosion.
+- **Shell Metacharacter Validation**: `validateFilePath()` rejects injection patterns (`& | ; $ \` () {} [] < > !`) in read/write/edit/multi-edit/apply-patch tools.
+- **Sensitive File Guard on Multi-Edit**: Blocks editing `.env`, credentials, and other sensitive files in batch edits.
+- **Theme Persistence**: Saves theme selection to `~/.config/codetyper/theme.json`, loads on startup.
+- **Tab Key Navigation**: Tab opens agent selector, Shift+Tab opens mode selector.
+- **Tool Output Truncation**: 20KB cap for search tools (grep, bash, web_fetch). Read/edit tools skip truncation to preserve file integrity.
 
 ### Changed
 
-- **Default Model**: `gpt-5-mini` → `gpt-4.1` (free, 111K context, 16K output).
-- **"auto" Model Removed**: API rejects it — removed from UI and code.
-- **System Prompts -75%**: From 13K to ~4K chars. "Verbal response is FAILURE."
-- **Plan Threshold**: 3+ → 5+ files before requiring approval.
-- **Tool Truncation**: 20KB for search tools, skip for read/edit (prevents file deletion).
-- **Parallel Tools**: 3 → 10. MCP tools scoped to "full" profile only.
-- **Model Lists**: 8 dead models purged, 16 verified working.
-- **Compaction**: Triggers at 60% (was 80%).
+- **Default Model**: `gpt-5-mini` → `gpt-4.1` (free/unlimited, 111K context, 16K output — 10x more efficient per token).
+- **"auto" Model Removed**: Copilot API rejects `model: "auto"`. Removed from model selector, header, and all fallback paths.
+- **System Prompts Reduced ~75%**: Base, balanced, and thorough tier prompts trimmed. Copilot provider prompt gutted (-4.4K chars). Total system prompt from ~14K to ~4K chars.
+- **Agent Autonomy**: "Responding with only a plan or explanation is FAILURE. You MUST execute via tools." Adopted from crush's coder.md.tpl.
+- **Plan Approval Threshold**: 3+ files → 5+ files. Simple tasks (single-file, docs, config) execute immediately without plan approval.
+- **MAX_PARALLEL_TOOLS**: 3 → 10 for faster parallel tool execution.
+- **MCP Tools Scoped**: Only included in "full" profile. Code/test/plan profiles get built-in tools only (eliminates 9 `mcp_filesystem_*` tools from most requests).
+- **Model Lists Verified**: Purged 8 non-functional models (codex variants, raptor-mini) via curl testing against Copilot API. 16 verified working models remain.
+- **Compaction Triggers**: 80% → 60% threshold for earlier context compression.
+- **Prompt Instructions**: "Use edit not write — write OVERWRITES entire file", "Read files with limit=500+", "If apply_patch fails, use edit immediately."
 
 ### Fixed
 
-- **52 Bug Fixes**: Permissions, security, memory leaks, TUI, providers, sessions, tools.
-- **Ollama Provider**: Tool message format, default model, capability detection.
-- **apply_patch**: Detailed failure reasons + fallback to edit tool.
-- **Modal Freeze**: CenteredModal keyboard blocker removed.
-- **Double @**: File picker duplicate character insertion.
-- **Timer Leaks**: Status bar effects with proper onCleanup.
-- **Dead Code**: Deleted unused `src/api/copilot/` directory.
+- **52 Bug Fixes** across all subsystems:
+  - **Security**: Command injection validation, multi-edit sensitive file guard, Copilot token expiry buffer mismatch.
+  - **Permissions**: Path normalization (absolute vs relative), boundary-aware substring matching, absolute directory patterns.
+  - **Memory**: Capped unbounded stores — logs (2K), usage history (500), todo history (50), multi-agent instances (20), conflicts (50).
+  - **Sessions**: Context files restored on session resume, not cleared after first message, fork state cleanup on switch, graceful shutdown.
+  - **TUI**: Double @ in file picker, duplicate keyboard handlers, status bar timer leaks, streaming batch updates, modal event blocking, theme persistence.
+  - **Providers**: Ollama tool message format, default model `qwen3-coder:30b`, tool capability detection, error body reading, cascade availability check, cascade audit crash protection.
+- **apply_patch Failures**: Now returns detailed hunk failure reasons and suggests `edit` tool as fallback. Prevents 3x retry of same broken patch.
+- **Modal Keyboard Freeze**: Removed blanket `useKeyboard(stopPropagation)` from CenteredModal that blocked all child component keyboard handlers (/model, /theme, etc.).
+- **File Deletion Prevention**: Tool output truncation no longer applies to read/edit results (previously truncated file content caused model to overwrite with partial data, deleting 951 lines).
+- **Cloud Sync Race**: Replaced boolean flag with Promise-based mutex for concurrent sync protection.
+- **Dead Code**: Deleted entire `src/api/copilot/` directory (unused duplicate of providers layer).
+- **Error Handling**: Silent `.catch(() => {})` blocks replaced with debug logging. Uncaught exceptions and unhandled rejections now log stack traces before exit.
 
 ---
 
