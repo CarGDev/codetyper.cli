@@ -799,10 +799,35 @@ export const runAgentLoopStream = async (
           }
         }
       } else {
-        // No tool calls - this is the final response
-        finalResponse = response.content || "";
-        state.options.onText?.(finalResponse);
-        break;
+        // No tool calls — check if this is a genuine completion or lazy exit
+        const content = response.content || "";
+        const isFirstIteration = iterations === 1;
+        const hasToolCallsInHistory = allToolCalls.length > 0;
+        const looksLikeSummary = !isFirstIteration && hasToolCallsInHistory &&
+          content.length < 2000 &&
+          !state.options.chatMode &&
+          iterations < 3;
+
+        // If the model gathered info via tools then exited with a short summary
+        // without actually making changes, nudge it to continue
+        if (looksLikeSummary && iterations < maxIterations - 1) {
+          logAgent("NUDGE: model exited with summary after tool calls, forcing continuation");
+          const nudge: AgentMessage = {
+            role: "user" as const,
+            content: "You gathered information but did not implement the changes. Use tools (edit, write, bash) to complete the task now. Do not just summarize — execute.",
+          };
+          agentMessages.push({
+            role: "assistant" as const,
+            content,
+          });
+          agentMessages.push(nudge);
+          // Don't break — continue the loop
+        } else {
+          // Genuine final response
+          finalResponse = content;
+          state.options.onText?.(finalResponse);
+          break;
+        }
       }
     } catch (error: unknown) {
       logError(`agent loop error at iteration ${iterations}`, error);
