@@ -3,7 +3,7 @@
  */
 
 import got from "got";
-import { logApi } from "@utils/debug-logger";
+import { logApi, logError } from "@utils/debug-logger";
 
 import {
   COPILOT_MAX_RETRIES,
@@ -281,6 +281,7 @@ export const chat = async (
 
       return result;
     } catch (error) {
+      logError("copilot chat request failed", error);
       lastError = error;
 
       // Check if quota exceeded and current model is not unlimited
@@ -486,6 +487,7 @@ export const chatStream = async (
       await executeStream(endpoint, token, body, onChunk, extraHeaders);
       return;
     } catch (error) {
+      logError("copilot stream request failed", error);
       lastError = error;
 
       // Check if quota exceeded and current model is not unlimited

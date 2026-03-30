@@ -3,6 +3,7 @@
  */
 
 import { OLLAMA_ENDPOINTS, OLLAMA_TIMEOUTS } from "@constants/ollama";
+import { logError } from "@utils/debug-logger";
 import { getOllamaBaseUrl } from "@providers/ollama/state";
 import { buildChatRequest, mapToolCall } from "@providers/ollama/core/chat";
 import type {
@@ -83,9 +84,9 @@ export const ollamaChatStream = async (
     } catch {
       // Use raw text if not JSON
     }
-    throw new Error(
-      `Ollama API error ${response.status}: ${errorBody || response.statusText}`,
-    );
+    const errMsg = `Ollama API error ${response.status}: ${errorBody || response.statusText}`;
+    logError("ollama stream failed", errMsg);
+    throw new Error(errMsg);
   }
 
   if (!response.body) {

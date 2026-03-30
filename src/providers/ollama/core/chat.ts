@@ -3,6 +3,7 @@
  */
 
 import got from "got";
+import { logApi } from "@utils/debug-logger";
 
 import {
   OLLAMA_ENDPOINTS,
@@ -188,6 +189,7 @@ export const ollamaChat = async (
   messages: Message[],
   options?: ChatCompletionOptions,
 ): Promise<ChatCompletionResponse> => {
+  logApi("ollama chat request", { messageCount: messages.length, model: options?.model, toolCount: options?.tools?.length });
   const baseUrl = getOllamaBaseUrl();
   const body = buildChatRequest(messages, options, false);
 

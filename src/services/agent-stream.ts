@@ -7,7 +7,7 @@
  */
 
 import { v4 as uuidv4 } from "uuid";
-import { logAgent, logTool } from "@utils/debug-logger";
+import { logAgent, logTool, logError } from "@utils/debug-logger";
 import type { Message, StreamChunk } from "@/types/providers";
 import type { AgentOptions } from "@interfaces/AgentOptions";
 import type { AgentResult } from "@interfaces/AgentResult";
@@ -486,6 +486,7 @@ const executeTool = async (
 
     return result;
   } catch (error: unknown) {
+    logError(`tool execution failed: ${toolCall.name}`, error);
     const receivedArgs = JSON.stringify(toolCall.arguments);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return {
@@ -795,6 +796,7 @@ export const runAgentLoopStream = async (
         break;
       }
     } catch (error: unknown) {
+      logError(`agent loop error at iteration ${iterations}`, error);
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       state.options.onError?.(`Agent error: ${errorMessage}`);

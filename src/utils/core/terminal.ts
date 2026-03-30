@@ -3,6 +3,7 @@
  */
 
 import { writeSync } from "fs";
+import { logError } from "@utils/debug-logger";
 import chalk from "chalk";
 import ora, { Ora } from "ora";
 import boxen from "boxen";
@@ -130,10 +131,12 @@ export const registerExitHandlers = (): void => {
   process.on("SIGTERM", () => gracefulExit(143));
   process.on("SIGHUP", () => gracefulExit(128));
   process.on("uncaughtException", (err) => {
+    logError("UNCAUGHT EXCEPTION", err);
     console.error("Uncaught exception:", err instanceof Error ? err.stack ?? err.message : String(err));
     process.exit(1);
   });
   process.on("unhandledRejection", (reason) => {
+    logError("UNHANDLED REJECTION", reason);
     console.error("Unhandled rejection:", reason instanceof Error ? reason.stack ?? reason.message : String(reason));
     process.exit(1);
   });

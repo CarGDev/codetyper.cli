@@ -3,7 +3,7 @@
  */
 
 import { v4 as uuidv4 } from "uuid";
-import { debugLog } from "@utils/debug-logger";
+import { debugLog, logError } from "@utils/debug-logger";
 import { addMessage, saveSession } from "@services/core/session";
 import {
   createStreamingAgent,
@@ -870,6 +870,7 @@ export const handleMessage = async (
             }
           }
         } catch (err) {
+          logError(`subagent @${key} failed to start`, err);
           appStore.addLog({
             type: "error",
             content: `Subagent @${key} failed to start: ${String(err)}`,
@@ -879,6 +880,7 @@ export const handleMessage = async (
     }
   } catch (err) {
     // Non-fatal - don't block main flow on subagent helpers
+    logError("subagent invocation error", err);
     addDebugLog("error", `Subagent invocation error: ${String(err)}`);
   }
 
