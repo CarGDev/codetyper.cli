@@ -11,6 +11,8 @@ export interface ToolCallMessage {
       arguments: string;
     };
   }[];
+  /** Opaque reasoning token for multi-turn continuity */
+  reasoning_opaque?: string;
 }
 
 export interface ToolResultMessage {

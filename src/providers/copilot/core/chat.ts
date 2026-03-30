@@ -3,6 +3,7 @@
  */
 
 import got from "got";
+import { logApi } from "@utils/debug-logger";
 
 import {
   COPILOT_MAX_RETRIES,
@@ -60,13 +61,25 @@ const hasVisionContent = (messages: Message[]): boolean =>
     return msg.content.some((part) => part.type === "image_url");
   });
 
+interface CacheControl {
+  type: "ephemeral";
+}
+
 interface FormattedMessage {
   role: string;
   content: MessageContent;
   tool_call_id?: string;
   tool_calls?: Message["tool_calls"];
+  cache_control?: CacheControl;
+  /** Opaque reasoning token from previous turn — enables multi-turn reasoning continuity */
+  reasoning_opaque?: string;
 }
 
+/**
+ * Format messages for Copilot API.
+ * Tags system messages with cache_control so the API can cache
+ * the system prompt across turns (30-50% token savings).
+ */
 const formatMessages = (messages: Message[]): FormattedMessage[] =>
   messages.map((msg) => {
     const formatted: FormattedMessage = {
@@ -74,12 +87,23 @@ const formatMessages = (messages: Message[]): FormattedMessage[] =>
       content: msg.content, // Already string or ContentPart[] — pass through
     };
 
+    // Tag system messages with cache_control so Copilot caches the
+    // system prompt across turns instead of re-processing it each time
+    if (msg.role === "system") {
+      formatted.cache_control = { type: "ephemeral" };
+    }
+
     if (msg.tool_call_id) {
       formatted.tool_call_id = msg.tool_call_id;
     }
 
     if (msg.tool_calls) {
       formatted.tool_calls = msg.tool_calls;
+    }
+
+    // Preserve reasoning_opaque from assistant messages for multi-turn continuity
+    if (msg.reasoning_opaque) {
+      formatted.reasoning_opaque = msg.reasoning_opaque;
     }
 
     return formatted;
@@ -166,7 +190,12 @@ const executeChatRequest = async (
     .json<{
       error?: { message?: string };
       choices?: Array<{
-        message?: { content?: string; tool_calls?: Message["tool_calls"] };
+        message?: {
+          content?: string;
+          tool_calls?: Message["tool_calls"];
+          reasoning_text?: string;
+          reasoning_opaque?: string;
+        };
         finish_reason?: ChatCompletionResponse["finishReason"];
       }>;
       usage?: {
@@ -190,6 +219,14 @@ const executeChatRequest = async (
     finishReason: choice.finish_reason,
   };
 
+  // Preserve reasoning tokens for multi-turn continuity
+  if (choice.message?.reasoning_text) {
+    result.reasoningText = choice.message.reasoning_text;
+  }
+  if (choice.message?.reasoning_opaque) {
+    result.reasoningOpaque = choice.message.reasoning_opaque;
+  }
+
   if (choice.message?.tool_calls) {
     result.toolCalls = choice.message.tool_calls;
   }
@@ -209,6 +246,7 @@ export const chat = async (
   messages: Message[],
   options?: ChatCompletionOptions,
 ): Promise<ChatResult> => {
+  logApi("copilot chat request", { messageCount: messages.length, model: options?.model, toolCount: options?.tools?.length });
   const token = await refreshToken();
   const endpoint = getEndpoint(token);
   const originalModel =
@@ -296,6 +334,14 @@ const processStreamLine = (
       onChunk({ type: "content", content: delta.content });
     }
 
+    // Extract reasoning tokens from chain-of-thought models (o1, o3, gpt-5)
+    if (delta?.reasoning_text) {
+      onChunk({ type: "reasoning", reasoning: delta.reasoning_text });
+    }
+    if (delta?.reasoning_opaque) {
+      onChunk({ type: "reasoning", reasoningOpaque: delta.reasoning_opaque });
+    }
+
     if (delta?.tool_calls) {
       for (const tc of delta.tool_calls) {
         addDebugLog("api", `Tool call chunk: ${JSON.stringify(tc)}`);
@@ -335,6 +381,7 @@ const executeStream = async (
   onChunk: (chunk: StreamChunk) => void,
   extraHeaders?: Record<string, string>,
 ): Promise<void> => {
+  logApi("copilot stream request", { model: body.model, messageCount: body.messages.length, toolCount: body.tools?.length, initiator: extraHeaders?.["X-Initiator"], hasCache: body.messages.some((m: FormattedMessage) => !!m.cache_control) });
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {

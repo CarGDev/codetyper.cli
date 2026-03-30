@@ -3,6 +3,7 @@
  */
 
 import { v4 as uuidv4 } from "uuid";
+import { debugLog } from "@utils/debug-logger";
 import { addMessage, saveSession } from "@services/core/session";
 import {
   createStreamingAgent,
@@ -585,6 +586,7 @@ export const handleMessage = async (
   message: string,
   callbacks: ChatServiceCallbacks,
 ): Promise<void> => {
+  debugLog("message", "handleMessage called", { messageLen: message.length, provider: state.provider, model: state.model });
   // Check for feedback on previous response
   await checkUserFeedback(message, callbacks);
 

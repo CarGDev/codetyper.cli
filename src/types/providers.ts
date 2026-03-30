@@ -30,6 +30,8 @@ export interface Message {
   content: MessageContent;
   tool_call_id?: string;
   tool_calls?: ToolCall[];
+  /** Opaque reasoning token from chain-of-thought models — preserved across turns */
+  reasoning_opaque?: string;
 }
 
 /**
@@ -76,6 +78,10 @@ export interface ChatCompletionOptions {
 export interface ChatCompletionResponse {
   content: string | null;
   toolCalls?: ToolCall[];
+  /** Reasoning text from models that support chain-of-thought (o1, o3, gpt-5) */
+  reasoningText?: string;
+  /** Opaque reasoning token — send back in next turn for reasoning continuity */
+  reasoningOpaque?: string;
   usage?: {
     promptTokens: number;
     completionTokens: number;
@@ -85,10 +91,14 @@ export interface ChatCompletionResponse {
 }
 
 export interface StreamChunk {
-  type: "content" | "tool_call" | "done" | "error" | "model_switched" | "usage";
+  type: "content" | "tool_call" | "done" | "error" | "model_switched" | "usage" | "reasoning";
   content?: string;
   toolCall?: Partial<ToolCall>;
   error?: string;
+  /** Reasoning text from chain-of-thought models */
+  reasoning?: string;
+  /** Opaque reasoning token for multi-turn continuity */
+  reasoningOpaque?: string;
   usage?: {
     promptTokens: number;
     completionTokens: number;

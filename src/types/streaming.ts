@@ -78,6 +78,8 @@ export interface StreamAccumulator {
   content: string;
   toolCalls: Map<number, PartialToolCall>;
   modelSwitch: ModelSwitchInfo | null;
+  /** Accumulated reasoning_opaque from chain-of-thought models */
+  reasoningOpaque: string | null;
 }
 
 // =============================================================================
@@ -97,4 +99,5 @@ export const createStreamAccumulator = (): StreamAccumulator => ({
   content: "",
   toolCalls: new Map(),
   modelSwitch: null,
+  reasoningOpaque: null,
 });

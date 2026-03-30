@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { logSession } from "@utils/debug-logger";
 import type { AgentType, ChatSession, ChatMessage } from "@/types/common";
 import type { SessionInfo, SubagentSessionConfig } from "@/types/session";
 import { DIRS } from "@constants/paths";
@@ -39,6 +40,7 @@ export const createSession = async (agent: AgentType): Promise<ChatSession> => {
   };
 
   currentSession = session;
+  logSession("created", { id: session.id, agent });
   await saveSession(session);
   return session;
 };
@@ -55,6 +57,7 @@ export const loadSession = async (id: string): Promise<ChatSession | null> => {
     const sessionFile = path.join(DIRS.sessions, `${id}.json`);
     const data = await fs.readFile(sessionFile, "utf-8");
     currentSession = JSON.parse(data);
+    logSession("loaded", { id, messageCount: currentSession?.messages.length });
     return currentSession;
   } catch {
     return null;

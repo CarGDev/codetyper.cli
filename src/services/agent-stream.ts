@@ -7,6 +7,7 @@
  */
 
 import { v4 as uuidv4 } from "uuid";
+import { logAgent, logTool } from "@utils/debug-logger";
 import type { Message, StreamChunk } from "@/types/providers";
 import type { AgentOptions } from "@interfaces/AgentOptions";
 import type { AgentResult } from "@interfaces/AgentResult";
@@ -207,6 +208,18 @@ const processStreamChunk = (
       }
     },
 
+    reasoning: () => {
+      // Capture reasoning_opaque for multi-turn continuity
+      if (chunk.reasoningOpaque) {
+        accumulator.reasoningOpaque = chunk.reasoningOpaque;
+      }
+      // Emit reasoning text as content (visible to user as thinking)
+      if (chunk.reasoning) {
+        accumulator.content += chunk.reasoning;
+        callbacks.onContentChunk?.(chunk.reasoning);
+      }
+    },
+
     usage: () => {
       if (chunk.usage) {
         callbacks.onUsage?.(chunk.usage);
@@ -346,6 +359,7 @@ const executeTool = async (
   state: StreamAgentState,
   toolCall: ToolCall,
 ): Promise<ToolResult> => {
+  logTool(`executing: ${toolCall.name}`, { id: toolCall.id, args: Object.keys(toolCall.arguments) });
   // Check if execution was aborted
   if (state.executionControl.getState() === "aborted") {
     return {
@@ -457,7 +471,9 @@ const executeTool = async (
 
   try {
     const validatedArgs = tool.parameters.parse(toolCall.arguments);
+    const startTime = Date.now();
     const result = await tool.execute(validatedArgs, ctx);
+    logTool(`completed: ${toolCall.name}`, { success: result.success, duration: Date.now() - startTime, outputLen: result.output?.length });
 
     // Record action for rollback if successful and modifying
     if (result.success && rollbackType) {
@@ -588,6 +604,7 @@ const callLLMStream = async (
 ): Promise<{
   content: string;
   toolCalls: ToolCall[];
+  reasoningOpaque?: string;
 }> => {
   const chatMode = state.options.chatMode ?? false;
   const toolDefs = getToolsForApi(chatMode, state.options.toolFilter);
@@ -598,11 +615,16 @@ const callLLMStream = async (
   // Convert messages to provider format
   const providerMessages: Message[] = messages.map((msg) => {
     if ("tool_calls" in msg) {
-      return {
+      const assistantMsg: Message = {
         role: "assistant" as const,
         content: msg.content ?? "",
         tool_calls: msg.tool_calls,
       };
+      // Preserve reasoning_opaque for multi-turn reasoning continuity
+      if ("reasoning_opaque" in msg && msg.reasoning_opaque) {
+        assistantMsg.reasoning_opaque = msg.reasoning_opaque as string;
+      }
+      return assistantMsg;
     }
     if ("tool_call_id" in msg) {
       return {
@@ -638,6 +660,7 @@ const callLLMStream = async (
 
   return {
     content: accumulator.content,
+    reasoningOpaque: accumulator.reasoningOpaque ?? undefined,
     toolCalls: completedToolCalls,
   };
 };
@@ -668,6 +691,7 @@ export const runAgentLoopStream = async (
   }
 
   const agentMessages: AgentMessage[] = [...messages];
+  logAgent("starting agent loop", { provider: state.options.provider, model: state.options.model, maxIterations, toolFilter: state.options.toolFilter, messageCount: messages.length });
 
   while (iterations < maxIterations) {
     // Check for abort at start of each iteration
@@ -685,9 +709,11 @@ export const runAgentLoopStream = async (
     await state.executionControl.waitIfPaused();
 
     iterations++;
+    logAgent(`iteration ${iterations}/${maxIterations}`, { messagesInContext: agentMessages.length });
 
     try {
       const response = await callLLMStream(state, agentMessages);
+      logAgent(`LLM response`, { contentLen: response.content?.length, toolCallCount: response.toolCalls?.length, hasReasoning: !!response.reasoningOpaque });
 
       // Check if response has tool calls
       if (response.toolCalls && response.toolCalls.length > 0) {
@@ -703,6 +729,8 @@ export const runAgentLoopStream = async (
               arguments: JSON.stringify(tc.arguments),
             },
           })),
+          // Preserve reasoning_opaque for multi-turn reasoning continuity
+          reasoning_opaque: response.reasoningOpaque,
         };
         agentMessages.push(assistantMessage);
 

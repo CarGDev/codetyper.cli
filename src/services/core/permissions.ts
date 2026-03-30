@@ -16,6 +16,7 @@
 import fs from "fs/promises";
 import path from "path";
 import chalk from "chalk";
+import { logPermission } from "@utils/debug-logger";
 import { DIRS, FILES, LOCAL_CONFIG_DIR } from "@constants/paths";
 import type {
   ToolType,
@@ -511,12 +512,16 @@ export const promptBashPermission = async (
   description: string,
 ): Promise<{ allowed: boolean; remember?: "session" | "global" | "local" }> => {
   if (isBashDenied(command)) {
+    logPermission("bash DENIED", command);
     return { allowed: false };
   }
 
   if (isBashAllowed(command)) {
+    logPermission("bash ALLOWED (cached)", command);
     return { allowed: true };
   }
+
+  logPermission("bash PROMPTING user", command);
 
   const suggestedPattern = generateBashPattern(command);
   const patterns = generateBashPatterns(command);
@@ -652,9 +657,11 @@ export const promptFilePermission = async (
   description?: string,
 ): Promise<{ allowed: boolean; remember?: "session" | "global" | "local" }> => {
   if (isFileOpAllowed(tool, filePath)) {
+    logPermission(`${tool} ALLOWED (cached)`, filePath);
     return { allowed: true };
   }
 
+  logPermission(`${tool} PROMPTING user`, filePath);
   const ext = path.extname(filePath);
   // Generate pattern using the absolute directory so it matches future lookups
   const absoluteDir = path.dirname(resolveToAbsolute(filePath));
