@@ -132,12 +132,9 @@ const buildRequestBody = (
   stream: boolean,
   modelOverride?: string,
 ): ChatRequestBody => {
-  // Use model override if provided, otherwise use options model or default
-  const model =
-    modelOverride ??
-    (options?.model && options.model !== "auto"
-      ? options.model
-      : getDefaultModel());
+  // Resolve model — "auto" is not supported by Copilot API, always use a real model
+  const rawModel = modelOverride ?? options?.model;
+  const model = (!rawModel || rawModel === "auto") ? getDefaultModel() : rawModel;
 
   // Use higher max_tokens when tools are enabled to prevent truncation
   const hasTools = options?.tools && options.tools.length > 0;

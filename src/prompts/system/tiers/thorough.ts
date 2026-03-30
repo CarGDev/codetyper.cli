@@ -62,29 +62,11 @@ export const buildThoroughTierPrompt = (): string => {
  * - Standard high-end: codex-max and 5.2 variants
  */
 export const THOROUGH_TIER_MODELS = [
-  // Copilot Premium (3.0x)
+  // Verified working via API test 2026-03-30
   "claude-opus-4.5",
-
-  // Copilot Standard high-end
-  "gpt-5.1-codex-max",
+  "claude-opus-4.6",
   "gpt-5.2",
-  "gpt-5.2-codex",
-
-  // Reasoning models
-  "o1",
-  "o1-pro",
-  "o1-preview",
-  "o3",
-  "o3-mini",
-
-  // Other thorough models
-  "claude-opus",
-  "claude-3-opus",
-  "claude-4-opus",
-  "gemini-ultra",
-  "gemini-2.0-ultra",
-  "llama-3.1-405b",
-  "deepseek-r1",
+  "gpt-5.1",
 ] as const;
 
 export type ThoroughTierModel = (typeof THOROUGH_TIER_MODELS)[number];
@@ -92,9 +74,6 @@ export type ThoroughTierModel = (typeof THOROUGH_TIER_MODELS)[number];
 export const isThoroughTierModel = (modelId: string): boolean => {
   const lowerModel = modelId.toLowerCase();
   return THOROUGH_TIER_MODELS.some(
-    (m) => lowerModel.includes(m.toLowerCase())
-  ) || lowerModel.includes("opus") || lowerModel.includes("ultra") ||
-    lowerModel.includes("o1") || lowerModel.includes("o3") ||
-    lowerModel.includes("405b") || lowerModel.includes("r1") ||
-    lowerModel.includes("codex-max") || lowerModel.includes("5.2");
+    (m) => lowerModel.includes(m.toLowerCase()),
+  ) || lowerModel.includes("opus");
 };

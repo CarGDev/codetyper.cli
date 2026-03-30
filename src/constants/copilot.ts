@@ -35,10 +35,10 @@ export const CONNECTION_ERROR_PATTERNS = [
   /aborted/i,
 ] as const;
 
-// Default model
-export const COPILOT_DEFAULT_MODEL = "gpt-5-mini";
+// Default model — gpt-4o is unlimited (0x cost) and efficient
+export const COPILOT_DEFAULT_MODEL = "gpt-4o";
 
-// Unlimited fallback model (used when quota is exceeded)
+// Unlimited fallback model (used when quota is exceeded on premium models)
 export const COPILOT_UNLIMITED_MODEL = "gpt-4o";
 
 // Copilot messages
@@ -59,17 +59,14 @@ export const COPILOT_MESSAGES = {
  * API response billing.multiplier is preferred when available.
  */
 export const MODEL_COST_MULTIPLIERS: Record<string, number> = {
-  // Unlimited models (0x)
-  "gpt-4.1": 0,
+  // Unlimited models (0x) — verified working via API test 2026-03-30
   "gpt-4o": 0,
+  "gpt-4.1": 0,
   "gpt-5-mini": 0,
-  "raptor-mini": 0,
 
   // Low cost models (0.25x-0.33x)
   "claude-haiku-4.5": 0.33,
   "gemini-3-flash-preview": 0.33,
-  "gpt-5.1-codex-mini-preview": 0.33,
-  "gpt-5.4-mini": 0.33,
   "grok-code-fast-1": 0.25,
 
   // Standard cost models (1.0x)
@@ -79,12 +76,7 @@ export const MODEL_COST_MULTIPLIERS: Record<string, number> = {
   "gemini-2.5-pro": 1.0,
   "gemini-3.1-pro-preview": 1.0,
   "gpt-5.1": 1.0,
-  "gpt-5.1-codex": 1.0,
-  "gpt-5.1-codex-max": 1.0,
   "gpt-5.2": 1.0,
-  "gpt-5.2-codex": 1.0,
-  "gpt-5.3-codex": 1.0,
-  "gpt-5.4": 1.0,
 
   // Premium models (3.0x)
   "claude-opus-4.5": 3.0,
@@ -93,10 +85,9 @@ export const MODEL_COST_MULTIPLIERS: Record<string, number> = {
 
 // Models that are unlimited (0x cost multiplier)
 export const UNLIMITED_MODELS = new Set([
-  "gpt-4.1",
   "gpt-4o",
+  "gpt-4.1",
   "gpt-5-mini",
-  "raptor-mini",
 ]);
 
 // Model context sizes (input tokens, output tokens)
@@ -111,38 +102,31 @@ export interface ModelContextSize {
  * The API response is preferred via getModelContextSize().
  */
 export const MODEL_CONTEXT_SIZES: Record<string, ModelContextSize> = {
-  // Claude models
+  // Verified working via API test 2026-03-30
+  // Unlimited models
+  "gpt-4o": { input: 64000, output: 4000 },
+  "gpt-4.1": { input: 111000, output: 16000 },
+  "gpt-5-mini": { input: 128000, output: 64000 },
+
+  // Premium models (Claude)
   "claude-haiku-4.5": { input: 128000, output: 32000 },
-  "claude-opus-4.5": { input: 128000, output: 32000 },
-  "claude-opus-4.6": { input: 128000, output: 64000 },
   "claude-sonnet-4": { input: 128000, output: 16000 },
   "claude-sonnet-4.5": { input: 128000, output: 32000 },
   "claude-sonnet-4.6": { input: 128000, output: 32000 },
+  "claude-opus-4.5": { input: 128000, output: 32000 },
+  "claude-opus-4.6": { input: 128000, output: 64000 },
 
-  // Gemini models
+  // Premium models (Gemini)
   "gemini-2.5-pro": { input: 109000, output: 64000 },
   "gemini-3-flash-preview": { input: 109000, output: 64000 },
   "gemini-3.1-pro-preview": { input: 109000, output: 64000 },
 
-  // GPT-4 models
-  "gpt-4.1": { input: 111000, output: 16000 },
-  "gpt-4o": { input: 64000, output: 4000 },
-
-  // GPT-5 models
-  "gpt-5-mini": { input: 128000, output: 64000 },
+  // Premium models (GPT-5.x)
   "gpt-5.1": { input: 128000, output: 64000 },
-  "gpt-5.1-codex": { input: 128000, output: 128000 },
-  "gpt-5.1-codex-max": { input: 128000, output: 128000 },
-  "gpt-5.1-codex-mini-preview": { input: 128000, output: 128000 },
   "gpt-5.2": { input: 128000, output: 64000 },
-  "gpt-5.2-codex": { input: 272000, output: 128000 },
-  "gpt-5.3-codex": { input: 272000, output: 128000 },
-  "gpt-5.4": { input: 272000, output: 128000 },
-  "gpt-5.4-mini": { input: 272000, output: 128000 },
 
-  // Other models
+  // Other
   "grok-code-fast-1": { input: 109000, output: 64000 },
-  "raptor-mini": { input: 200000, output: 64000 },
 };
 
 // Default context size for unknown models

@@ -57,53 +57,30 @@ export const buildBalancedTierPrompt = (): string => {
  * - Standard (1.0x): most capable models
  */
 export const BALANCED_TIER_MODELS = [
-  // Copilot Unlimited flagship
+  // Verified working via API test 2026-03-30
   "gpt-4o",
-
-  // Copilot Standard (1.0x)
+  "gpt-4.1",
+  "gpt-5-mini",
   "claude-sonnet-4",
   "claude-sonnet-4.5",
+  "claude-sonnet-4.6",
   "gemini-2.5-pro",
-  "gemini-3-pro-preview",
-  "gpt-4.1",
-  "gpt-5",
-  "gpt-5-codex-preview",
+  "gemini-3.1-pro-preview",
+  "gemini-3-flash-preview",
   "gpt-5.1",
-  "gpt-5.1-codex",
-
-  // Other balanced models
-  "gpt-4-turbo",
-  "gpt-4",
-  "claude-3-sonnet",
-  "claude-sonnet",
-  "claude-3.5-sonnet",
-  "gemini-pro",
-  "gemini-1.5-pro",
-  "gemini-2.0-pro",
-  "llama-3.1-70b",
-  "llama-3.2-70b",
-  "mistral-large",
-  "qwen-72b",
-  "deepseek-v2",
+  "gpt-5.2",
+  "grok-code-fast-1",
+  "claude-haiku-4.5",
 ] as const;
 
 export type BalancedTierModel = (typeof BALANCED_TIER_MODELS)[number];
 
 export const isBalancedTierModel = (modelId: string): boolean => {
   const lowerModel = modelId.toLowerCase();
-
-  // Check for fast tier first (they often contain 'pro' in name too)
-  if (lowerModel.includes("mini") || lowerModel.includes("flash") || lowerModel.includes("raptor")) {
-    return false;
-  }
-
-  // Check for thorough tier
-  if (lowerModel.includes("opus") || lowerModel.includes("o1") || lowerModel.includes("ultra") ||
-      lowerModel.includes("codex-max") || lowerModel.includes("5.2")) {
-    return false;
-  }
-
+  // Thorough tier takes priority
+  if (lowerModel.includes("opus")) return false;
+  // Everything else is balanced (fast tier doesn't have a separate prompt)
   return BALANCED_TIER_MODELS.some(
-    (m) => lowerModel.includes(m.toLowerCase())
-  ) || lowerModel.includes("pro") || lowerModel.includes("sonnet") || lowerModel.includes("turbo");
+    (m) => lowerModel.includes(m.toLowerCase()),
+  );
 };
