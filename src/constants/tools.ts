@@ -84,7 +84,7 @@ export const TOOL_FILTER_PROFILES: Record<ToolFilterProfile, Set<string>> = {
  * Tool output truncation limits
  * Prevents large tool results from bloating the conversation context
  */
-export const TOOL_OUTPUT_MAX_BYTES = 10 * 1024; // 10KB hard limit (was 50KB — too much context waste)
+export const TOOL_OUTPUT_MAX_BYTES = 20 * 1024; // 20KB limit for search tools (read/edit skip truncation)
 export const TOOL_OUTPUT_MAX_LINES = 500;
 export const TOOL_OUTPUT_HEAD_LINES = 200;
 export const TOOL_OUTPUT_TAIL_LINES = 100;

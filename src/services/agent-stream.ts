@@ -770,11 +770,15 @@ export const runAgentLoopStream = async (
             consecutiveErrors = 0;
           }
 
-          // Add tool result message (truncated to prevent context bloat)
+          // Add tool result message (truncated for search tools, NOT for read/write/edit)
           const rawContent = result.error
             ? `Error: ${result.error}\n\n${result.output}`
             : result.output;
-          const { content: truncatedContent } = truncateToolOutput(rawContent);
+          // Don't truncate file content tools — the model needs full content to edit correctly
+          const skipTruncation = new Set(["read", "write", "edit", "multi_edit", "complete_task"]);
+          const { content: truncatedContent } = skipTruncation.has(toolCall.name)
+            ? { content: rawContent }
+            : truncateToolOutput(rawContent);
           const toolResultMessage: ToolResultMessage = {
             role: "tool",
             tool_call_id: toolCall.id,
