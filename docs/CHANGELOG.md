@@ -9,9 +9,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Planned
 
-- **Diff Preview**: Show file changes before writing ([#112](https://github.com/CarGDev/codetyper.cli/issues/112))
-- **Model Consistency**: Ensure consistent behavior across LLM providers ([#114](https://github.com/CarGDev/codetyper.cli/issues/114))
-- **Quality Gates**: Run TypeScript, lint, and tests before task completion ([#115](https://github.com/CarGDev/codetyper.cli/issues/115))
+- **GitHub Models API Provider**: Access 40+ models (DeepSeek, Llama 4, Grok 3) + embeddings
+- **Agent Creation Command**: `codetyper agent create <name> --prompt "..."`
+- **Session Revert/Undo**: Revert to any previous message
+- **File Watching**: Detect external editor changes
+
+---
+
+## [0.5.0] - 2026-03-30
+
+### Added
+
+- **`complete_task` Tool**: Agents must explicitly signal completion. Text-only responses no longer stop the loop — runtime enforces completion contracts.
+- **`ask_user` Tool**: LLM presents selectable options via TUI modal with keyboard navigation.
+- **`codetyper agent list` Command**: Shows all agents (built-in + project + global) as table.
+- **Debug File Logger**: Full logging to `/tmp/codetyper.cli.log` (ENV=DEV) — API calls, tool execution, agent iterations, permissions, errors with stack traces.
+- **Tool Filter Profiles**: 7 profiles limiting tools per request. Default "code" = 10 tools (was 23).
+- **Context Budget Enforcement**: Trims messages at 80% of model context limit per iteration.
+- **Copilot API Optimizations**: X-Initiator header, cache_control on system messages, reasoning_opaque preservation, vision request header.
+- **Grep `maxResults` Parameter**: Default 200 results to prevent context explosion.
+- **Path Validation**: Shell metacharacter rejection in all file tools.
+- **Sensitive File Guard**: Multi-edit now blocks `.env` and credential files.
+- **Theme Persistence**: Saves to `~/.config/codetyper/theme.json`.
+- **Tab Navigation**: Tab = agent select, Shift+Tab = mode select.
+
+### Changed
+
+- **Default Model**: `gpt-5-mini` → `gpt-4.1` (free, 111K context, 16K output).
+- **"auto" Model Removed**: API rejects it — removed from UI and code.
+- **System Prompts -75%**: From 13K to ~4K chars. "Verbal response is FAILURE."
+- **Plan Threshold**: 3+ → 5+ files before requiring approval.
+- **Tool Truncation**: 20KB for search tools, skip for read/edit (prevents file deletion).
+- **Parallel Tools**: 3 → 10. MCP tools scoped to "full" profile only.
+- **Model Lists**: 8 dead models purged, 16 verified working.
+- **Compaction**: Triggers at 60% (was 80%).
+
+### Fixed
+
+- **52 Bug Fixes**: Permissions, security, memory leaks, TUI, providers, sessions, tools.
+- **Ollama Provider**: Tool message format, default model, capability detection.
+- **apply_patch**: Detailed failure reasons + fallback to edit tool.
+- **Modal Freeze**: CenteredModal keyboard blocker removed.
+- **Double @**: File picker duplicate character insertion.
+- **Timer Leaks**: Status bar effects with proper onCleanup.
+- **Dead Code**: Deleted unused `src/api/copilot/` directory.
 
 ---
 
