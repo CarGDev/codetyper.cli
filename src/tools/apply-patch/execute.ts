@@ -128,18 +128,30 @@ export const executeApplyPatch = async (
           ? PATCH_TITLES.PARTIAL(totalPatched, totalFailed)
           : PATCH_TITLES.FAILED;
 
+    // Build detailed error with hunk failure reasons so the agent can recover
+    let errorDetail = success ? undefined : `${totalFailed} file(s) failed to patch.`;
+    if (!success) {
+      const failedHunks = results
+        .filter((r) => !r.success)
+        .flatMap((r) => r.hunkResults?.filter((h) => h.appliedAt === -1) ?? []);
+      if (failedHunks.length > 0) {
+        const reasons = failedHunks.map((h) => h.error ?? "context mismatch").join("; ");
+        errorDetail += ` Hunk failures: ${reasons}. TIP: Use the 'edit' tool instead — it matches exact text and is more reliable for single-file changes.`;
+      }
+    }
+
     return {
       success,
       title,
-      output,
-      error: success ? undefined : `${totalFailed} file(s) failed to patch`,
+      output: output || (errorDetail ?? ""),
+      error: errorDetail,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return {
       success: false,
       title: PATCH_TITLES.FAILED,
-      output: "",
+      output: `Patch parse failed: ${message}. TIP: Use the 'edit' tool instead for text replacement.`,
       error: PATCH_ERRORS.PARSE_FAILED(message),
     };
   }
