@@ -25,6 +25,11 @@ export const grepParams = z.object({
     .number()
     .optional()
     .describe("Number of context lines to show before and after each match"),
+  maxResults: z
+    .number()
+    .optional()
+    .default(200)
+    .describe("Maximum number of results to return. Default is 200."),
 });
 
 type GrepParams = z.infer<typeof grepParams>;
