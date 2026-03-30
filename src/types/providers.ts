@@ -103,9 +103,15 @@ export interface StreamChunk {
 export interface ProviderModel {
   id: string;
   name: string;
+  /** Max output tokens */
   maxTokens?: number;
+  /** Max input/prompt tokens (from API) */
+  maxInputTokens?: number;
+  /** Full context window size (input + output, from API) */
+  contextWindow?: number;
   supportsTools?: boolean;
   supportsStreaming?: boolean;
+  supportsVision?: boolean;
   costMultiplier?: number;
   isUnlimited?: boolean;
 }

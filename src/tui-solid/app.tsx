@@ -193,11 +193,12 @@ function AppContent(props: AppProps) {
 
   // Handle initial prompt after store is initialized
   if (props.initialPrompt && props.initialPrompt.trim()) {
-    setTimeout(async () => {
+    const promptTimer = setTimeout(async () => {
       app.addLog({ type: "user", content: props.initialPrompt! });
       app.setMode("thinking");
       await props.onSubmit(props.initialPrompt!);
     }, 100);
+    onCleanup(() => clearTimeout(promptTimer));
   }
 
   // Lifecycle: Start/stop Copilot usage refresh manager based on provider
@@ -313,9 +314,10 @@ function AppContent(props: AppProps) {
 
       app.setInterruptPending(true);
       toast.warning("Press Ctrl+C again to exit");
-      setTimeout(() => {
+      const exitTimer = setTimeout(() => {
         app.setInterruptPending(false);
       }, 2000);
+      exitTimer.unref?.();
       evt.preventDefault();
       return;
     }
@@ -474,8 +476,9 @@ function AppContent(props: AppProps) {
 
   const handleFileSelect = (file: string): void => {
     app.setMode("idle");
-    // Insert the file reference into the textarea as @path
-    const fileRef = `@${file} `;
+    // The "@" is already in the textarea from when the user typed it to open the picker.
+    // Just insert the file path and a trailing space.
+    const fileRef = `${file} `;
     app.insertText(fileRef);
     props.onFileSelect?.(file);
   };

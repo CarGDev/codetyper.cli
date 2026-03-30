@@ -32,6 +32,34 @@ import type {
 } from "@/types/providers";
 import { addDebugLog } from "@tui-solid/components/logs/debug-log-panel";
 
+/**
+ * Detect if the conversation is agent-initiated.
+ * opencode/crush send X-Initiator: "agent" when:
+ * - The last non-system message is from assistant (has tool_calls)
+ * - There are tool result messages in the conversation
+ * This tells the Copilot API to optimize for multi-turn agent flows.
+ */
+const detectInitiator = (messages: Message[]): "agent" | "user" => {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i];
+    if (msg.role === "system") continue;
+    if (msg.role === "tool") return "agent";
+    if (msg.role === "assistant" && msg.tool_calls && msg.tool_calls.length > 0) return "agent";
+    return "user";
+  }
+  return "user";
+};
+
+/**
+ * Detect if any message contains image content
+ */
+const hasVisionContent = (messages: Message[]): boolean =>
+  messages.some((msg) => {
+    if (typeof msg.content === "string") return false;
+    if (!Array.isArray(msg.content)) return false;
+    return msg.content.some((part) => part.type === "image_url");
+  });
+
 interface FormattedMessage {
   role: string;
   content: MessageContent;
@@ -128,10 +156,11 @@ const executeChatRequest = async (
   endpoint: string,
   token: CopilotToken,
   body: ChatRequestBody,
+  extraHeaders?: Record<string, string>,
 ): Promise<ChatCompletionResponse> => {
   const response = await got
     .post(endpoint, {
-      headers: buildHeaders(token),
+      headers: { ...buildHeaders(token), ...extraHeaders },
       json: body,
     })
     .json<{
@@ -188,12 +217,20 @@ export const chat = async (
       : getDefaultModel();
   const body = buildRequestBody(messages, options, false);
 
+  // Dynamic headers for better API routing
+  const extraHeaders: Record<string, string> = {
+    "X-Initiator": detectInitiator(messages),
+  };
+  if (hasVisionContent(messages)) {
+    extraHeaders["Copilot-Vision-Request"] = "true";
+  }
+
   let lastError: unknown;
   let switchedToUnlimited = false;
 
   for (let attempt = 0; attempt < COPILOT_MAX_RETRIES; attempt++) {
     try {
-      const result = await executeChatRequest(endpoint, token, body);
+      const result = await executeChatRequest(endpoint, token, body, extraHeaders);
 
       if (switchedToUnlimited) {
         return {
@@ -284,8 +321,8 @@ const processStreamLine = (
         error: "Response truncated: max_tokens limit reached",
       });
     }
-  } catch {
-    // Ignore parse errors in stream
+  } catch (err) {
+    addDebugLog("api", `Stream parse error: ${err instanceof Error ? err.message : String(err)}`);
   }
 
   return false;
@@ -296,12 +333,14 @@ const executeStream = async (
   token: CopilotToken,
   body: ChatRequestBody,
   onChunk: (chunk: StreamChunk) => void,
+  extraHeaders?: Record<string, string>,
 ): Promise<void> => {
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {
       ...buildHeaders(token),
       Accept: "text/event-stream",
+      ...extraHeaders,
     },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(COPILOT_STREAM_TIMEOUT),
@@ -361,7 +400,8 @@ export const chatStream = async (
   options: ChatCompletionOptions | undefined,
   onChunk: (chunk: StreamChunk) => void,
 ): Promise<void> => {
-  addDebugLog("api", `Copilot stream request: ${messages.length} messages`);
+  const initiator = detectInitiator(messages);
+  addDebugLog("api", `Copilot stream request: ${messages.length} messages, initiator=${initiator}`);
   const token = await refreshToken();
   const endpoint = getEndpoint(token);
   const originalModel =
@@ -370,6 +410,14 @@ export const chatStream = async (
       : getDefaultModel();
   const body = buildRequestBody(messages, options, true);
   addDebugLog("api", `Copilot model: ${body.model}`);
+
+  // Dynamic headers for better API routing
+  const extraHeaders: Record<string, string> = {
+    "X-Initiator": initiator,
+  };
+  if (hasVisionContent(messages)) {
+    extraHeaders["Copilot-Vision-Request"] = "true";
+  }
 
   let lastError: unknown;
   let switchedToUnlimited = false;
@@ -388,7 +436,7 @@ export const chatStream = async (
         });
       }
 
-      await executeStream(endpoint, token, body, onChunk);
+      await executeStream(endpoint, token, body, onChunk, extraHeaders);
       return;
     } catch (error) {
       lastError = error;

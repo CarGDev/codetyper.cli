@@ -45,6 +45,8 @@ export interface LogEntry {
 export interface LogEntryMetadata {
   toolName?: string;
   toolStatus?: "pending" | "running" | "success" | "error";
+  toolDescription?: string;
+  toolArgs?: Record<string, unknown>;
   isStreaming?: boolean;
   thinkingDuration?: number;
   diffData?: DiffData;

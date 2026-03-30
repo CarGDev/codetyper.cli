@@ -22,3 +22,65 @@ export const FILE_MODIFYING_TOOLS = [
   "apply_patch",
   "bash",
 ] as const;
+
+/**
+ * Tool filter profiles
+ *
+ * Instead of sending all 15+ built-in tools on every request,
+ * filter to only the tools relevant for the current task.
+ * Saves ~5,000-8,000 tokens per request.
+ */
+export type ToolFilterProfile =
+  | "full"       // All tools (default for general agent)
+  | "explore"    // Read-only exploration
+  | "code"       // Code editing focused
+  | "test"       // Testing focused
+  | "review"     // Code review (read + search)
+  | "plan"       // Planning (read + search + todo)
+  | "chat"       // Chat mode (read-only, no modifications);
+
+/**
+ * Tool names allowed per filter profile.
+ * Tools not in the set are excluded from the API call.
+ */
+export const TOOL_FILTER_PROFILES: Record<ToolFilterProfile, Set<string>> = {
+  full: new Set([
+    "bash", "read", "write", "edit", "multi_edit", "apply_patch",
+    "glob", "grep", "todo_read", "todo_write",
+    "web_search", "web_fetch", "lsp", "task_agent", "plan_approval", "ask_user",
+  ]),
+  explore: new Set([
+    "read", "glob", "grep", "web_search", "web_fetch", "lsp",
+  ]),
+  code: new Set([
+    "bash", "read", "write", "edit", "multi_edit", "apply_patch",
+    "glob", "grep", "lsp",
+  ]),
+  test: new Set([
+    "bash", "read", "write", "edit", "glob", "grep", "lsp",
+  ]),
+  review: new Set([
+    "read", "glob", "grep", "lsp", "web_search", "web_fetch",
+  ]),
+  plan: new Set([
+    "read", "glob", "grep", "todo_read", "todo_write",
+    "web_search", "web_fetch", "task_agent", "plan_approval", "ask_user",
+  ]),
+  chat: new Set([
+    "read", "glob", "grep", "todo_read",
+    "web_search", "web_fetch", "lsp",
+  ]),
+} as const;
+
+/**
+ * Tool output truncation limits
+ * Prevents large tool results from bloating the conversation context
+ */
+export const TOOL_OUTPUT_MAX_BYTES = 50 * 1024; // 50KB hard limit
+export const TOOL_OUTPUT_MAX_LINES = 2000;
+export const TOOL_OUTPUT_HEAD_LINES = 500;
+export const TOOL_OUTPUT_TAIL_LINES = 200;
+export const TOOL_OUTPUT_TRUNCATION_NOTICE =
+  "\n\n--- OUTPUT TRUNCATED ---\n" +
+  "Output exceeded limit. Use `read` with offset/limit or `grep` to find specific content.\n" +
+  "---\n\n";

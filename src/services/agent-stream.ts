@@ -32,6 +32,7 @@ import {
   captureFileState,
 } from "@services/execution-control";
 import { getActivePlans } from "@services/plan-mode/plan-service";
+import { truncateToolOutput } from "@utils/tool-output-truncation";
 
 // =============================================================================
 // Constants
@@ -47,6 +48,17 @@ const PLAN_APPROVAL_FILE_THRESHOLD = 2;
  * Tools that modify files and require plan approval tracking
  */
 const FILE_MODIFYING_TOOLS = new Set(["write", "edit", "delete", "multi_edit", "apply_patch"]);
+
+/**
+ * Session-level tracking of modified files for plan approval enforcement.
+ * Persists across agent runs within the same session (not reset per message).
+ */
+const sessionModifiedFiles = new Set<string>();
+
+/** Reset session file tracking (call on new session) */
+export const resetSessionModifiedFiles = (): void => {
+  sessionModifiedFiles.clear();
+};
 
 // =============================================================================
 // Types
@@ -367,6 +379,7 @@ const executeTool = async (
     // Track this file modification
     if (toolFilePath) {
       state.modifiedFiles.add(toolFilePath);
+      sessionModifiedFiles.add(toolFilePath);
     }
 
     // Check if we've exceeded the threshold and need plan approval
@@ -425,6 +438,7 @@ const executeTool = async (
     workingDir: state.workingDir,
     abort: state.abort,
     autoApprove: state.options.autoApprove,
+    provider: state.options.provider,
     onMetadata: () => {},
   };
 
@@ -576,7 +590,7 @@ const callLLMStream = async (
   toolCalls: ToolCall[];
 }> => {
   const chatMode = state.options.chatMode ?? false;
-  const toolDefs = getToolsForApi(chatMode);
+  const toolDefs = getToolsForApi(chatMode, state.options.toolFilter);
   const accumulator = createStreamAccumulator();
   let streamError: string | null = null;
   const completedToolCalls: ToolCall[] = [];
@@ -718,13 +732,15 @@ export const runAgentLoopStream = async (
             consecutiveErrors = 0;
           }
 
-          // Add tool result message
+          // Add tool result message (truncated to prevent context bloat)
+          const rawContent = result.error
+            ? `Error: ${result.error}\n\n${result.output}`
+            : result.output;
+          const { content: truncatedContent } = truncateToolOutput(rawContent);
           const toolResultMessage: ToolResultMessage = {
             role: "tool",
             tool_call_id: toolCall.id,
-            content: result.error
-              ? `Error: ${result.error}\n\n${result.output}`
-              : result.output,
+            content: truncatedContent,
           };
           agentMessages.push(toolResultMessage);
         }
@@ -733,7 +749,7 @@ export const runAgentLoopStream = async (
         if (allFailed) {
           consecutiveErrors++;
           if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
-            const errorMsg = `Stopping after ${consecutiveErrors} consecutive tool errors. Check model compatibility with tool calling.`;
+            const errorMsg = `Stopping after ${consecutiveErrors} consecutive tool errors. The task may be incomplete — try rephrasing or check model compatibility with tool calling.`;
             state.options.onError?.(errorMsg);
             return {
               success: false,

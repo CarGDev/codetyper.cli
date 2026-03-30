@@ -93,7 +93,7 @@ const formatBlockedMessage = (
   const categoryDescription =
     SENSITIVE_FILE_MESSAGES.CATEGORY_DESCRIPTIONS[pattern.category];
 
-  const operationText = operation === "read" ? "reading" : "modifying";
+
   const suggestion =
     operation === "read"
       ? SENSITIVE_FILE_MESSAGES.READ_SUGGESTION

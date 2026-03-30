@@ -32,7 +32,8 @@ export type AppMode =
   | "help_menu"
   | "help_detail"
   | "brain_menu"
-  | "brain_login";
+  | "brain_login"
+  | "question_prompt";
 
 /** Screen mode for determining which view to show */
 export type ScreenMode = "home" | "session";
@@ -147,6 +148,7 @@ export interface LogEntryMetadata {
   toolName?: string;
   toolStatus?: ToolStatus;
   toolDescription?: string;
+  toolArgs?: Record<string, unknown>;
   diffData?: DiffData;
   quiet?: boolean;
   isStreaming?: boolean;
@@ -240,6 +242,29 @@ export interface LearningPrompt {
 export interface LearningResponse {
   save: boolean;
   scope?: LearningScope;
+  editedContent?: string;
+}
+
+// ============================================================================
+// Question Prompt Types (ask_user tool)
+// ============================================================================
+
+export interface QuestionOption {
+  label: string;
+  description?: string;
+}
+
+export interface QuestionPrompt {
+  id: string;
+  question: string;
+  options: QuestionOption[];
+  allowCustom: boolean;
+  resolve: (response: QuestionResponse) => void;
+}
+
+export interface QuestionResponse {
+  selectedLabels: string[];
+  customAnswer?: string;
   editedContent?: string;
 }
 

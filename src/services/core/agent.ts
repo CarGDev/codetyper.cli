@@ -23,6 +23,7 @@ import { chat as providerChat } from "@providers/core/chat";
 import { getTool, getToolsForApi, refreshMCPTools } from "@tools/index";
 import type { ToolContext, ToolCall, ToolResult } from "@/types/tools";
 import { initializePermissions } from "@services/core/permissions";
+import { truncateToolOutput } from "@utils/tool-output-truncation";
 import {
   loadHooks,
   executePreToolUseHooks,
@@ -83,7 +84,10 @@ const callLLM = async (
   content: string | null;
   toolCalls?: ToolCall[];
 }> => {
-  const toolDefs = getToolsForApi();
+  const toolDefs = getToolsForApi(
+    state.options.chatMode ?? false,
+    state.options.toolFilter,
+  );
 
   // Convert messages to provider format
   const providerMessages: unknown[] = messages.map((msg) => {
@@ -395,13 +399,15 @@ export const runAgentLoop = async (
           allToolCalls.push({ call: toolCall, result });
           state.options.onToolResult?.(toolCall.id, result);
 
-          // Add tool result message
+          // Add tool result message (truncated to prevent context bloat)
+          const rawContent = result.error
+            ? `Error: ${result.error}\n\n${result.output}`
+            : result.output;
+          const { content: truncatedContent } = truncateToolOutput(rawContent);
           const toolResultMessage: ToolResultMessage = {
             role: "tool",
             tool_call_id: toolCall.id,
-            content: result.error
-              ? `Error: ${result.error}\n\n${result.output}`
-              : result.output,
+            content: truncatedContent,
           };
           agentMessages.push(toolResultMessage);
         }

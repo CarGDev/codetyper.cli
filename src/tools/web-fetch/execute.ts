@@ -269,13 +269,13 @@ export const executeWebFetch = async (
     status: "running",
   });
 
-  try {
-    // Create abort controller with timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+  // Declare outside try so finally can clean up
+  const controller = new AbortController();
+  const abortHandler = (): void => { controller.abort(); };
+  ctx.abort.signal.addEventListener("abort", abortHandler);
 
-    // Merge with context abort signal
-    ctx.abort.signal.addEventListener("abort", () => controller.abort());
+  try {
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     const response = await fetch(parsedUrl.toString(), {
       headers: {
@@ -332,6 +332,9 @@ export const executeWebFetch = async (
 
     const message = error instanceof Error ? error.message : String(error);
     return createErrorResult(WEB_FETCH_MESSAGES.FETCH_ERROR(message));
+  } finally {
+    // Clean up abort listener to prevent memory leak
+    ctx.abort.signal.removeEventListener("abort", abortHandler);
   }
 };
 

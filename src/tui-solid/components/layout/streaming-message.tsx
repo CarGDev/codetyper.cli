@@ -1,4 +1,4 @@
-import { Show, createSignal, createEffect, onMount } from "solid-js";
+import { Show, createSignal, createEffect, onMount, batch } from "solid-js";
 import { TextAttributes } from "@opentui/core";
 import { useTheme } from "@tui-solid/context/theme";
 import { useAppStore } from "@tui-solid/context/app";
@@ -44,18 +44,18 @@ export function StreamingMessage(props: StreamingMessageProps) {
       `Effect: logId=${logId}, entryId=${props.entry.id}, isActive=${isActive}, contentLen=${storeContent?.length ?? 0}`,
     );
 
-    if (isCurrentLog && isActive) {
-      setDisplayContent(storeContent);
-      setIsActiveStreaming(true);
-    } else if (isCurrentLog && !isActive) {
-      // Streaming just completed for this log
-      setIsActiveStreaming(false);
-      // Keep the content we have
-    } else {
-      // Not the current streaming log, use entry content
-      setDisplayContent(props.entry.content);
-      setIsActiveStreaming(props.entry.metadata?.isStreaming ?? false);
-    }
+    // Batch state updates to prevent duplicate re-renders per chunk
+    batch(() => {
+      if (isCurrentLog && isActive) {
+        setDisplayContent(storeContent);
+        setIsActiveStreaming(true);
+      } else if (isCurrentLog && !isActive) {
+        setIsActiveStreaming(false);
+      } else {
+        setDisplayContent(props.entry.content);
+        setIsActiveStreaming(props.entry.metadata?.isStreaming ?? false);
+      }
+    });
   });
 
   const hasContent = () => {

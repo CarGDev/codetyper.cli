@@ -10,6 +10,7 @@ import type {
   PermissionRequest,
   PlanApprovalPrompt,
   LearningPrompt,
+  QuestionPrompt,
   SessionStats,
   SuggestionPrompt,
   CommandMenuState,
@@ -39,6 +40,7 @@ interface AppStore {
   permissionRequest: PermissionRequest | null;
   planApprovalPrompt: PlanApprovalPrompt | null;
   learningPrompt: LearningPrompt | null;
+  questionPrompt: QuestionPrompt | null;
   thinkingMessage: string | null;
   sessionId: string | null;
   provider: string;
@@ -88,6 +90,7 @@ export interface AppContextValue {
   permissionRequest: Accessor<PermissionRequest | null>;
   planApprovalPrompt: Accessor<PlanApprovalPrompt | null>;
   learningPrompt: Accessor<LearningPrompt | null>;
+  questionPrompt: Accessor<QuestionPrompt | null>;
   thinkingMessage: Accessor<string | null>;
   sessionId: Accessor<string | null>;
   provider: Accessor<string>;
@@ -151,6 +154,9 @@ export interface AppContextValue {
 
   // Learning prompt actions
   setLearningPrompt: (prompt: LearningPrompt | null) => void;
+
+  // Question prompt actions
+  setQuestionPrompt: (prompt: QuestionPrompt | null) => void;
 
   // Thinking message
   setThinkingMessage: (message: string | null) => void;
@@ -296,6 +302,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         permissionRequest: null,
         planApprovalPrompt: null,
         learningPrompt: null,
+        questionPrompt: null,
         thinkingMessage: null,
         sessionId: null,
         provider: "copilot",
@@ -355,6 +362,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
       const planApprovalPrompt = (): PlanApprovalPrompt | null =>
         store.planApprovalPrompt;
       const learningPrompt = (): LearningPrompt | null => store.learningPrompt;
+      const questionPrompt = (): QuestionPrompt | null => store.questionPrompt;
       const thinkingMessage = (): string | null => store.thinkingMessage;
       const sessionId = (): string | null => store.sessionId;
       const provider = (): string => store.provider;
@@ -448,6 +456,10 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         setStore(
           produce((s) => {
             s.logs.push(newEntry);
+            // Prevent unbounded log growth — keep last 2000 entries
+            if (s.logs.length > 2000) {
+              s.logs.splice(0, s.logs.length - 2000);
+            }
           }),
         );
         return newEntry.id;
@@ -496,6 +508,11 @@ export const { provider: AppStoreProvider, use: useAppStore } =
       // Learning prompt actions
       const setLearningPrompt = (prompt: LearningPrompt | null): void => {
         setStore("learningPrompt", prompt);
+      };
+
+      // Question prompt actions
+      const setQuestionPrompt = (prompt: QuestionPrompt | null): void => {
+        setStore("questionPrompt", prompt);
       };
 
       // Thinking message
@@ -1024,6 +1041,7 @@ export const { provider: AppStoreProvider, use: useAppStore } =
         permissionRequest,
         planApprovalPrompt,
         learningPrompt,
+        questionPrompt,
         thinkingMessage,
         sessionId,
         provider,
@@ -1083,6 +1101,9 @@ export const { provider: AppStoreProvider, use: useAppStore } =
 
         // Learning prompt actions
         setLearningPrompt,
+
+        // Question prompt actions
+        setQuestionPrompt,
 
         // Thinking message
         setThinkingMessage,
@@ -1238,6 +1259,7 @@ export const appStore = {
       permissionRequest: storeRef.permissionRequest(),
       planApprovalPrompt: storeRef.planApprovalPrompt(),
       learningPrompt: storeRef.learningPrompt(),
+      questionPrompt: storeRef.questionPrompt(),
       thinkingMessage: storeRef.thinkingMessage(),
       sessionId: storeRef.sessionId(),
       provider: storeRef.provider(),
@@ -1316,6 +1338,11 @@ export const appStore = {
   setLearningPrompt: (prompt: LearningPrompt | null): void => {
     if (!storeRef) return;
     storeRef.setLearningPrompt(prompt);
+  },
+
+  setQuestionPrompt: (prompt: QuestionPrompt | null): void => {
+    if (!storeRef) return;
+    storeRef.setQuestionPrompt(prompt);
   },
 
   clearInput: (): void => {

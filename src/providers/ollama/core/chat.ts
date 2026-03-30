@@ -57,11 +57,23 @@ const extractContentParts = (
 
 /**
  * Format messages for Ollama API
- * Handles regular messages, assistant messages with tool_calls, and tool response messages.
- * Multimodal content (images) is converted to Ollama's `images` array format.
+ *
+ * Key differences from OpenAI format:
+ * - Ollama tool results use { role: "tool", content: "..." } without tool_call_id
+ * - Ollama tool_calls arguments must be objects, not JSON strings
+ * - Ollama doesn't support multimodal content in tool messages
  */
 const formatMessages = (messages: Message[]): OllamaMessage[] =>
   messages.map((msg) => {
+    // Tool result messages: Ollama expects { role: "tool", content: string }
+    // No tool_call_id, no images — just plain content
+    if (msg.role === "tool") {
+      const content = typeof msg.content === "string"
+        ? msg.content
+        : extractContentParts(msg.content).text;
+      return { role: "tool", content };
+    }
+
     const { text, images } = extractContentParts(msg.content);
 
     const formatted: OllamaMessage = {
@@ -74,9 +86,9 @@ const formatMessages = (messages: Message[]): OllamaMessage[] =>
     }
 
     // Include tool_calls for assistant messages that made tool calls
+    // Ollama expects arguments as objects, not JSON strings
     if (msg.tool_calls && msg.tool_calls.length > 0) {
       formatted.tool_calls = msg.tool_calls.map((tc) => ({
-        id: tc.id,
         function: {
           name: tc.function.name,
           arguments:

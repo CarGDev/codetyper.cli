@@ -198,6 +198,6 @@ export const buildContextMessage = (
     );
   }
 
-  state.contextFiles.clear();
+  // Don't clear — context files should remain available for the entire session
   return contextParts.join("\n\n") + "\n\n" + message;
 };

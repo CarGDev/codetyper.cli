@@ -85,10 +85,10 @@ const buildSystemPrompt = async (
   }
 };
 
-const restoreMessagesFromSession = (
+const restoreMessagesFromSession = async (
   state: ChatServiceState,
   session: ChatSession,
-): void => {
+): Promise<void> => {
   state.messages = [{ role: "system", content: state.systemPrompt }];
 
   for (const msg of session.messages) {
@@ -104,6 +104,19 @@ const restoreMessagesFromSession = (
       });
     }
   }
+
+  // Restore context files by re-reading from disk
+  if (session.contextFiles && session.contextFiles.length > 0) {
+    const { readFile } = await import("fs/promises");
+    for (const filePath of session.contextFiles) {
+      try {
+        const content = await readFile(filePath, "utf-8");
+        state.contextFiles.set(filePath, content);
+      } catch {
+        // File may have been deleted since session was saved — skip
+      }
+    }
+  }
 };
 
 const initializeSession = async (
@@ -114,7 +127,7 @@ const initializeSession = async (
     const recent = await getMostRecentSession(process.cwd());
     if (recent) {
       await loadSession(recent.id);
-      restoreMessagesFromSession(state, recent);
+      await restoreMessagesFromSession(state, recent);
       return recent;
     }
     return createSession("coder");
@@ -124,7 +137,7 @@ const initializeSession = async (
     const found = await findSession(options.resumeSession);
     if (found) {
       await loadSession(found.id);
-      restoreMessagesFromSession(state, found);
+      await restoreMessagesFromSession(state, found);
       return found;
     }
     errorMessage(`Session not found: ${options.resumeSession}`);

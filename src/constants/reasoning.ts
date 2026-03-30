@@ -88,8 +88,8 @@ export const RETRY_TIER_ORDER = [
 // =============================================================================
 
 export const COMPRESSION_THRESHOLDS = {
-  COMPRESS_AT: 0.8,
-  MINIMAL_AT: 0.95,
+  COMPRESS_AT: 0.6,
+  MINIMAL_AT: 0.85,
 } as const;
 
 export const COMPRESSION_LIMITS = {
@@ -203,8 +203,8 @@ export const DEFAULT_TOKEN_BUDGET = 8000;
 // Default max context (used when model is unknown or "auto")
 export const DEFAULT_MAX_CONTEXT_TOKENS = 128000;
 
-// Compaction trigger percentage (compact at 80% of context limit)
-export const COMPACTION_TRIGGER_PERCENT = 0.8;
+// Compaction trigger percentage (compact at 60% of context limit)
+export const COMPACTION_TRIGGER_PERCENT = 0.6;
 
 // =============================================================================
 // PRESERVATION PRIORITIES

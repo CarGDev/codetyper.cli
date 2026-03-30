@@ -8,7 +8,20 @@
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import type { ToolDefinition, ToolContext, ToolResult } from "@/types/tools";
+import type { ToolFilterProfile } from "@constants/tools";
 import { MULTI_AGENT_DEFAULTS } from "@/constants/multi-agent";
+
+/**
+ * Map task agent types to tool filter profiles
+ */
+const AGENT_TYPE_TO_PROFILE: Record<string, ToolFilterProfile> = {
+  explore: "explore",
+  implement: "code",
+  test: "test",
+  review: "review",
+  refactor: "code",
+  plan: "plan",
+};
 
 /**
  * Agent types available for delegation
@@ -321,7 +334,7 @@ const executeAgentInternal = async (
   params: TaskAgentParams,
   systemPrompt: string,
   taskPrompt: string,
-  _ctx: ToolContext,
+  ctx: ToolContext,
 ): Promise<ToolResult> => {
   const startTime = Date.now();
 
@@ -340,11 +353,14 @@ const executeAgentInternal = async (
 
     const model = tierModels[agentConfig.tier] ?? "gpt-4o";
 
+    const toolFilter = AGENT_TYPE_TO_PROFILE[params.agent_type] ?? "full";
+    const provider = (ctx.provider ?? "copilot") as import("@/types/providers").ProviderName;
     const result = await runAgent(taskPrompt, systemPrompt, {
-      provider: "copilot",
+      provider,
       model,
       autoApprove: true,
       maxIterations: params.max_turns ?? agentConfig.maxTurns,
+      toolFilter,
     });
 
     const duration = Date.now() - startTime;

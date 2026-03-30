@@ -4,7 +4,7 @@
 
 import got from "got";
 
-import { OLLAMA_ENDPOINTS } from "@constants/ollama";
+import { OLLAMA_ENDPOINTS, OLLAMA_TOOL_CAPABLE_PATTERNS } from "@constants/ollama";
 import {
   getOllamaBaseUrl,
   getOllamaDefaultModel,
@@ -12,10 +12,18 @@ import {
 import type { ProviderModel } from "@/types/providers";
 import type { OllamaTagsResponse, OllamaModelInfo } from "@/types/ollama";
 
+/**
+ * Check if an Ollama model supports tool calling based on known patterns
+ */
+const isToolCapable = (modelName: string): boolean => {
+  const lower = modelName.toLowerCase();
+  return OLLAMA_TOOL_CAPABLE_PATTERNS.some((pattern) => lower.includes(pattern));
+};
+
 const mapModelToProviderModel = (model: OllamaModelInfo): ProviderModel => ({
   id: model.name,
   name: model.name,
-  supportsTools: true,
+  supportsTools: isToolCapable(model.name),
   supportsStreaming: true,
 });
 

@@ -24,6 +24,7 @@ import { FilePicker } from "@tui-solid/components/inputs/file-picker";
 import { PermissionModal } from "@tui-solid/components/modals/permission-modal";
 import { PlanApprovalModal } from "@tui-solid/components/modals/plan-approval-modal";
 import { LearningModal } from "@tui-solid/components/modals/learning-modal";
+import { QuestionModal } from "@tui-solid/components/modals/question-modal";
 import { HelpMenu } from "@tui-solid/components/menu/help-menu";
 import { HelpDetail } from "@tui-solid/components/panels/help-detail";
 import { TodoPanel } from "@tui-solid/components/panels/todo-panel";
@@ -302,6 +303,15 @@ export function Session(props: SessionProps) {
           request={app.permissionRequest()!}
           onRespond={props.onPermissionResponse}
           isActive={app.mode() === "permission_prompt"}
+        />
+      </Show>
+
+      <Show
+        when={app.mode() === "question_prompt" && app.questionPrompt()}
+      >
+        <QuestionModal
+          prompt={app.questionPrompt()!}
+          isActive={app.mode() === "question_prompt"}
         />
       </Show>
 

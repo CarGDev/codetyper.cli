@@ -86,15 +86,28 @@ export const checkCopilotAvailability = async (): Promise<ProviderStatus> => {
     return providerCache["copilot"];
   }
 
-  // Copilot availability depends on authentication
-  // For now, assume available if token exists
-  const status: ProviderStatus = {
-    available: true,
-    lastChecked: Date.now(),
-  };
+  try {
+    const { getProvider } = await import("@providers/core/registry");
+    const copilot = getProvider("copilot");
+    const isConfigured = await copilot.isConfigured();
 
-  providerCache["copilot"] = status;
-  return status;
+    const status: ProviderStatus = {
+      available: isConfigured,
+      lastChecked: Date.now(),
+      error: isConfigured ? undefined : "Copilot not configured",
+    };
+
+    providerCache["copilot"] = status;
+    return status;
+  } catch (err) {
+    const status: ProviderStatus = {
+      available: false,
+      lastChecked: Date.now(),
+      error: err instanceof Error ? err.message : String(err),
+    };
+    providerCache["copilot"] = status;
+    return status;
+  }
 };
 
 export const getProviderStatuses = async (): Promise<

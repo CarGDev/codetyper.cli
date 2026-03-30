@@ -160,6 +160,22 @@ export function InputArea(props: InputAreaProps) {
     // Don't capture keys when any menu/modal is open
     if (isMenuOpen()) return;
 
+    // Tab opens agent/mode selector
+    if (evt.name === "tab" && !evt.shift && !evt.ctrl && !evt.meta) {
+      app.setMode("agent_select");
+      evt.preventDefault();
+      evt.stopPropagation();
+      return;
+    }
+
+    // Shift+Tab opens mode selector (agent/ask/code-review)
+    if (evt.name === "tab" && evt.shift && !evt.ctrl && !evt.meta) {
+      app.setMode("mode_select");
+      evt.preventDefault();
+      evt.stopPropagation();
+      return;
+    }
+
     // Ctrl+V: attempt clipboard image paste first, then fall through to text paste
     if (matchesAction(evt, "input_paste")) {
       handleImagePaste().then((handled) => {
@@ -177,18 +193,16 @@ export function InputArea(props: InputAreaProps) {
 
     // Command menu from "/" — works at any point in the input
     if (matchesAction(evt, "command_menu")) {
-      app.insertText("/");
+      // Don't insert "/" manually — the native textarea input already adds it
       app.openCommandMenu();
-      evt.preventDefault();
       evt.stopPropagation();
       return;
     }
 
     // File picker from "@" — works at any point in the input
     if (matchesAction(evt, "file_picker")) {
-      app.insertText("@");
+      // Don't insert "@" manually — the native textarea input already adds it
       app.setMode("file_picker");
-      evt.preventDefault();
       evt.stopPropagation();
       return;
     }
@@ -299,28 +313,9 @@ export function InputArea(props: InputAreaProps) {
             }
           }}
           onPaste={handlePaste}
-          onKeyDown={(evt) => {
-            // Don't capture keys when any menu/modal is open
-            if (isMenuOpen()) return;
-            if (
-              matchesAction(evt, "input_submit") &&
-              !evt.shift &&
-              !evt.ctrl &&
-              !evt.meta
-            ) {
-              handleSubmit();
-              evt.preventDefault();
-            }
-            if (matchesAction(evt, "command_menu")) {
-              app.insertText("/");
-              app.openCommandMenu();
-              evt.preventDefault();
-            }
-            if (matchesAction(evt, "file_picker")) {
-              app.insertText("@");
-              app.setMode("file_picker");
-              evt.preventDefault();
-            }
+          onKeyDown={() => {
+            // Key handling is done by useKeyboard() hook above
+            // to avoid duplicate event processing
           }}
           onSubmit={handleSubmit}
         />

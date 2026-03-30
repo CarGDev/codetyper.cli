@@ -43,6 +43,15 @@ import {
 let globalIndex: EmbeddingIndex | null = null;
 let localIndex: EmbeddingIndex | null = null;
 
+/**
+ * Clear cached indexes. Call when switching projects
+ * to prevent cross-project contamination.
+ */
+export const clearSemanticIndexes = (): void => {
+  globalIndex = null;
+  localIndex = null;
+};
+
 const getGlobalIndexDir = (): string =>
   path.join(getGlobalConfigDir(), "learnings");
 

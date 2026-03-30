@@ -18,6 +18,8 @@ import {
   promptFilePermission,
 } from "@services/core/permissions";
 import { formatDiff } from "@utils/diff/format";
+import { validateFilePath } from "@utils/path-validation";
+import { checkSensitiveFile } from "@services/sensitive-file-guard";
 import { generateDiff } from "@utils/diff/generate";
 import { multiEditParams } from "@tools/multi-edit/params";
 import type { ToolDefinition, ToolContext, ToolResult } from "@/types/tools";
@@ -229,14 +231,16 @@ const applyEdit = async (
 /**
  * Rollback changes using backups
  */
-const rollback = async (backups: FileBackup[]): Promise<void> => {
+const rollback = async (backups: FileBackup[]): Promise<string[]> => {
+  const failures: string[] = [];
   for (const backup of backups) {
     try {
       await fs.writeFile(backup.path, backup.content, "utf-8");
-    } catch {
-      // Best effort rollback
+    } catch (err) {
+      failures.push(`Failed to rollback ${backup.path}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
+  return failures;
 };
 
 /**
@@ -257,6 +261,27 @@ export const executeMultiEdit = async (
     return createErrorResult(
       MULTI_EDIT_MESSAGES.TOO_MANY_EDITS(MULTI_EDIT_DEFAULTS.MAX_EDITS),
     );
+  }
+
+  // SAFETY: Reject file paths with shell metacharacters
+  for (const edit of edits) {
+    const pathError = validateFilePath(edit.file_path);
+    if (pathError) {
+      return createErrorResult(pathError);
+    }
+  }
+
+  // SAFETY: Check for sensitive files BEFORE any other operation
+  for (const edit of edits) {
+    const fullPath = path.isAbsolute(edit.file_path)
+      ? edit.file_path
+      : path.join(ctx.workingDir, edit.file_path);
+    const sensitiveCheck = checkSensitiveFile(fullPath, "edit");
+    if (sensitiveCheck.blocked) {
+      return createErrorResult(
+        sensitiveCheck.message ?? `Cannot edit sensitive file: ${edit.file_path}`,
+      );
+    }
   }
 
   ctx.onMetadata?.({

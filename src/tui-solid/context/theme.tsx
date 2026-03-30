@@ -72,18 +72,46 @@ export const { provider: ThemeProvider, use: useTheme } =
   });
 
 const loadSavedTheme = (): string => {
+  // Env var takes priority
   try {
-    const saved = process.env["CODETYPER_THEME"];
-    if (saved && saved in THEMES) {
-      return saved;
+    const envTheme = process.env["CODETYPER_THEME"];
+    if (envTheme && envTheme in THEMES) {
+      return envTheme;
     }
   } catch {
-    // Ignore errors
+    // Ignore
   }
+
+  // Try saved config file
+  try {
+    const { readFileSync } = require("fs");
+    const { join } = require("path");
+    const configDir = process.env.XDG_CONFIG_HOME
+      ? join(process.env.XDG_CONFIG_HOME, "codetyper")
+      : join(require("os").homedir(), ".config", "codetyper");
+    const data = readFileSync(join(configDir, "theme.json"), "utf-8");
+    const parsed = JSON.parse(data);
+    if (parsed.theme && parsed.theme in THEMES) {
+      return parsed.theme;
+    }
+  } catch {
+    // File doesn't exist or is invalid
+  }
+
   return DEFAULT_THEME;
 };
 
-const saveTheme = (_name: string): void => {
-  // Theme persistence could be implemented here
-  // For now, themes are session-only
+const saveTheme = (name: string): void => {
+  try {
+    const { writeFileSync, mkdirSync } = require("fs");
+    const { join } = require("path");
+    const configDir = process.env.XDG_CONFIG_HOME
+      ? join(process.env.XDG_CONFIG_HOME, "codetyper")
+      : join(require("os").homedir(), ".config", "codetyper");
+    mkdirSync(configDir, { recursive: true });
+    const configPath = join(configDir, "theme.json");
+    writeFileSync(configPath, JSON.stringify({ theme: name }), "utf-8");
+  } catch {
+    // Silently fail — theme persistence is optional
+  }
 };

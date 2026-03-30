@@ -83,9 +83,12 @@ export const pollForAccessToken = async (
         );
       }
     } catch (error) {
-      if ((error as Error).message.includes("Authentication")) {
+      const msg = (error as Error).message;
+      // Re-throw auth failures and non-retriable errors immediately
+      if (msg.includes("Authentication") || msg.includes("ENOTFOUND") || msg.includes("ECONNRESET")) {
         throw error;
       }
+      // Only retry on ECONNREFUSED / ETIMEDOUT (server might still be starting)
     }
   }
 

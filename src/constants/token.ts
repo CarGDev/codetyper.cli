@@ -11,7 +11,7 @@ export const TOKENS_PER_CHAR = 0.25;
 // Context warning thresholds
 export const TOKEN_WARNING_THRESHOLD = 0.75; // 75% - yellow warning
 export const TOKEN_CRITICAL_THRESHOLD = 0.9; // 90% - red warning
-export const TOKEN_OVERFLOW_THRESHOLD = 0.95; // 95% - trigger compaction
+export const TOKEN_OVERFLOW_THRESHOLD = 0.80; // 80% - trigger compaction
 
 export const PRUNE_MINIMUM_TOKENS = 20000; // Min tokens to actually prune
 export const PRUNE_PROTECT_TOKENS = 40000; // Threshold before marking for pruning

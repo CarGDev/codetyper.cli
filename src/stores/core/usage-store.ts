@@ -34,7 +34,7 @@ export const usageStore = {
       completionTokens: state.completionTokens + entry.completionTokens,
       totalTokens: state.totalTokens + entry.totalTokens,
       requestCount: state.requestCount + 1,
-      history: [...state.history, newEntry],
+      history: [...state.history.slice(-499), newEntry],
     }));
   },
 

@@ -17,6 +17,15 @@ import {
 } from "@providers/copilot/state";
 import type { CopilotToken } from "@/types/copilot";
 
+/** Grace period in seconds before token expiry to trigger refresh */
+const TOKEN_EXPIRY_BUFFER_SECONDS = 60;
+
+/**
+ * Check if a Copilot token is still valid (with buffer)
+ */
+const isTokenValid = (token: CopilotToken): boolean =>
+  token.expires_at > Date.now() / 1000 + TOKEN_EXPIRY_BUFFER_SECONDS;
+
 /**
  * Load cached Copilot token from disk
  */
@@ -25,8 +34,7 @@ const loadCachedToken = async (): Promise<CopilotToken | null> => {
     const data = await readFile(FILES.copilotTokenCache, "utf-8");
     const token = JSON.parse(data) as CopilotToken;
 
-    // Check if token is still valid (with 60 second buffer)
-    if (token.expires_at > Date.now() / 1000 + 60) {
+    if (isTokenValid(token)) {
       return token;
     }
   } catch {
@@ -119,11 +127,8 @@ export const refreshToken = async (): Promise<CopilotToken> => {
 
   const currentState = getState();
 
-  // Check in-memory cache first
-  if (
-    currentState.githubToken &&
-    currentState.githubToken.expires_at > Date.now() / 1000
-  ) {
+  // Check in-memory cache first (same buffer as disk cache)
+  if (currentState.githubToken && isTokenValid(currentState.githubToken)) {
     return currentState.githubToken;
   }
 
@@ -159,9 +164,9 @@ export const refreshToken = async (): Promise<CopilotToken> => {
 export const buildHeaders = (token: CopilotToken): Record<string, string> => ({
   Authorization: `Bearer ${token.token}`,
   "Content-Type": "application/json",
-  "User-Agent": "GitHubCopilotChat/0.26.7",
-  "Editor-Version": "vscode/1.105.1",
-  "Editor-Plugin-Version": "copilot-chat/0.26.7",
+  "User-Agent": "GitHubCopilotChat/0.30.0",
+  "Editor-Version": "vscode/1.100.0",
+  "Editor-Plugin-Version": "copilot-chat/0.30.0",
   "Copilot-Integration-Id": "vscode-chat",
   "Openai-Intent": "conversation-edits",
 });

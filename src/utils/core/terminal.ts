@@ -120,12 +120,23 @@ export const registerExitHandlers = (): void => {
   // Emergency cleanup will be called once on ANY exit
   process.on("exit", emergencyTerminalCleanup);
   
-  // Signal handlers just call process.exit() which triggers "exit" event
-  process.on("SIGINT", () => process.exit(130));
-  process.on("SIGTERM", () => process.exit(143));
-  process.on("SIGHUP", () => process.exit(128));
-  process.on("uncaughtException", () => process.exit(1));
-  process.on("unhandledRejection", () => process.exit(1));
+  // Signal handlers: give cleanup a brief window before forced exit
+  const gracefulExit = (code: number): void => {
+    // Allow 500ms for cleanup, then force exit
+    setTimeout(() => process.exit(code), 500).unref();
+    process.exit(code);
+  };
+  process.on("SIGINT", () => gracefulExit(130));
+  process.on("SIGTERM", () => gracefulExit(143));
+  process.on("SIGHUP", () => gracefulExit(128));
+  process.on("uncaughtException", (err) => {
+    console.error("Uncaught exception:", err instanceof Error ? err.stack ?? err.message : String(err));
+    process.exit(1);
+  });
+  process.on("unhandledRejection", (reason) => {
+    console.error("Unhandled rejection:", reason instanceof Error ? reason.stack ?? reason.message : String(reason));
+    process.exit(1);
+  });
 };
 
 /**

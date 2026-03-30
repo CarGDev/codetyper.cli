@@ -50,7 +50,7 @@ const clearPlan = (): void => {
   if (currentPlan) {
     store.setState({
       currentPlan: null,
-      history: [...history, { ...currentPlan, completed: false }],
+      history: [...history.slice(-49), { ...currentPlan, completed: false }],
     });
   }
 };
@@ -65,7 +65,7 @@ const completePlan = (): void => {
     };
     store.setState({
       currentPlan: null,
-      history: [...history, completedPlan],
+      history: [...history.slice(-49), completedPlan],
     });
   }
 };

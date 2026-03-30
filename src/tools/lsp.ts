@@ -157,8 +157,12 @@ Examples:
 - Get symbols: { "operation": "symbols", "file": "src/app.ts" }
 - Get diagnostics: { "operation": "diagnostics", "file": "src/app.ts" }`,
   parameters: parametersSchema,
-  execute: async (args: LSPParams) => {
-    const { operation, file, position } = args;
+  execute: async (args: LSPParams, ctx: import("@/types/tools").ToolContext) => {
+    const { operation, file: rawFile, position } = args;
+    const { resolve, isAbsolute } = await import("path");
+
+    // Resolve file path against working directory
+    const file = isAbsolute(rawFile) ? rawFile : resolve(ctx.workingDir, rawFile);
 
     // Check if file exists
     try {

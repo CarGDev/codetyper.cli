@@ -16,6 +16,7 @@ import {
   promptFilePermission,
 } from "@services/core/permissions";
 import { readParams } from "@tools/read/params";
+import { validateFilePath } from "@utils/path-validation";
 import { processLines } from "@tools/read/format";
 import type {
   ToolDefinition,
@@ -98,6 +99,13 @@ export const executeRead = async (
   ctx: ToolContext,
 ): Promise<ToolResult> => {
   const { filePath, offset = 0, limit = READ_DEFAULTS.MAX_LINES } = args;
+
+  // SAFETY: Reject file paths with shell metacharacters
+  const pathError = validateFilePath(filePath);
+  if (pathError) {
+    return createErrorResult(filePath, new Error(pathError));
+  }
+
   const fullPath = resolvePath(filePath, ctx.workingDir);
 
   const allowed = await checkPermission(fullPath, ctx.autoApprove ?? false);

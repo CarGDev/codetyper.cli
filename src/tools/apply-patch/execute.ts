@@ -31,6 +31,7 @@ import type {
   ParsedFilePatch,
 } from "@/types/apply-patch";
 import type { ToolContext, ToolResult } from "@tools/core/types";
+import { validateFilePath } from "@utils/path-validation";
 
 // Rollback storage (in-memory for session)
 const rollbackStore: Map<string, PatchRollback> = new Map();
@@ -63,6 +64,18 @@ export const executeApplyPatch = async (
     let totalFailed = 0;
 
     for (let filePatch of parsedPatch.files) {
+      // SAFETY: Reject file paths with shell metacharacters
+      const patchTargetPath = getTargetPath(filePatch);
+      const pathError = validateFilePath(patchTargetPath);
+      if (pathError) {
+        return {
+          success: false,
+          title: PATCH_TITLES.FAILED,
+          output: "",
+          error: pathError,
+        };
+      }
+
       // Skip binary files
       if (filePatch.isBinary) {
         results.push({

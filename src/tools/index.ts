@@ -1,5 +1,7 @@
 import type { ToolDefinition, FunctionDefinition } from "@tools/core/types";
 import { toolToFunction } from "@tools/core/types";
+import type { ToolFilterProfile } from "@constants/tools";
+import { TOOL_FILTER_PROFILES } from "@constants/tools";
 import { bashTool } from "@tools/bash";
 import { readTool } from "@tools/read";
 import { writeTool } from "@tools/write";
@@ -15,6 +17,7 @@ import { lspTool } from "@tools/lsp";
 import { applyPatchTool } from "@tools/apply-patch";
 import { taskAgentTool } from "@tools/task-agent/execute";
 import { planApprovalTool } from "@tools/plan-approval/execute";
+import { askUserTool } from "@tools/ask-user/execute";
 import {
   isMCPTool,
   executeMCPTool,
@@ -44,18 +47,14 @@ export const tools: ToolDefinition[] = [
   applyPatchTool,
   taskAgentTool,
   planApprovalTool,
+  askUserTool,
 ];
 
-// Tools that are read-only (allowed in chat mode)
-const READ_ONLY_TOOLS = new Set([
-  "read",
-  "glob",
-  "grep",
-  "todo_read",
-  "web_search",
-  "web_fetch",
-  "lsp",
-]);
+
+
+// Cache for filtered tool definitions keyed by profile name
+const toolDefsCache = new Map<string, { type: "function"; function: FunctionDefinition }[]>();
+let mcpToolsCacheVersion = 0;
 
 // Map of tools by name
 export const toolMap: Map<string, ToolDefinition> = new Map(
@@ -111,45 +110,58 @@ export function getToolFunctions(): FunctionDefinition[] {
 }
 
 /**
- * Filter tools based on chat mode (read-only vs full access)
+ * Filter tools based on profile or chat mode
  */
-const filterToolsForMode = (
+const filterTools = (
   toolList: ToolDefinition[],
-  chatMode: boolean,
+  profile: ToolFilterProfile,
 ): ToolDefinition[] => {
-  if (!chatMode) return toolList;
-  return toolList.filter((t) => READ_ONLY_TOOLS.has(t.name));
+  const allowedNames = TOOL_FILTER_PROFILES[profile];
+  return toolList.filter((t) => allowedNames.has(t.name));
+};
+
+/**
+ * Resolve which profile to use based on options
+ */
+const resolveProfile = (
+  chatMode: boolean,
+  profile?: ToolFilterProfile,
+): ToolFilterProfile => {
+  if (profile) return profile;
+  if (chatMode) return "chat";
+  return "full";
 };
 
 /**
  * Get tools as format expected by Copilot/OpenAI API
  * This includes both built-in tools and MCP tools
  * @param chatMode - If true, only return read-only tools (no file modifications)
+ * @param profile - Tool filter profile to limit which tools are sent
  */
-export async function getToolsForApiAsync(chatMode = false): Promise<
-  {
-    type: "function";
-    function: FunctionDefinition;
-  }[]
-> {
-  const filteredTools = filterToolsForMode(tools, chatMode);
+export async function getToolsForApiAsync(
+  chatMode = false,
+  profile?: ToolFilterProfile,
+): Promise<{ type: "function"; function: FunctionDefinition }[]> {
+  const resolved = resolveProfile(chatMode, profile);
+  const filteredTools = filterTools(tools, resolved);
   const builtInTools = filteredTools.map((t) => ({
     type: "function" as const,
     function: toolToFunction(t),
   }));
 
-  // In chat mode, don't include MCP tools (they might modify files)
-  if (chatMode) {
+  // Read-only profiles don't include MCP/plugin tools
+  if (resolved === "chat" || resolved === "explore" || resolved === "review") {
     return builtInTools;
   }
 
   // Get MCP tools and plugin tools
   try {
     mcpToolsCache = await getMCPToolsForApi();
+    mcpToolsCacheVersion++;
+    toolDefsCache.clear(); // Invalidate cache when MCP tools change
     const pluginTools = getPluginToolsForApi();
     return [...builtInTools, ...pluginTools, ...mcpToolsCache];
   } catch {
-    // If MCP tools fail to load, still include plugin tools
     const pluginTools = getPluginToolsForApi();
     return [...builtInTools, ...pluginTools];
   }
@@ -157,32 +169,40 @@ export async function getToolsForApiAsync(chatMode = false): Promise<
 
 /**
  * Get tools synchronously (uses cached MCP tools if available)
+ * Results are cached per profile to avoid re-serialization every request.
  * @param chatMode - If true, only return read-only tools (no file modifications)
+ * @param profile - Tool filter profile to limit which tools are sent
  */
-export function getToolsForApi(chatMode = false): {
-  type: "function";
-  function: FunctionDefinition;
-}[] {
-  const filteredTools = filterToolsForMode(tools, chatMode);
+export function getToolsForApi(
+  chatMode = false,
+  profile?: ToolFilterProfile,
+): { type: "function"; function: FunctionDefinition }[] {
+  const resolved = resolveProfile(chatMode, profile);
+  const cacheKey = `${resolved}_${mcpToolsCacheVersion}`;
+
+  // Return cached result if available
+  const cached = toolDefsCache.get(cacheKey);
+  if (cached) return cached;
+
+  const filteredTools = filterTools(tools, resolved);
   const builtInTools = filteredTools.map((t) => ({
     type: "function" as const,
     function: toolToFunction(t),
   }));
 
-  // In chat mode, don't include MCP tools
-  if (chatMode) {
+  // Read-only profiles don't include MCP/plugin tools
+  if (resolved === "chat" || resolved === "explore" || resolved === "review") {
+    toolDefsCache.set(cacheKey, builtInTools);
     return builtInTools;
   }
 
-  // Include plugin tools
   const pluginTools = getPluginToolsForApi();
+  const result = mcpToolsCache
+    ? [...builtInTools, ...pluginTools, ...mcpToolsCache]
+    : [...builtInTools, ...pluginTools];
 
-  // Include cached MCP tools if available
-  if (mcpToolsCache) {
-    return [...builtInTools, ...pluginTools, ...mcpToolsCache];
-  }
-
-  return [...builtInTools, ...pluginTools];
+  toolDefsCache.set(cacheKey, result);
+  return result;
 }
 
 /**
@@ -196,12 +216,16 @@ export async function refreshMCPTools(): Promise<{
 }> {
   try {
     mcpToolsCache = await getMCPToolsForApi();
+    mcpToolsCacheVersion++;
+    toolDefsCache.clear(); // Invalidate on refresh
     return {
       success: true,
       toolCount: mcpToolsCache.length,
     };
   } catch (err) {
     mcpToolsCache = null;
+    mcpToolsCacheVersion++;
+    toolDefsCache.clear();
     const errorMessage = err instanceof Error ? err.message : String(err);
     return {
       success: false,

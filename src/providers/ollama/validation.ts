@@ -12,7 +12,15 @@ import {
 import { getOllamaBaseUrl } from "@providers/ollama/state";
 
 export const isOllamaConfigured = async (): Promise<boolean> => {
-  return true;
+  const baseUrl = getOllamaBaseUrl();
+  try {
+    await got.get(`${baseUrl}${OLLAMA_ENDPOINTS.TAGS}`, {
+      timeout: { request: OLLAMA_TIMEOUTS.VALIDATION },
+    });
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 export const validateOllama = async (): Promise<{

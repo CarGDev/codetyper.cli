@@ -66,5 +66,11 @@ export {
   cleanupPermissionHandler,
 } from "@services/chat-tui/permissions";
 
+// Re-export question handling
+export {
+  setupQuestionHandler,
+  cleanupQuestionHandler,
+} from "@services/chat-tui/question-handler";
+
 // Re-export print mode
 export { executePrintMode } from "@services/chat-tui/print-mode";

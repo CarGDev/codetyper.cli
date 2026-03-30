@@ -95,15 +95,22 @@ export const executeCascade = async (
   const primaryResponse = await callProvider(userPrompt, "ollama");
   options.callbacks?.onPrimaryComplete?.(primaryResponse);
 
-  options.callbacks?.onAuditStart?.();
-  const auditResponse = await callProvider(
-    createAuditMessage(userPrompt, primaryResponse),
-    "copilot",
-    true,
-  );
+  let auditResult;
+  let auditResponse: string | null = null;
+  try {
+    options.callbacks?.onAuditStart?.();
+    auditResponse = await callProvider(
+      createAuditMessage(userPrompt, primaryResponse),
+      "copilot",
+      true,
+    );
 
-  const auditResult = parseAuditResult(auditResponse);
-  options.callbacks?.onAuditComplete?.(auditResult);
+    auditResult = parseAuditResult(auditResponse);
+    options.callbacks?.onAuditComplete?.(auditResult);
+  } catch {
+    // Audit failure should not block the primary response
+    auditResult = { approved: true, issues: [], suggestions: [], severity: "none" as const };
+  }
 
   // Update quality scores based on audit
   await recordAuditResult(
@@ -116,7 +123,7 @@ export const executeCascade = async (
   // Determine final response
   let finalResponse = primaryResponse;
 
-  if (!auditResult.approved && auditResult.severity !== "none") {
+  if (!auditResult.approved && auditResult.severity !== "none" && auditResponse) {
     const parsed = parseAuditResponse(auditResponse);
     if (parsed.correctedResponse) {
       finalResponse = parsed.correctedResponse;

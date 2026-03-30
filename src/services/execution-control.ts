@@ -107,7 +107,10 @@ export const createExecutionControl = (
       file_write: async () => {
         // Delete the created file
         if (action.originalState?.filePath) {
-          await unlink(action.originalState.filePath).catch(() => {});
+          await unlink(action.originalState.filePath).catch((err) => {
+            // Log but don't fail — rollback is best-effort
+            console.error(`Rollback: failed to delete ${action.originalState?.filePath}: ${err}`);
+          });
         }
       },
 

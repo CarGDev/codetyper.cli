@@ -48,6 +48,10 @@ export const createSession = async (agent: AgentType): Promise<ChatSession> => {
  */
 export const loadSession = async (id: string): Promise<ChatSession | null> => {
   try {
+    // Clean up fork state from previous session on switch
+    const { clearForkService } = await import("@services/session-fork-service");
+    clearForkService();
+
     const sessionFile = path.join(DIRS.sessions, `${id}.json`);
     const data = await fs.readFile(sessionFile, "utf-8");
     currentSession = JSON.parse(data);
@@ -96,6 +100,13 @@ export const addMessage = async (
   };
 
   currentSession.messages.push(message);
+
+  // Prune old messages to prevent unbounded growth (keep last 500)
+  const MAX_SESSION_MESSAGES = 500;
+  if (currentSession.messages.length > MAX_SESSION_MESSAGES) {
+    currentSession.messages = currentSession.messages.slice(-MAX_SESSION_MESSAGES);
+  }
+
   await saveSession();
 };
 

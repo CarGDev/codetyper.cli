@@ -32,11 +32,14 @@ interface ModelsApiResponse {
     capabilities?: {
       type?: string;
       limits?: {
+        max_prompt_tokens?: number;
         max_output_tokens?: number;
+        max_context_window?: number;
       };
       supports?: {
         tool_calls?: boolean;
         streaming?: boolean;
+        vision?: boolean;
       };
     };
   }>;
@@ -61,9 +64,9 @@ export const getModels = async (): Promise<ProviderModel[]> => {
         headers: {
           Authorization: `Bearer ${token.token}`,
           Accept: "application/json",
-          "User-Agent": "GitHubCopilotChat/0.26.7",
-          "Editor-Version": "vscode/1.105.1",
-          "Editor-Plugin-Version": "copilot-chat/0.26.7",
+          "User-Agent": "GitHubCopilotChat/0.30.0",
+          "Editor-Version": "vscode/1.100.0",
+          "Editor-Plugin-Version": "copilot-chat/0.30.0",
         },
       })
       .json<ModelsApiResponse>();
@@ -89,12 +92,16 @@ export const getModels = async (): Promise<ProviderModel[]> => {
             costMultiplier === 0 ||
             UNLIMITED_MODELS.has(model.id);
 
+          const limits = model.capabilities?.limits;
           models.push({
             id: model.id,
             name: model.name ?? model.id,
-            maxTokens: model.capabilities?.limits?.max_output_tokens,
+            maxTokens: limits?.max_output_tokens,
+            maxInputTokens: limits?.max_prompt_tokens,
+            contextWindow: limits?.max_context_window,
             supportsTools: model.capabilities?.supports?.tool_calls ?? false,
             supportsStreaming: model.capabilities?.supports?.streaming ?? false,
+            supportsVision: model.capabilities?.supports?.vision ?? false,
             costMultiplier,
             isUnlimited,
           });
@@ -115,8 +122,22 @@ export const getDefaultModel = (): string => COPILOT_DEFAULT_MODEL;
 
 export const getUnlimitedModel = (): string => COPILOT_UNLIMITED_MODEL;
 
-export const isModelUnlimited = (modelId: string): boolean =>
-  UNLIMITED_MODELS.has(modelId);
+/**
+ * Check if model is unlimited. Checks fetched API data first, then hardcoded set.
+ */
+export const isModelUnlimited = (modelId: string): boolean => {
+  const state = getState();
+  const apiModel = state.models?.find((m) => m.id === modelId);
+  if (apiModel) return apiModel.isUnlimited ?? false;
+  return UNLIMITED_MODELS.has(modelId);
+};
 
-export const getModelCostMultiplier = (modelId: string): number =>
-  MODEL_COST_MULTIPLIERS[modelId] ?? 1.0;
+/**
+ * Get cost multiplier. Checks fetched API data first, then hardcoded map.
+ */
+export const getModelCostMultiplier = (modelId: string): number => {
+  const state = getState();
+  const apiModel = state.models?.find((m) => m.id === modelId);
+  if (apiModel?.costMultiplier !== undefined) return apiModel.costMultiplier;
+  return MODEL_COST_MULTIPLIERS[modelId] ?? 1.0;
+};

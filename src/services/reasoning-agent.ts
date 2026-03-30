@@ -26,6 +26,7 @@ import { chat as providerChat } from "@providers/core/chat";
 import { getTool, getToolsForApi, refreshMCPTools } from "@tools/index";
 import type { ToolContext, ToolCall, ToolResult } from "@/types/tools";
 import { initializePermissions } from "@services/core/permissions";
+import { truncateToolOutput } from "@utils/tool-output-truncation";
 import { MAX_ITERATIONS } from "@constants/agent";
 import { usageStore } from "@stores/core/usage-store";
 import type {
@@ -114,7 +115,10 @@ const callLLMWithReasoning = async (
   toolCalls?: ToolCall[];
   tokenCount: number;
 }> => {
-  const toolDefs = getToolsForApi();
+  const toolDefs = getToolsForApi(
+    state.options.chatMode ?? false,
+    state.options.toolFilter,
+  );
 
   const providerMessages: unknown[] = messages.map((msg) => {
     if ("tool_calls" in msg) {
@@ -443,12 +447,14 @@ export const runReasoningAgentLoop = async (
             createMemoryItem(result.output, "TOOL_RESULT"),
           );
 
+          const rawContent = result.error
+            ? `Error: ${result.error}\n\n${result.output}`
+            : result.output;
+          const { content: truncatedContent } = truncateToolOutput(rawContent);
           const toolResultMessage: ToolResultMessage = {
             role: "tool",
             tool_call_id: toolCall.id,
-            content: result.error
-              ? `Error: ${result.error}\n\n${result.output}`
-              : result.output,
+            content: truncatedContent,
           };
           agentMessages.push(toolResultMessage);
 

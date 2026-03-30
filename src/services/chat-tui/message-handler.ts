@@ -603,11 +603,11 @@ export const handleMessage = async (
       );
       addDebugLog("state", `Plan ${plan.id} approved by user`);
 
-      // Continue with agent execution - the agent will see the approved status
-      // and proceed with implementation
+      // Inject full plan details so the agent knows exactly what to implement
+      const planDetails = formatPlanForDisplay(plan);
       state.messages.push({
         role: "user",
-        content: `The user approved the plan. Proceed with the implementation of plan "${plan.title}".`,
+        content: `The user approved the plan. Implement it step by step.\n\n${planDetails}`,
       });
       // Fall through to normal agent processing
     } else if (isRejectionMessage(message)) {
@@ -843,23 +843,28 @@ export const handleMessage = async (
             content: `Started subagent @${key} (ID: ${startResult.metadata?.agentId ?? "?"}).`,
           });
 
-          // Poll briefly for completion and attach result if ready
+          // Poll for completion with exponential backoff (up to ~60s)
           const agentId = startResult.metadata?.agentId as string | undefined;
           if (agentId) {
-            const maxAttempts = 10;
-            const interval = 300;
+            const maxAttempts = 20;
+            let interval = 500;
             for (let i = 0; i < maxAttempts; i++) {
               // eslint-disable-next-line no-await-in-loop
               const status = await getBackgroundAgentStatus(agentId);
               if (status && status.success && status.output) {
-                // Attach assistant result to conversation
                 appStore.addLog({ type: "assistant", content: status.output });
                 addMessage("assistant", status.output);
                 await saveSession();
                 break;
               }
+              if (status && status.error) {
+                appStore.addLog({ type: "error", content: `@${key}: ${status.error}` });
+                break;
+              }
               // eslint-disable-next-line no-await-in-loop
               await new Promise((res) => setTimeout(res, interval));
+              // Backoff: 500ms, 1s, 1.5s, 2s, 2.5s, 3s...
+              interval = Math.min(interval + 500, 5000);
             }
           }
         } catch (err) {

@@ -7,6 +7,7 @@ import {
   executePrintMode,
   setupPermissionHandler,
   cleanupPermissionHandler,
+  setupQuestionHandler,
   executeCommand,
   handleMessage,
 } from "@services/chat-tui-service";
@@ -159,6 +160,7 @@ const execute = async (options: ChatTUIOptions): Promise<void> => {
   }
 
   setupPermissionHandler();
+  setupQuestionHandler();
 
   const models = await loadModels(state.provider);
   const agents = await agentLoader.getAvailableAgents(process.cwd());

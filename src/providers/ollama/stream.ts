@@ -49,8 +49,8 @@ const parseStreamLine = (
     if (parsed.done) {
       onChunk({ type: "done" });
     }
-  } catch {
-    // Ignore parse errors
+  } catch (err) {
+    addDebugLog("api", `Ollama stream parse error: ${err instanceof Error ? err.message : String(err)}`);
   }
 };
 
@@ -74,8 +74,17 @@ export const ollamaChatStream = async (
   });
 
   if (!response.ok) {
+    // Read the error body for useful diagnostics
+    let errorBody = "";
+    try {
+      errorBody = await response.text();
+      const parsed = JSON.parse(errorBody);
+      errorBody = parsed.error ?? errorBody;
+    } catch {
+      // Use raw text if not JSON
+    }
     throw new Error(
-      `Ollama API error: ${response.status} ${response.statusText}`,
+      `Ollama API error ${response.status}: ${errorBody || response.statusText}`,
     );
   }
 

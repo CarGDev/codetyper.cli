@@ -55,8 +55,8 @@ let syncState: BrainSyncState = {
 // Cloud configuration
 let cloudConfig: CloudBrainConfig = { ...CLOUD_BRAIN_DEFAULTS };
 
-// Sync lock to prevent concurrent syncs
-let syncInProgress = false;
+// Sync mutex — reuse in-flight sync promise to prevent concurrent syncs
+let syncInProgress: Promise<void> | null = null;
 
 // Local version tracking
 let localVersion = 0;
@@ -103,8 +103,10 @@ export const sync = async (
     throw new Error(CLOUD_ERRORS.NOT_CONFIGURED);
   }
 
+  // If sync is already in progress, wait for it instead of throwing
   if (syncInProgress) {
-    throw new Error(CLOUD_ERRORS.SYNC_IN_PROGRESS);
+    await syncInProgress;
+    return { success: true, direction: options.direction ?? "both", itemsSynced: 0, itemsFailed: 0, conflicts: [], errors: [], duration: 0, timestamp: Date.now() };
   }
 
   if (!isOnline()) {
@@ -112,7 +114,8 @@ export const sync = async (
     throw new Error(CLOUD_ERRORS.OFFLINE);
   }
 
-  syncInProgress = true;
+  let resolveSync: () => void;
+  syncInProgress = new Promise<void>((r) => { resolveSync = r; });
   syncState.status = "syncing";
   syncState.syncErrors = [];
 
@@ -227,7 +230,8 @@ export const sync = async (
 
     return result;
   } finally {
-    syncInProgress = false;
+    resolveSync!();
+    syncInProgress = null;
     clearResolvedConflicts();
   }
 };

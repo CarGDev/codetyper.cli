@@ -125,17 +125,21 @@ const updateInstanceStatus = (
     if (!instance) return state;
 
     const newInstances = new Map(state.instances);
+    const isTerminal = ["completed", "error", "cancelled"].includes(status);
     newInstances.set(agentId, {
       ...instance,
       status,
       error,
-      completedAt: ["completed", "error", "cancelled"].includes(status)
-        ? Date.now()
-        : undefined,
+      completedAt: isTerminal ? Date.now() : undefined,
     });
 
     return { instances: newInstances };
   });
+
+  // Auto-prune when agents reach terminal state
+  if (["completed", "error", "cancelled"].includes(status)) {
+    pruneCompletedInstances();
+  }
 };
 
 /**
@@ -281,6 +285,40 @@ const setError = (error: string | null): void => {
 };
 
 /**
+ * Remove completed/failed/cancelled agent instances to free memory.
+ * Keeps only the most recent 20 finished instances for debugging.
+ */
+const pruneCompletedInstances = (): void => {
+  store.setState((state) => {
+    const newInstances = new Map(state.instances);
+    const finished: [string, AgentInstance][] = [];
+
+    for (const [id, instance] of newInstances) {
+      if (["completed", "error", "cancelled"].includes(instance.status)) {
+        finished.push([id, instance]);
+      }
+    }
+
+    // Keep only last 20 finished instances
+    if (finished.length > 20) {
+      const toRemove = finished
+        .sort((a, b) => (a[1].completedAt ?? 0) - (b[1].completedAt ?? 0))
+        .slice(0, finished.length - 20);
+      for (const [id] of toRemove) {
+        newInstances.delete(id);
+      }
+    }
+
+    // Also prune resolved conflicts — keep last 50
+    const conflicts = state.conflicts.length > 50
+      ? state.conflicts.slice(-50)
+      : state.conflicts;
+
+    return { instances: newInstances, conflicts };
+  });
+};
+
+/**
  * Clear all state
  */
 const clear = (): void => {
@@ -359,6 +397,7 @@ export const multiAgentStore = {
 
   // State management
   clear,
+  pruneCompletedInstances,
 
   // Queries
   getActiveInstances,

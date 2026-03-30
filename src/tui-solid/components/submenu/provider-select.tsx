@@ -106,7 +106,7 @@ export function ProviderSelect(props: ProviderSelectProps) {
             if (selected.id !== "ollama") {
               props.onClose();
             }
-          });
+          }).catch(() => { /* provider switch failed — UI stays open */ });
         } else if (selected.id !== "ollama") {
           props.onClose();
         }

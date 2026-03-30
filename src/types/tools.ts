@@ -12,6 +12,8 @@ export interface ToolContext {
   workingDir: string;
   abort: AbortController;
   autoApprove?: boolean;
+  /** Provider used by the parent agent — subagents should respect this */
+  provider?: string;
   onMetadata?: (metadata: ToolMetadata) => void;
 }
 

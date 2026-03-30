@@ -69,24 +69,18 @@ export function StatusBar() {
   let prevToolName: string | undefined = undefined;
 
   // Elapsed time tracking
-  let elapsedTimer: ReturnType<typeof setInterval> | null = null;
+  // Elapsed time — uses onCleanup inside effect for proper Solid.js cleanup
   createEffect(() => {
     const startTime = app.sessionStats().startTime;
-    if (elapsedTimer) clearInterval(elapsedTimer);
-    elapsedTimer = setInterval(() => {
+    const timer = setInterval(() => {
       setElapsed(Date.now() - startTime);
     }, 1000);
-  });
-
-  onCleanup(() => {
-    if (elapsedTimer) clearInterval(elapsedTimer);
+    onCleanup(() => clearInterval(timer));
   });
 
   // Thinking time tracking
-  let thinkingTimer: ReturnType<typeof setInterval> | null = null;
   createEffect(() => {
     const thinkingStart = app.sessionStats().thinkingStartTime;
-    if (thinkingTimer) clearInterval(thinkingTimer);
 
     if (thinkingStart === null) {
       setThinkingTime(0);
@@ -94,23 +88,17 @@ export function StatusBar() {
     }
 
     setThinkingTime(Math.floor((Date.now() - thinkingStart) / 1000));
-    thinkingTimer = setInterval(() => {
+    const timer = setInterval(() => {
       setThinkingTime(Math.floor((Date.now() - thinkingStart) / 1000));
     }, 1000);
-  });
-
-  onCleanup(() => {
-    if (thinkingTimer) clearInterval(thinkingTimer);
+    onCleanup(() => clearInterval(timer));
   });
 
   // Rotating status message
-  let messageTimer: ReturnType<typeof setInterval> | null = null;
   createEffect(() => {
     const mode = app.mode();
     const toolCall = app.currentToolCall();
     const isProcessing = mode === "thinking" || mode === "tool_execution";
-
-    if (messageTimer) clearInterval(messageTimer);
 
     if (!isProcessing) {
       setStatusMessage("");
@@ -131,17 +119,14 @@ export function StatusBar() {
     prevMode = mode;
     prevToolName = toolCall?.name;
 
-    messageTimer = setInterval(() => {
+    const timer = setInterval(() => {
       if (mode === "thinking") {
         setStatusMessage(getThinkingMessage());
       } else if (mode === "tool_execution" && toolCall) {
         setStatusMessage(getToolMessage(toolCall.name, toolCall.description));
       }
     }, 2500);
-  });
-
-  onCleanup(() => {
-    if (messageTimer) clearInterval(messageTimer);
+    onCleanup(() => clearInterval(timer));
   });
 
   const isProcessing = createMemo(

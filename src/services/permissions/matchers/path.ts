@@ -18,7 +18,18 @@ import { getPatternsForTool } from "@services/permissions/pattern-index";
 // =============================================================================
 
 /**
- * Check if a file path matches a pattern string
+ * Resolve a path to absolute for consistent matching
+ */
+const resolveToAbsolute = (filePath: string): string =>
+  path.isAbsolute(filePath)
+    ? path.normalize(filePath)
+    : path.normalize(path.resolve(process.cwd(), filePath));
+
+/**
+ * Check if a file path matches a pattern string.
+ *
+ * Both filePath and pattern are resolved to absolute paths before comparison
+ * to prevent mismatches between relative patterns and absolute tool paths.
  */
 export const matchesPathPattern = (
   filePath: string,
@@ -27,32 +38,31 @@ export const matchesPathPattern = (
   // Wildcard: match everything
   if (pattern === "*") return true;
 
-  const normalizedPath = path.normalize(filePath);
-  const normalizedPattern = path.normalize(pattern);
-
-  // Directory prefix: src/* matches src/foo.ts
-  if (pattern.endsWith("/*") || pattern.endsWith("*")) {
-    const prefix = normalizedPattern.slice(0, -1);
-    if (normalizedPath.startsWith(prefix)) {
-      return true;
-    }
-  }
-
-  // Extension pattern: *.ts matches foo.ts
+  // Extension pattern: *.ts matches foo.ts (no path resolution needed)
   if (pattern.startsWith("*.")) {
     const ext = pattern.slice(1); // .ts
-    if (normalizedPath.endsWith(ext)) {
-      return true;
-    }
+    return path.normalize(filePath).endsWith(ext);
   }
 
+  const absolutePath = resolveToAbsolute(filePath);
+
+  // Directory prefix: src/* or /abs/path/src/*
+  if (pattern.endsWith("/*") || pattern.endsWith("*")) {
+    const rawPrefix = pattern.slice(0, pattern.lastIndexOf("*"));
+    const absolutePrefix = resolveToAbsolute(rawPrefix);
+    return absolutePath.startsWith(absolutePrefix);
+  }
+
+  const absolutePattern = resolveToAbsolute(pattern);
+
   // Exact match
-  if (normalizedPath === normalizedPattern) {
+  if (absolutePath === absolutePattern) {
     return true;
   }
 
-  // Substring match (for partial paths)
-  if (normalizedPath.includes(normalizedPattern)) {
+  // Path-boundary substring match (prevent "src" matching "src-backup")
+  const sepPattern = path.sep + absolutePattern;
+  if (absolutePath.includes(sepPattern + path.sep) || absolutePath.endsWith(sepPattern)) {
     return true;
   }
 
@@ -115,7 +125,8 @@ export const findMatchingFilePatterns = (
 // =============================================================================
 
 /**
- * Generate a pattern suggestion for a file operation
+ * Generate a pattern suggestion for a file operation.
+ * Uses absolute paths for directory patterns to ensure consistent matching.
  */
 export const generateFilePattern = (
   tool: FileOpTool,
@@ -128,10 +139,10 @@ export const generateFilePattern = (
     return `${tool}(*${ext})`;
   }
 
-  // Directory-based pattern
-  const dir = path.dirname(filePath);
-  if (dir && dir !== ".") {
-    return `${tool}(${dir}/*)`;
+  // Directory-based pattern using absolute path
+  const absoluteDir = path.dirname(resolveToAbsolute(filePath));
+  if (absoluteDir && absoluteDir !== ".") {
+    return `${tool}(${absoluteDir}/*)`;
   }
 
   // Fall back to basename

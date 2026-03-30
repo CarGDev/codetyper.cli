@@ -16,6 +16,7 @@ import {
   promptFilePermission,
 } from "@services/core/permissions";
 import { checkSensitiveFile } from "@services/sensitive-file-guard";
+import { validateFilePath } from "@utils/path-validation";
 import { createBackup } from "@services/file-backup";
 import { formatDiff } from "@utils/diff/format";
 import { generateDiff } from "@utils/diff/generate";
@@ -142,6 +143,13 @@ export const executeWrite = async (
   ctx: ToolContext,
 ): Promise<ToolResult> => {
   const { filePath, content } = args;
+
+  // SAFETY: Reject file paths with shell metacharacters
+  const pathError = validateFilePath(filePath);
+  if (pathError) {
+    return createErrorResult(filePath, new Error(pathError));
+  }
+
   const { fullPath, relativePath } = resolvePaths(filePath, ctx.workingDir);
 
   // SAFETY: Check for sensitive files BEFORE any other operation

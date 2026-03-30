@@ -4,6 +4,7 @@
 
 import type { ProviderName } from "@/types/providers";
 import type { ToolCall, ToolResult } from "@/types/tools";
+import type { ToolFilterProfile } from "@constants/tools";
 
 export interface AgentOptions {
   provider: ProviderName;
@@ -19,6 +20,8 @@ export interface AgentOptions {
   autoApprove?: boolean;
   /** Chat mode - only read-only tools, no file modifications */
   chatMode?: boolean;
+  /** Tool filter profile — limits which tools are sent to the LLM per request */
+  toolFilter?: ToolFilterProfile;
   /** Enforce plan approval for multi-file modifications (default: true) */
   enforcePlanApproval?: boolean;
   /** Model-specific parameters from tier detection */

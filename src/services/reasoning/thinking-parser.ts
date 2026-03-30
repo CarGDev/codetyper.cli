@@ -41,10 +41,9 @@ type ParserState = "normal" | "buffering_tag" | "inside_tag";
 // Tag Detection
 // =============================================================================
 
-const TAG_SET = new Set<string>(THINKING_TAGS);
 
-const isKnownTag = (name: string): name is ThinkingTagName =>
-  TAG_SET.has(name);
+
+
 
 /**
  * Try to match an opening tag at a given position in the text.
