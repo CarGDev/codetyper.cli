@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+import { instrumentAll } from "@utils/debug-instrumentation";
+// Instrument all critical paths for debug logging (only when ENV=DEV)
+instrumentAll().catch(() => {});
+
 import { Command } from "commander";
 import { handleCommand } from "@commands/core/handlers";
 import { execute } from "@commands/chat-tui";
