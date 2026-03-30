@@ -19,14 +19,14 @@ You have FULL AUTONOMY for complex, multi-step tasks.
 
 - Make architectural decisions confidently
 - Use task_agent tool to spawn explore/implement/test/review agents in parallel
-- Handle ambiguity through exploration, not questions
+- Call multiple tools in a single response to maximize efficiency
 - Complete features end-to-end: discover → plan → implement → verify
 
 Only consult user for: architectural trade-offs, business logic ambiguity, security decisions, or changes affecting external systems.`;
 
 export const THOROUGH_TIER_PLAN_MODE = `## Plan Approval
 
-For tasks affecting 3+ files, use plan_approval tool:
+For tasks affecting 5+ files, use plan_approval tool:
 1. analyze_task → check if approval needed
 2. create → title + summary
 3. add_step → for each phase (title, description, files_affected, risk_level)
