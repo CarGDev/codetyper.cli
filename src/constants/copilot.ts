@@ -35,8 +35,9 @@ export const CONNECTION_ERROR_PATTERNS = [
   /aborted/i,
 ] as const;
 
-// Default model — gpt-4o is unlimited (0x cost) and efficient
-export const COPILOT_DEFAULT_MODEL = "gpt-4o";
+// Default model — gpt-4.1 is unlimited (0x), 111K context, 16K output
+// Better than gpt-4o (64K/4K) for agent tasks that need more context/output
+export const COPILOT_DEFAULT_MODEL = "gpt-4.1";
 
 // Unlimited fallback model (used when quota is exceeded on premium models)
 export const COPILOT_UNLIMITED_MODEL = "gpt-4o";

@@ -47,58 +47,11 @@ export const COPILOT_MODEL_TIERS = {
   ],
 } as const;
 
-export const COPILOT_TOOL_PATTERNS = `## Copilot Tool Usage Patterns
-
-### Model Selection
-Copilot provides multiple models with different cost/capability trade-offs:
-- **Unlimited**: gpt-4o, gpt-4o-mini, gpt-5-mini - no rate limits
-- **Low cost**: claude-haiku-4.5, gemini-3-flash - efficient
-- **Standard**: claude-sonnet, gemini-pro, gpt-5 - capable
-- **Premium**: claude-opus - maximum capability
-
-### Function Calling
-All Copilot models support function calling:
-- Structured tool calls
-- Parallel tool execution
-- JSON argument parsing
-
-### Context Handling
-Copilot manages context automatically:
-- Current file context
-- Workspace context
-- Recent conversation history`;
-
-export const COPILOT_BEST_PRACTICES = `## Copilot Best Practices
-
-### Model Recommendations by Task
-
-| Task Type | Recommended Model | Reason |
-|-----------|------------------|--------|
-| Simple edits | gpt-4o-mini | Fast, unlimited |
-| Code generation | gpt-4o | Balanced, unlimited |
-| Complex reasoning | claude-sonnet-4.5 | High quality |
-| Architecture | claude-opus-4.5 | Best reasoning |
-
-### Efficiency Tips
-- Use unlimited models for iterative work
-- Reserve premium models for complex decisions
-- Batch simple changes to reduce API calls
-
-### Code Style
-Copilot models:
-- Follow project conventions when visible
-- Match existing code patterns
-- Use TypeScript types from context`;
-
 /**
- * Build Copilot-specific enhancements
+ * Build Copilot-specific enhancements — kept minimal to save tokens.
+ * The model doesn't need pricing info or model recommendations in its prompt.
  */
-export const buildCopilotEnhancements = (): string => {
-  return [
-    COPILOT_TOOL_PATTERNS,
-    COPILOT_BEST_PRACTICES,
-  ].join("\n\n");
-};
+export const buildCopilotEnhancements = (): string => "";
 
 /**
  * Check if model is accessed through Copilot
