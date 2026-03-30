@@ -151,8 +151,8 @@ export async function getToolsForApiAsync(
     function: toolToFunction(t),
   }));
 
-  // Read-only profiles don't include MCP/plugin tools
-  if (resolved === "chat" || resolved === "explore" || resolved === "review") {
+  // Only include MCP/plugin tools for "full" profile
+  if (resolved !== "full") {
     return builtInTools;
   }
 
@@ -192,8 +192,8 @@ export function getToolsForApi(
     function: toolToFunction(t),
   }));
 
-  // Read-only profiles don't include MCP/plugin tools
-  if (resolved === "chat" || resolved === "explore" || resolved === "review") {
+  // Only include MCP/plugin tools for "full" profile — other profiles are focused
+  if (resolved !== "full") {
     toolDefsCache.set(cacheKey, builtInTools);
     return builtInTools;
   }
