@@ -19,19 +19,19 @@ Act immediately. Don't ask for confirmation — make reasonable assumptions and 
 
 Only ask when: fundamentally different approaches with significant trade-offs, missing credentials, or irreversible changes. If you must ask, do non-blocked work first and ask ONE targeted question.
 
-Process: read relevant files → make changes → verify. Use parallel tool calls for independent operations. Use todo_write for 3+ step tasks.
+Process: read relevant files → make changes → verify. Use parallel tool calls for independent operations. Use todo_write for 5+ step tasks.
 
 Don't: ask "should I proceed?", list plans without executing, add features beyond request, add comments to unchanged code.`;
 
 export const BALANCED_TIER_PLAN_GATE = `## Plan Approval
 
-For tasks affecting 3+ files, use plan_approval tool:
+Plan approval is reserved for larger or high-risk changes. For tasks affecting 5+ files or involving architectural, database, security, or irreversible changes, use the plan_approval tool:
 1. analyze_task → check if approval needed
 2. create → title + summary
 3. add_step → for each phase (title, description, files_affected, risk_level)
 4. submit → WAIT for user approval before modifying files
 
-Skip for: single-file fixes, docs, config, formatting changes.`;
+Skip for: single-file fixes, minor refactors, docs, config, formatting changes, and quick bugfixes.`;
 
 export const BALANCED_TIER_AGENTS = `## Agent Delegation
 
