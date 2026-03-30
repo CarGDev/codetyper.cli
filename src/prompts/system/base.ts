@@ -31,9 +31,9 @@ export const BASE_TOOLS = `## Tool Usage
 
 Use dedicated tools (read, write, edit, glob, grep) instead of bash for file ops. Reserve bash for git, npm, builds, tests. Run independent tool calls in parallel; dependent ones sequentially.
 
+When reading files, use limit=500 or higher — never read 50 lines at a time. Read the full file when possible.
 Prefer the 'edit' tool for modifying files — it matches exact text and is the most reliable.
-If 'apply_patch' fails, switch to 'edit' immediately — do not retry apply_patch more than once.
-If a tool fails, try a different tool or approach — do not retry the same call identically.`;
+If a tool fails, try a different approach — do not retry the same call identically.`;
 
 export const BASE_CODE_REFERENCES = `## Code References
 
